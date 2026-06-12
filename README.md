@@ -26,7 +26,6 @@
 - `services/consolidation/rpc`：用户充值地址资金归集。
 - `services/swap/rpc`：Swap 聚合与交易编排。
 - `services/market/rpc`：行情与汇率采集（Binance ticker/fiat -> Redis）。
-- `services/market-alert`：独立行情拉升预警（Binance WS -> Redis状态 -> Telegram）。
 - `services/notification/rpc`：站内/推送通知相关能力。
 
 ## 目录结构
