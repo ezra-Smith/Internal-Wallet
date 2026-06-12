@@ -1,0 +1,160 @@
+Name: api-gateway
+Mode: dev
+
+# HTTP 服务配置
+Host: 0.0.0.0
+Port: 8080
+
+# 日志配置
+Log:
+  ServiceName: api-gateway
+  Mode: console                    # console/file/volume
+  Path: logs/gateway           # 日志路径
+  Level: info                   # debug/info/error/severe
+  Compress: true                # 是否压缩
+  KeepDays: 7                   # 保留天数
+  StackCooldownMillis: 100      # 堆栈日志冷却时间
+
+# JWT 认证配置
+# JWT 密钥从环境变量/AWS Secrets Manager注入
+# 必须与 Business 服务的 JWT 密钥保持一致
+Auth:
+  AccessSecret: ""  # 占位符，实际值从 secrets 包注入
+  AccessExpire: 2592000  # 30 天 (30 * 24 * 3600)
+  RefreshSecret: ""  # 占位符，实际值从 secrets 包注入
+  RefreshExpire: 5184000  # 60 天 (60 * 24 * 3600)
+
+# Admin JWT（后台管理独立密钥对）
+# Admin JWT 密钥从环境变量/AWS Secrets Manager注入
+AdminAuth:
+  AccessSecret: ""  # 占位符，实际值从 secrets 包注入
+  AccessExpire: 28800   # 8 小时（与 Admin SRD 对齐）
+  RefreshSecret: ""  # 占位符，实际值从 secrets 包注入
+  RefreshExpire: 604800 # 7 天（预留/2FA临时token也可用）
+
+# RPC 服务配置 - 使用 etcd 服务发现
+# Business Service (包含 Auth, User, Account, Balance, Transfer)
+BusinessRpc:
+  Etcd:
+    Hosts:
+      - localhost:2379
+    Key: business.rpc
+  Timeout: 30000
+
+# ChainRPC Service (链操作服务)
+ChainRpcRpc:
+  Etcd:
+    Hosts:
+      - localhost:2379
+    Key: chainrpc.rpc
+  Timeout: 30000
+
+# ChainSync Service (扫链服务)
+ChainSyncRpc:
+  Etcd:
+    Hosts:
+      - localhost:2379
+    Key: chainsync.rpc
+  Timeout: 30000
+
+# Admin Service (后台管理服务)
+AdminRpc:
+  Etcd:
+    Hosts:
+      - localhost:2379
+    Key: admin.rpc
+  Timeout: 30000
+
+# Redis 配置（用于分布式限流）
+# 密码从环境变量/AWS Secrets Manager注入
+Redis:
+  Host: localhost
+  Port: 6379
+  Password: ""  # 占位符，实际值从 secrets 包注入
+  DB: 0         # 使用DB 0
+
+# Geetest 配置（可选）
+Geetest:
+  Enabled: false                      # 是否启用极验验证（生产需开启）
+  FailOpen: true                      # 发生故障时是否放行
+  CaptchaID: "${GEETEST_CAPTCHA_ID}"  # 从环境变量/Secrets注入
+  CaptchaKey: "${GEETEST_CAPTCHA_KEY}" # 从环境变量/Secrets注入
+  APIServer: "http://gcaptcha4.geetest.com"
+  Timeout: 5000                       # 毫秒
+
+# 限流配置
+RateLimit:
+  Enable: true        # 启用限流
+  UseRedis: true      # 使用Redis分布式限流（集群部署必须开启）
+  GlobalRate: 1000    # 全局限流：每秒1000个请求
+  GlobalBurst: 2000   # 全局突发容量：2000
+
+# 请求超时配置（毫秒）
+RequestTimeout: 30000
+
+# S3 上传配置（管理后台上传币种图标等静态资源）
+S3:
+  Enabled: false
+  Region: "ap-southeast-1"
+  Bucket: ""
+  Endpoint: ""        # 可选：S3 兼容 endpoint（如 MinIO）
+  AccessKeyID: ""     # 推荐用环境变量/密钥管理，避免写入配置文件
+  SecretAccessKey: "" # 推荐用环境变量/密钥管理，避免写入配置文件
+  SessionToken: ""    # 可选：临时凭证
+  PublicBaseURL: ""   # 可选：对外访问域名（CDN），如 https://cdn.example.com
+  Prefix: "admin"     # 可选：对象 key 前缀目录
+  UsePathStyle: false # 可选：S3 兼容（MinIO）常用
+  ACL: ""             # 可选：如 public-read（bucket 开启 Object Ownership 时请留空）
+
+# CORS 配置
+# 开发模式：允许所有来源（测试阶段）
+# 生产环境必须改为具体域名白名单！
+Cors:
+  AllowOrigins:
+    - "*"  # 开发阶段允许所有来源
+  AllowMethods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "PATCH"
+    - "OPTIONS"
+  AllowHeaders:
+    - "Content-Type"
+    - "Authorization"
+    - "Idempotency-Key"
+    - "X-Request-ID"
+    - "X-Trace-ID"
+  ExposeHeaders:
+    - "X-Request-ID"
+    - "X-Trace-ID"
+  AllowCredentials: false  # 使用 "*" 时必须为 false
+  MaxAge: 86400
+
+  # 生产环境配置示例（部署前请取消注释并删除上面的 "*" 配置）：
+  # AllowOrigins:
+  #   - "https://wallet.yourcompany.com"
+  #   - "https://admin.yourcompany.com"
+  # AllowCredentials: true  # 生产环境改为 true
+
+# 可信代理配置（用于安全的客户端IP提取）
+# 重要：仅当请求来自这些CIDR范围内的代理时，才信任X-Forwarded-For/X-Real-IP标头
+# 这可以防止攻击者通过伪造代理头绕过IP限流
+# 默认为空（不信任任何代理头，使用RemoteAddr）- 最安全的配置
+TrustedProxies: []
+  # 开发环境示例（本地Docker网络）
+  # - "172.16.0.0/12"    # Docker默认网络
+  # - "127.0.0.1/32"     # localhost
+
+  # Kubernetes环境示例
+  # - "10.0.0.0/8"       # Pod CIDR
+  # - "172.16.0.0/12"    # Service CIDR
+
+  # 云环境示例（根据实际情况配置）
+  # GCP:
+  # - "35.191.0.0/16"    # GCP Cloud Load Balancer
+  # - "130.211.0.0/22"   # GCP Health Check
+  # AWS:
+  # - "从AWS API获取ELB IP范围"
+  # Azure:
+# - "从Azure API获取LB IP范围"

@@ -1,0 +1,305 @@
+syntax = "proto3";
+
+package consolidation;
+
+option go_package = "./pb";
+
+import "google/protobuf/struct.proto";
+
+// Consolidation service: discovers user deposit addresses, optionally rents TRON energy,
+// executes sweeps, and tracks confirmations.
+service Consolidation {
+  // Manually trigger discovery/execution for a specific chain/asset (best-effort).
+  rpc TriggerConsolidation(TriggerConsolidationRequest) returns (TriggerConsolidationResponse);
+
+  // Query task by task_id.
+  rpc GetConsolidationTask(GetConsolidationTaskRequest) returns (GetConsolidationTaskResponse);
+
+  // List tasks with filters.
+  rpc ListConsolidationTasks(ListConsolidationTasksRequest) returns (ListConsolidationTasksResponse);
+
+  // Aggregated stats.
+  rpc GetConsolidationStats(GetConsolidationStatsRequest) returns (GetConsolidationStatsResponse);
+
+  // Cancel a pending task.
+  rpc CancelConsolidationTask(CancelConsolidationTaskRequest) returns (CancelConsolidationTaskResponse);
+
+  // Retry a failed/permanent-failed task (subject to max retry policy).
+  rpc RetryConsolidationTask(RetryConsolidationTaskRequest) returns (RetryConsolidationTaskResponse);
+
+  // List logs with filters.
+  rpc ListConsolidationLogs(ListConsolidationLogsRequest) returns (ListConsolidationLogsResponse);
+
+  // List top-up records with filters.
+  rpc ListConsolidationTopupRecords(ListConsolidationTopupRecordsRequest) returns (ListConsolidationTopupRecordsResponse);
+
+  // List energy rental records with filters.
+  rpc ListEnergyRentalRecords(ListEnergyRentalRecordsRequest) returns (ListEnergyRentalRecordsResponse);
+
+  // Get energy rental record by ID.
+  rpc GetEnergyRentalRecord(GetEnergyRentalRecordRequest) returns (GetEnergyRentalRecordResponse);
+}
+
+enum ConsolidationTaskStatus {
+  CONSOLIDATION_TASK_STATUS_UNSPECIFIED = 0;
+  CONSOLIDATION_TASK_STATUS_PENDING = 1;
+  CONSOLIDATION_TASK_STATUS_NEED_ENERGY = 2;
+  CONSOLIDATION_TASK_STATUS_IN_PROGRESS = 3;
+  CONSOLIDATION_TASK_STATUS_CONFIRMED = 4;
+  CONSOLIDATION_TASK_STATUS_FAILED = 5;
+  CONSOLIDATION_TASK_STATUS_TIMEOUT = 6;
+  CONSOLIDATION_TASK_STATUS_NEED_GAS = 7;
+  CONSOLIDATION_TASK_STATUS_CANCELLED = 8;
+  CONSOLIDATION_TASK_STATUS_PERMANENT_FAILED = 9;
+  CONSOLIDATION_TASK_STATUS_NEED_BANDWIDTH = 10;
+}
+
+message ConsolidationTask {
+  string task_id = 1;
+  string chain = 2;           // TRON/ETH/BSC
+  string asset_symbol = 3;    // TRX/ETH/BNB/USDT/USDC
+  string token_contract = 4;  // empty for native
+  string from_address = 5;
+  string to_address = 6;
+  string amount = 7;          // smallest unit
+  string estimated_fee = 8;
+  string actual_fee = 9;
+  ConsolidationTaskStatus status = 10;
+  string tx_hash = 11;
+  int32 retry_count = 12;
+  string error_message = 13;
+  int64 started_at = 14;      // unix seconds
+  int64 confirmed_at = 15;    // unix seconds
+  int64 created_at = 16;      // unix seconds
+  int64 updated_at = 17;      // unix seconds
+  int64 energy_rental_id = 18; // energy_rental_records.id (0 if none)
+  int64 next_attempt_at = 19;  // unix seconds
+  string claimed_by = 20;
+  int64 claimed_until = 21;    // unix seconds
+  int32 energy_order_count = 22;
+  int64 energy_total_cost_sun = 23;
+}
+
+message TriggerConsolidationRequest {
+  string chain = 1;           // optional: TRON/ETH/BSC; empty=all enabled
+  string asset_symbol = 2;    // optional: empty=all configured
+  string from_address = 3;    // optional: empty=all
+  bool dry_run = 4;           // if true, only returns would-create tasks
+}
+
+message TriggerConsolidationResponse {
+  bool success = 1;
+  string message = 2;
+  int64 total_candidates = 3;
+  int64 total_tasks_created = 4;
+  repeated ConsolidationTask tasks = 5;
+}
+
+message GetConsolidationTaskRequest {
+  string task_id = 1;
+}
+
+message GetConsolidationTaskResponse {
+  bool success = 1;
+  string message = 2;
+  ConsolidationTask task = 3;
+}
+
+message ListConsolidationTasksRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string chain = 3;                    // optional
+  string asset_symbol = 4;             // optional
+  ConsolidationTaskStatus status = 5;  // optional
+  int64 created_at_from = 6;           // optional unix seconds
+  int64 created_at_to = 7;             // optional unix seconds
+  string task_id = 8;                  // optional
+  string from_address = 9;             // optional
+  string to_address = 10;              // optional
+  string tx_hash = 11;                 // optional
+}
+
+message ListConsolidationTasksResponse {
+  bool success = 1;
+  string message = 2;
+  int64 total = 3;
+  repeated ConsolidationTask tasks = 4;
+}
+
+message GetConsolidationStatsRequest {
+  string chain = 1;        // optional
+  string asset_symbol = 2; // optional
+  int64 from_ts = 3;       // optional unix seconds
+  int64 to_ts = 4;         // optional unix seconds
+}
+
+message ConsolidationStats {
+  int64 total = 1;
+  int64 confirmed = 2;
+  int64 failed = 3;
+  double success_rate = 4;
+  string total_amount = 5;        // smallest unit (chain/asset specific)
+  string total_estimated_fee = 6; // smallest unit
+  string total_actual_fee = 7;    // smallest unit
+}
+
+message GetConsolidationStatsResponse {
+  bool success = 1;
+  string message = 2;
+  ConsolidationStats stats = 3;
+}
+
+message CancelConsolidationTaskRequest {
+  string task_id = 1;
+}
+
+message CancelConsolidationTaskResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RetryConsolidationTaskRequest {
+  string task_id = 1;
+}
+
+message RetryConsolidationTaskResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================
+// Consolidation Logs
+// ============================================
+
+message ConsolidationLog {
+  int64 id = 1;
+  string task_id = 2;
+  string log_level = 3;             // INFO/WARN/ERROR
+  string message = 4;
+  google.protobuf.Struct details = 5;
+  int64 created_at = 6;             // unix seconds
+}
+
+message ListConsolidationLogsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string task_id = 3;               // optional
+  string log_level = 4;             // optional
+  int64 created_at_from = 5;        // optional unix seconds
+  int64 created_at_to = 6;          // optional unix seconds
+}
+
+message ListConsolidationLogsResponse {
+  bool success = 1;
+  string message = 2;
+  int64 total = 3;
+  repeated ConsolidationLog logs = 4;
+}
+
+// ============================================
+// Consolidation Top-ups
+// ============================================
+
+enum ConsolidationTopupStatus {
+  CONSOLIDATION_TOPUP_STATUS_UNSPECIFIED = 0;
+  CONSOLIDATION_TOPUP_STATUS_PENDING = 1;
+  CONSOLIDATION_TOPUP_STATUS_SENT = 2;
+  CONSOLIDATION_TOPUP_STATUS_CONFIRMED = 3;
+  CONSOLIDATION_TOPUP_STATUS_FAILED = 4;
+}
+
+message ConsolidationTopupRecord {
+  int64 id = 1;
+  string task_id = 2;
+  string chain = 3;
+  string asset_symbol = 4;
+  string from_address = 5;
+  string to_address = 6;
+  string amount = 7;
+  string purpose = 8;
+  ConsolidationTopupStatus status = 9;
+  string tx_hash = 10;
+  int32 retry_count = 11;
+  string error_message = 12;
+  int64 confirmed_at = 13;  // unix seconds
+  int64 created_at = 14;    // unix seconds
+  int64 updated_at = 15;    // unix seconds
+}
+
+message ListConsolidationTopupRecordsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string task_id = 3;               // optional
+  string chain = 4;                 // optional
+  string asset_symbol = 5;          // optional
+  string purpose = 6;               // optional
+  ConsolidationTopupStatus status = 7; // optional
+  string to_address = 8;            // optional
+  string tx_hash = 9;               // optional
+  int64 created_at_from = 10;       // optional unix seconds
+  int64 created_at_to = 11;         // optional unix seconds
+}
+
+message ListConsolidationTopupRecordsResponse {
+  bool success = 1;
+  string message = 2;
+  int64 total = 3;
+  repeated ConsolidationTopupRecord records = 4;
+}
+
+// ============================================
+// Energy Rentals
+// ============================================
+
+enum EnergyRentalStatus {
+  ENERGY_RENTAL_STATUS_UNSPECIFIED = 0;
+  ENERGY_RENTAL_STATUS_PENDING = 1;
+  ENERGY_RENTAL_STATUS_CONFIRMED = 2;
+  ENERGY_RENTAL_STATUS_FAILED = 3;
+  ENERGY_RENTAL_STATUS_EXPIRED = 4;
+}
+
+message EnergyRentalRecord {
+  int64 id = 1;
+  string order_id = 2;
+  string receiver_address = 3;
+  int64 energy_amount = 4;
+  int32 rental_duration = 5;
+  string price_per_energy = 6;
+  string total_cost = 7;
+  string provider = 8;
+  EnergyRentalStatus status = 9;
+  google.protobuf.Struct provider_response = 10;
+  string error_message = 11;
+  int64 confirmed_at = 12; // unix seconds
+  int64 created_at = 13;   // unix seconds
+  int64 updated_at = 14;   // unix seconds
+}
+
+message ListEnergyRentalRecordsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string receiver_address = 3; // optional
+  string provider = 4;         // optional
+  EnergyRentalStatus status = 5; // optional
+  string order_id = 6;         // optional
+  int64 created_at_from = 7;   // optional unix seconds
+  int64 created_at_to = 8;     // optional unix seconds
+}
+
+message ListEnergyRentalRecordsResponse {
+  bool success = 1;
+  string message = 2;
+  int64 total = 3;
+  repeated EnergyRentalRecord records = 4;
+}
+
+message GetEnergyRentalRecordRequest {
+  int64 id = 1;
+}
+
+message GetEnergyRentalRecordResponse {
+  bool success = 1;
+  string message = 2;
+  EnergyRentalRecord record = 3;
+}

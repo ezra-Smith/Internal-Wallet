@@ -1,0 +1,203 @@
+# kOps Cluster Configuration
+# Single-AZ deployment in ap-northeast-1a with private topology
+#
+# Usage:
+#   source env.sh
+#   kops create -f cluster.yaml
+#   kops update cluster --name $KOPS_CLUSTER_NAME --yes --admin
+
+apiVersion: kops.k8s.io/v1alpha2
+kind: Cluster
+metadata:
+  name: k8s.zinkapi.com
+spec:
+  # Kubernetes version
+  kubernetesVersion: "1.29.0"
+
+  # Cloud provider
+  cloudProvider: aws
+
+  # Network topology: private nodes (SSM access via ops-ssm instance)
+  topology:
+    dns:
+      type: Public
+    masters: private
+    nodes: private
+
+  # API server configuration
+  api:
+    loadBalancer:
+      type: Internal
+      class: Network
+
+  # Networking
+  networkCIDR: 10.0.0.0/16
+  networking:
+    calico: {}
+
+  nonMasqueradeCIDR: 100.64.0.0/10
+
+  # Subnets - single AZ
+  subnets:
+    - name: ap-northeast-1a
+      type: Private
+      zone: ap-northeast-1a
+      cidr: 10.0.128.0/17
+    - name: utility-ap-northeast-1a
+      type: Utility
+      zone: ap-northeast-1a
+      cidr: 10.0.0.0/24
+
+  # etcd configuration
+  etcdClusters:
+    - name: main
+      cpuRequest: 200m
+      memoryRequest: 100Mi
+      etcdMembers:
+        - name: a
+          instanceGroup: master-ap-northeast-1a
+          encryptedVolume: true
+          volumeSize: 20
+          volumeType: gp3
+    - name: events
+      cpuRequest: 100m
+      memoryRequest: 100Mi
+      etcdMembers:
+        - name: a
+          instanceGroup: master-ap-northeast-1a
+          encryptedVolume: true
+          volumeSize: 20
+          volumeType: gp3
+
+  # IAM configuration
+  iam:
+    allowContainerRegistry: true
+    legacy: false
+
+  # ========== IRSA (IAM Roles for Service Accounts) ==========
+  # kOps will publish OIDC discovery docs to this S3 bucket and create an IAM OIDC provider.
+  serviceAccountIssuerDiscovery:
+    discoveryStore: s3://k8s-zinkapi-com-oidc
+    enableAWSOIDCProvider: true
+
+  # Required by webhooks (including podIdentityWebhook) for cert management.
+  certManager:
+    enabled: true
+
+  # AWS pod identity webhook (IRSA token + env injection).
+  podIdentityWebhook:
+    enabled: true
+
+  # Kubelet configuration
+  kubelet:
+    anonymousAuth: false
+
+  # kube-proxy configuration
+  kubeProxy:
+    enabled: true
+
+  # SSH access
+  sshAccess:
+    # Restrict SSH access to your public IP (/32).
+    # Update this CIDR if your IP changes.
+    - 151.242.36.40/32
+
+  # Kubernetes API access (internal only)
+  kubernetesApiAccess:
+    - 10.0.0.0/16
+
+  # Additional policies
+  additionalPolicies:
+    node: |
+      [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:BatchGetImage"
+          ],
+          "Resource": "*"
+        }
+      ]
+
+---
+# Master Instance Group
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  name: master-ap-northeast-1a
+  labels:
+    kops.k8s.io/cluster: k8s.zinkapi.com
+spec:
+  role: Master
+  machineType: m6i.large
+  minSize: 1
+  maxSize: 1
+  subnets:
+    - ap-northeast-1a
+  rootVolume:
+    size: 50
+    type: gp3
+  cloudLabels:
+    project: internal-wallet
+    environment: production
+    role: control-plane
+
+---
+# Business Worker Instance Group
+# Runs stateless Go microservices
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  name: nodes-business
+  labels:
+    kops.k8s.io/cluster: k8s.zinkapi.com
+spec:
+  role: Node
+  machineType: m6i.2xlarge
+  minSize: 1
+  maxSize: 3
+  subnets:
+    - ap-northeast-1a
+  rootVolume:
+    size: 300
+    type: gp3
+  nodeLabels:
+    node-role: business
+  cloudLabels:
+    project: internal-wallet
+    environment: production
+    role: business
+
+---
+# Infrastructure Worker Instance Group
+# Runs stateful services: MariaDB, Redis, Kafka, ETCD, monitoring
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  name: nodes-infra
+  labels:
+    kops.k8s.io/cluster: k8s.zinkapi.com
+spec:
+  role: Node
+  machineType: r6i.xlarge
+  minSize: 1
+  maxSize: 1
+  subnets:
+    - ap-northeast-1a
+  rootVolume:
+    size: 500
+    type: gp3
+    iops: 6000
+    throughput: 250
+  nodeLabels:
+    node-role: infrastructure
+  taints:
+    - "node-role=infrastructure:NoSchedule"
+  cloudLabels:
+    project: internal-wallet
+    environment: production
+    role: infrastructure
+

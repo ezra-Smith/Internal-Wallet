@@ -1,0 +1,81 @@
+Name: chainrpc
+ListenOn: 0.0.0.0:9005
+Mode: dev
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: chainrpc.rpc
+
+# 服务 NodeID（建议唯一）：business=1, chainrpc=2, chainsync=3, signer=4, admin=5, swap=6, accounting=7
+NodeID: 2
+
+# Chains configuration
+# ⚠️  注意: 生产环境建议使用环境变量注入 API Keys,而不是直接写在配置文件中
+# 支持的环境变量:
+#   - ETH_RPC_API_KEY: ETH 节点 API Key
+#   - BSC_RPC_API_KEY: BSC 节点 API Key
+#   - TRON_API_KEY: TRON 节点 API Key
+#   - REDIS_PASSWORD: Redis 密码
+Chains:
+  - ChainType: "ETH"
+    ChainID: 1
+    # 以太坊主网 RPC 端点
+    # 备选端点：
+    # - https://eth.llamarpc.com (免费，可靠)
+    # - https://rpc.ankr.com/eth (免费，可靠)
+    # - https://ethereum-rpc.publicnode.com (公共节点，可能不稳定)
+    # 自建节点示例：http://15.235.229.70/eth
+    RPCEndpoint: "https://eth.llamarpc.com"
+    # API Key 用于自建节点认证（可选，公共节点留空）
+    # 生产环境建议使用环境变量 ETH_RPC_API_KEY
+    APIKey: ""  # 例如: "YOUR_ETH_API_KEY" 或从环境变量读取
+    Enabled: true
+
+  - ChainType: "BSC"
+    ChainID: 56
+    # BSC 主网 RPC 端点
+    RPCEndpoint: "https://bsc-rpc.publicnode.com"
+    # API Key 用于自建节点认证（可选）
+    # 生产环境建议使用环境变量 BSC_RPC_API_KEY
+    APIKey: ""  # 例如: "YOUR_BSC_API_KEY" 或从环境变量读取
+    Enabled: true
+
+  - ChainType: "TRON"
+    ChainID: 728126428  # TRON 主网 ChainID（代码库统一使用此值）
+    # TRON 主网 gRPC 端点
+    # 如需使用测试网，请使用: grpc.nile.trongrid.io:50051 (Nile 测试网)
+    # 自建节点示例：15.235.229.70:50051
+    TronEndpoint: "grpc.trongrid.io:50051"
+    # API Key 用于 TRON 节点认证（可选）
+    # 生产环境建议使用环境变量 TRON_API_KEY
+    TronAPIKey: ""  # 例如: "YOUR_TRON_API_KEY" 或从环境变量读取
+    Enabled: true
+
+# RPC客户端配置
+SignerRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: signer.rpc
+  Timeout: 5000                 # 超时时间（毫秒）
+  NonBlock: true                # 非阻塞模式（推荐）
+
+# Timeout configurations
+# 服务端 gRPC 请求超时（30秒），应大于所有内部调用的超时时间
+# 超时层级：HTTP客户端(30s) < GetNonce逻辑(20s) < ChainRPC客户端(25s) < ChainRPC服务端(30s)
+Timeout: 30000
+
+# Redis 缓存配置（用于从 market 服务获取价格）
+CacheRedis:
+  - Host: localhost:6379
+    Pass: ""  # 占位符，实际值从 secrets 包注入
+    Type: node
+
+# Market 价格服务配置
+MarketPrice:
+  TickerHashKey: binance:tickers  # Market 服务存储价格的 Redis hash key
+
+# Log configuration
+Log:
+  ServiceName: chainrpc
+  Mode: console

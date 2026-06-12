@@ -1,0 +1,1238 @@
+syntax = "proto3";
+
+package swap;
+
+option go_package = "./pb";
+
+// ============================================================================
+// Swap Service (Standalone, API-key authenticated)
+// Phase 1: 1inch only (provider-extensible design)
+// ============================================================================
+
+service Swap {
+  // ==================== Swap APIs ====================
+  rpc GetQuote(GetQuoteRequest) returns (GetQuoteResponse);
+  rpc ExecuteSwap(ExecuteSwapRequest) returns (ExecuteSwapResponse);
+  rpc GetApprovalTransaction(GetApprovalTransactionRequest) returns (GetApprovalTransactionResponse);
+  rpc ResetApproval(ResetApprovalRequest) returns (ResetApprovalResponse);
+  rpc GetSwapStatus(GetSwapStatusRequest) returns (GetSwapStatusResponse);
+  rpc GetSwapHistory(GetSwapHistoryRequest) returns (GetSwapHistoryResponse);
+  // GetSwapDetail returns a swap transaction record stored in swap_svc_transactions.
+  rpc GetSwapDetail(GetSwapDetailRequest) returns (GetSwapDetailResponse);
+  rpc GetSupportedTokens(GetSupportedTokensRequest) returns (GetSupportedTokensResponse);
+  rpc GetSupportedChains(GetSupportedChainsRequest) returns (GetSupportedChainsResponse);
+  rpc BroadcastSwap(BroadcastSwapRequest) returns (BroadcastSwapResponse);
+  // UpdateSwapBroadcastResult updates swap_svc_transactions after an external broadcast (e.g. client broadcast via /web3/transaction/broadcast).
+  rpc UpdateSwapBroadcastResult(UpdateSwapBroadcastResultRequest) returns (UpdateSwapBroadcastResultResponse);
+
+  // ==================== OKX DEX Specific APIs ====================
+  rpc GetLiquiditySources(GetLiquiditySourcesRequest) returns (GetLiquiditySourcesResponse);
+  rpc GetExternalSwapStatus(GetExternalSwapStatusRequest) returns (GetExternalSwapStatusResponse);
+
+  // ==================== API Key Management (admin-protected) ====================
+  rpc CreateSwapApiKey(CreateSwapApiKeyRequest) returns (CreateSwapApiKeyResponse);
+  rpc RevokeSwapApiKey(RevokeSwapApiKeyRequest) returns (RevokeSwapApiKeyResponse);
+  rpc ListSwapApiKeys(ListSwapApiKeysRequest) returns (ListSwapApiKeysResponse);
+
+  // ==================== Provider管理 (Provider Management - Admin-protected) ====================
+  rpc CreateSwapProvider(SwapCreateProviderRequest) returns (SwapCreateProviderResponse);
+  rpc UpdateSwapProvider(SwapUpdateProviderRequest) returns (SwapUpdateProviderResponse);
+  rpc ListSwapProviders(SwapListProvidersRequest) returns (SwapListProvidersResponse);
+  rpc GetSwapProviderDetail(SwapGetProviderDetailRequest) returns (SwapGetProviderDetailResponse);
+  rpc DeleteSwapProvider(SwapDeleteProviderRequest) returns (SwapDeleteProviderResponse);
+  rpc EnableSwapProvider(SwapEnableProviderRequest) returns (SwapEnableProviderResponse);
+  rpc DisableSwapProvider(SwapDisableProviderRequest) returns (SwapDisableProviderResponse);
+  rpc ListSwapProvidersForDropdown(SwapListProvidersForDropdownRequest) returns (SwapListProvidersForDropdownResponse);
+
+  // ==================== 简化配置管理 (Simplified Config Management - Admin-protected) ====================
+  // 全局配置 CRUD（扁平化：provider+chain+token一体）
+  rpc ListSwapConfigs(SwapListSwapConfigsRequest) returns (SwapListSwapConfigsResponse);
+  rpc GetSwapConfigDetail(SwapGetSwapConfigDetailRequest) returns (SwapGetSwapConfigDetailResponse);
+  rpc CreateSwapConfig(SwapCreateSwapConfigRequest) returns (SwapCreateSwapConfigResponse);
+  rpc UpdateSwapConfigDetail(SwapUpdateSwapConfigDetailRequest) returns (SwapUpdateSwapConfigDetailResponse);
+  rpc DeleteSwapConfig(SwapDeleteSwapConfigRequest) returns (SwapDeleteSwapConfigResponse);
+
+  // 项目配置管理（启用/禁用开关）
+  rpc ListProjectSwapConfigs(SwapListProjectSwapConfigsRequest) returns (SwapListProjectSwapConfigsResponse);
+  rpc EnableSwapConfigForProject(SwapEnableSwapConfigForProjectRequest) returns (SwapEnableSwapConfigForProjectResponse);
+  rpc DisableSwapConfigForProject(SwapDisableSwapConfigForProjectRequest) returns (SwapDisableSwapConfigForProjectResponse);
+
+  // ==================== 业务端配置查询 (Business API - API Key authenticated) ====================
+  // 业务端查询自己项目的生效配置（从 API Key context 自动获取 project_name）
+  rpc GetMySwapConfigs(SwapGetMySwapConfigsRequest) returns (SwapGetMySwapConfigsResponse);
+
+  // ==================== 统计与查询 (API Key authenticated) ====================
+  // DEPRECATED: GetSwapStatistics - feature removed
+  // rpc GetSwapStatistics(SwapGetSwapStatisticsRequest) returns (SwapGetSwapStatisticsResponse);
+  rpc ListSwapTransactions(SwapListSwapTransactionsRequest) returns (SwapListSwapTransactionsResponse);
+}
+
+// ============================================================================
+// Common
+// ============================================================================
+
+// SwapPagination 分页信息
+message SwapPagination {
+  int32 page = 1;              // 当前页码
+  int32 page_size = 2;         // 每页条数
+  int64 total = 3;             // 总记录数
+  int32 total_pages = 4;       // 总页数
+  bool has_next = 5;           // 是否有下一页
+  bool has_prev = 6;           // 是否有上一页
+}
+
+// ============================================================================
+// Types
+// ============================================================================
+
+// SwapTxStatus 交易状态
+enum SwapTxStatus {
+  SWAP_TX_STATUS_UNSPECIFIED = 0;  // 未指定
+  SWAP_TX_STATUS_CREATED = 1;      // 已创建（未签名交易）
+  SWAP_TX_STATUS_PENDING = 2;      // 待确认
+  SWAP_TX_STATUS_SUCCESS = 3;      // 成功
+  SWAP_TX_STATUS_FAILED = 4;       // 失败
+}
+
+// ChainInfo 链信息
+message ChainInfo {
+  int64 chain_id = 1;                    // 链ID
+  string name = 2;                       // 链名称
+  bool enabled = 3;                      // 是否启用
+  uint64 required_confirmations = 4;     // 所需确认数
+}
+
+// LiquiditySource 流动性来源（DEX交易所）
+message LiquiditySource {
+  string id = 1;      // DEX ID（例如："34" 表示 Uniswap V2）
+  string name = 2;    // DEX 名称（例如："Uniswap V2"）
+  string logo = 3;    // DEX 图标URL
+}
+
+// ChainSwapStatus 链上交易状态
+enum ChainSwapStatus {
+  CHAIN_SWAP_STATUS_UNSPECIFIED = 0;  // 未指定
+  CHAIN_SWAP_STATUS_PENDING = 1;      // 待确认
+  CHAIN_SWAP_STATUS_SUCCESS = 2;      // 成功
+  CHAIN_SWAP_STATUS_FAILED = 3;       // 失败
+}
+
+// ChainSwapHistoryItem 链上交易历史记录
+message ChainSwapHistoryItem {
+  string chain_index = 1;           // 链ID（例如："1" 表示以太坊）
+  string tx_hash = 2;               // 交易哈希
+  string block_height = 3;          // 区块高度
+  int64 tx_time = 4;                // 交易时间（Unix毫秒时间戳）
+  ChainSwapStatus status = 5;       // 交易状态
+  string tx_type = 6;               // 交易类型（Approve/Wrap/Unwrap/Swap）
+  string from_address = 7;          // 发送地址
+  string dex_router = 8;            // DEX路由合约地址
+  string to_address = 9;            // 接收地址
+  repeated TokenDetail from_tokens = 10;   // 源代币详情
+  repeated TokenDetail to_tokens = 11;     // 目标代币详情
+  string referral_amount = 12;      // 推荐奖励金额
+  string error_msg = 13;            // 错误信息（失败时）
+  string gas_limit = 14;            // Gas 上限
+  string gas_used = 15;             // 实际使用 Gas
+  string gas_price = 16;            // Gas 价格
+  string tx_fee = 17;               // 交易手续费
+}
+
+// TokenDetail 代币详情
+message TokenDetail {
+  string symbol = 1;                // 代币符号
+  string amount = 2;                // 代币数量（最小单位，如 wei）
+  string token_address = 3;         // 代币合约地址
+}
+
+// SwapTokenInfo 代币信息
+message SwapTokenInfo {
+  string address = 1;    // 代币合约地址
+  string symbol = 2;     // 代币符号
+  string name = 3;       // 代币名称
+  uint32 decimals = 4;   // 代币精度
+  string logo_uri = 5;   // 代币图标URI
+  string min_swap_amount_usd = 6;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 7;   // 最大兑换金额（USD）
+}
+
+// UnsignedTransaction 未签名交易
+message UnsignedTransaction {
+  int64 chain_id = 1;      // 链ID
+  string from = 2;         // 发送地址
+  string to = 3;           // 接收地址
+  string data = 4;         // 交易数据（十六进制字符串，0x...）
+  string value = 5;        // 转账金额（wei，十进制字符串）
+  string gas = 6;          // Gas 限制（wei，十进制字符串，可选）
+  string gas_price = 7;    // Gas 价格（wei，十进制字符串，可选）
+}
+
+// ============================================================================
+// Swap APIs
+// ============================================================================
+
+// GetQuoteRequest 获取报价请求
+message GetQuoteRequest {
+  int64 chain_id = 1;                 // 链ID
+  string from_token_address = 2;      // 源代币合约地址
+  string to_token_address = 3;        // 目标代币合约地址
+  string amount = 4;                  // 兑换数量（最小单位 wei，十进制字符串）
+  bool include_protocols = 5;         // 是否包含协议路由信息（尽力而为）
+}
+
+// QuoteData 报价数据
+message QuoteData {
+  int64 chain_id = 1;              // 链ID
+  SwapTokenInfo from_token = 2;    // 源代币信息
+  SwapTokenInfo to_token = 3;      // 目标代币信息
+  string from_amount = 4;          // 源代币数量（wei，十进制字符串）
+  string to_amount = 5;            // 目标代币数量（wei，十进制字符串）
+  uint64 estimated_gas = 6;        // 预估 Gas
+  string provider = 7;             // 服务提供商（例如 "1inch"）
+  string trade_fee = 8;            // DEX 交易手续费（USD 计价，例如 "0.5"）
+  string price_impact = 9;         // 价格冲击百分比（例如 "0.5" 表示 0.5%）
+}
+
+// GetQuoteResponse 获取报价响应
+message GetQuoteResponse {
+  bool success = 1;      // 是否成功
+  string message = 2;    // 响应消息
+  QuoteData data = 3;    // 报价数据
+}
+
+// ExecuteSwapRequest 执行兑换请求
+message ExecuteSwapRequest {
+  int64 chain_id = 1;                 // 链ID
+  string wallet_address = 2;          // 钱包地址（EVM地址，0x...）
+  string from_token_address = 3;      // 源代币合约地址
+  string to_token_address = 4;        // 目标代币合约地址
+  string amount = 5;                  // 兑换数量（最小单位 wei，十进制字符串）
+  int32 slippage_bps = 6;             // 滑点容差（1 = 0.01%，100 = 1%）
+  string recipient = 7;               // 接收地址（可选，默认为 wallet_address）
+  bool check_allowance = 8;           // 是否检查授权额度并在需要时返回授权交易
+  bool include_approve_tx = 9;        // 是否在需要时包含授权交易
+  uint64 estimated_gas = 10;          // 预估 gas（询价时返回，用于执行 swap 时设置 gasLimit）
+}
+
+// ExecuteSwapData 执行兑换数据
+message ExecuteSwapData {
+  string swap_id = 1;                 // 内部跟踪ID
+  string provider = 2;                // 服务提供商（例如 "1inch"）
+  QuoteData quote = 3;                // 使用的报价快照（尽力而为）
+  UnsignedTransaction approve_tx = 4; // 授权交易（可选，ERC20授权）
+  UnsignedTransaction swap_tx = 5;    // 兑换交易
+}
+
+// ExecuteSwapResponse 执行兑换响应
+message ExecuteSwapResponse {
+  bool success = 1;         // 是否成功
+  string message = 2;       // 响应消息
+  ExecuteSwapData data = 3; // 兑换数据
+}
+
+// GetApprovalTransactionRequest 获取授权交易请求
+message GetApprovalTransactionRequest {
+  int64 chain_id = 1;                 // 链ID
+  string wallet_address = 2;          // 钱包地址
+  string token_address = 3;           // 代币合约地址（需要授权的代币）
+  string amount = 4;                  // 授权额度（"0"表示重置授权，不填或"max"表示无限授权，其他值表示具体授权额度）
+}
+
+// GetApprovalTransactionResponse 获取授权交易响应
+message GetApprovalTransactionResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 响应消息
+  UnsignedTransaction tx = 3;         // 未签名的授权交易
+}
+
+// ResetApprovalRequest 重置授权请求（广播签名后的重置授权交易）
+message ResetApprovalRequest {
+  int64 chain_id = 1;                 // 链ID
+  string wallet_address = 2;          // 钱包地址
+  string token_address = 3;           // 代币合约地址（需要重置授权的代币）
+  string signed_tx_hex = 4;           // 必填：签名后的交易hex字符串（Web3用户提供）
+}
+
+// ResetApprovalData 重置授权数据（广播结果）
+message ResetApprovalData {
+  string tx_hash = 1;                       // 交易哈希
+  int64 broadcasted_at = 2;                 // 广播时间戳（Unix秒）
+}
+
+// ResetApprovalResponse 重置授权响应
+message ResetApprovalResponse {
+  bool success = 1;           // 是否成功
+  string message = 2;         // 响应消息
+  ResetApprovalData data = 3; // 重置授权数据
+}
+
+// GetSwapStatusRequest 获取兑换状态请求
+message GetSwapStatusRequest {
+  int64 chain_id = 1;    // 链ID
+  string tx_hash = 2;    // 交易哈希
+  string swap_id = 3;    // 兑换ID（可选，用于绑定交易哈希到兑换记录）
+}
+
+// SwapStatusData 兑换状态数据
+message SwapStatusData {
+  string swap_id = 1;                  // 兑换ID
+  int64 chain_id = 2;                  // 链ID
+  string tx_hash = 3;                  // 交易哈希
+  SwapTxStatus status = 4;             // 交易状态
+  uint64 confirmations = 5;            // 当前确认数
+  uint64 required_confirmations = 6;   // 所需确认数
+  bool is_confirmed = 7;               // 是否已确认
+  string block_number = 8;             // 区块号
+  string provider = 9;                 // 服务提供商
+}
+
+// GetSwapStatusResponse 获取兑换状态响应
+message GetSwapStatusResponse {
+  bool success = 1;        // 是否成功
+  string message = 2;      // 响应消息
+  SwapStatusData data = 3; // 状态数据
+}
+
+// GetSwapHistoryRequest 获取兑换历史请求
+message GetSwapHistoryRequest {
+  string wallet_address = 1;  // 钱包地址
+  int64 chain_id = 2;         // 链ID（可选，0表示所有链）
+  int32 page = 3;             // 页码
+  int32 page_size = 4;        // 每页条数
+}
+
+// SwapHistoryItem 兑换历史记录
+message SwapHistoryItem {
+  string swap_id = 1;              // 兑换ID
+  int64 chain_id = 2;              // 链ID
+  string provider = 3;             // 服务提供商
+  string wallet_address = 4;       // 钱包地址
+  string from_token_address = 5;   // 源代币合约地址
+  string to_token_address = 6;     // 目标代币合约地址
+  string from_amount = 7;          // 源代币数量
+  string to_amount = 8;            // 目标代币数量
+  string tx_hash = 9;              // 交易哈希
+  SwapTxStatus status = 10;        // 交易状态
+  string created_at = 11;          // 创建时间（RFC3339格式）
+  string updated_at = 12;          // 更新时间（RFC3339格式）
+}
+
+// GetSwapHistoryResponse 获取兑换历史响应
+message GetSwapHistoryResponse {
+  bool success = 1;                 // 是否成功
+  string message = 2;               // 响应消息
+  repeated SwapHistoryItem items = 3;  // 历史记录列表
+  SwapPagination pagination = 4;    // 分页信息
+}
+
+// GetSwapDetailRequest 获取交易详情请求（从 swap_svc_transactions 查询）
+//
+// - 如果 chain_id > 0：按 (chain_id, tx_hash) 精确查询
+// - 如果 chain_id == 0：按 tx_hash 查询最新一条记录（不推荐，但兼容业务端历史调用）
+message GetSwapDetailRequest {
+  int64 chain_id = 1;  // 链ID（可选；0 表示不指定）
+  string tx_hash = 2;  // 交易哈希（必填）
+}
+
+// SwapDetailData 交易详情（DB 记录）
+message SwapDetailData {
+  int64 id = 1;                // 记录ID（雪花ID）
+  int64 api_key_id = 2;        // API Key ID（内部）
+  string project_name = 3;     // 项目名称
+  string wallet_address = 4;   // 钱包地址
+  int64 chain_id = 5;          // 链ID
+  string provider = 6;         // 服务商（例如 "okx" / "1inch"）
+
+  // Swap pair + amount snapshot
+  string from_token = 7;
+  string to_token = 8;
+  string from_amount = 9;
+  string to_amount = 10;
+
+  // Unsigned tx snapshot (from ExecuteSwap)
+  string tx_from = 11;
+  string tx_to = 12;
+  string tx_data = 13;
+  string tx_value = 14;
+  string tx_gas = 15;
+  string tx_gas_price = 16;
+  string tx_nonce = 17;
+  string tx_signature_data = 18;
+
+  // Result
+  string tx_hash = 19;
+  string status = 20;
+  string error_code = 21;
+  string error_message = 22;
+  string broadcasted_at = 23; // RFC3339; empty if null
+
+  string created_at = 24; // RFC3339
+  string updated_at = 25; // RFC3339
+
+  // Token names from swap_configs
+  string from_token_name = 26;  // 源代币名称
+  string to_token_name = 27;    // 目标代币名称
+}
+
+// GetSwapDetailResponse 获取交易详情响应
+message GetSwapDetailResponse {
+  bool success = 1;
+  string message = 2;
+  SwapDetailData data = 3;
+}
+
+// GetSupportedTokensRequest 获取支持的代币列表请求
+message GetSupportedTokensRequest {
+  int64 chain_id = 1;  // 链ID
+}
+
+// GetSupportedTokensResponse 获取支持的代币列表响应
+message GetSupportedTokensResponse {
+  bool success = 1;                 // 是否成功
+  string message = 2;               // 响应消息
+  int64 chain_id = 3;               // 链ID
+  repeated SwapTokenInfo tokens = 4;  // 代币列表
+}
+
+// GetSupportedChainsRequest 获取支持的链列表请求
+message GetSupportedChainsRequest {}
+
+// GetSupportedChainsResponse 获取支持的链列表响应
+message GetSupportedChainsResponse {
+  bool success = 1;              // 是否成功
+  string message = 2;            // 响应消息
+  repeated ChainInfo chains = 3; // 链列表
+}
+
+// BroadcastSwapRequest 广播兑换交易请求
+message BroadcastSwapRequest {
+  string swap_id = 1;    // ExecuteSwap返回的swap_id（必填）
+  int64 chain_id = 2;    // 链ID（可选，用于验证）
+  // 注意：交易数据已在ExecuteSwap时保存到数据库，无需重复传递
+}
+
+// BroadcastSwapData 广播兑换交易数据
+message BroadcastSwapData {
+  string swap_id = 1;          // 兑换ID
+  string tx_hash = 2;          // 广播后的交易哈希
+  SwapTxStatus status = 3;     // 交易状态（PENDING）
+  int64 broadcasted_at = 4;    // 广播时间戳（Unix秒）
+}
+
+// BroadcastSwapResponse 广播兑换交易响应
+message BroadcastSwapResponse {
+  bool success = 1;            // 是否成功
+  string message = 2;          // 响应消息
+  BroadcastSwapData data = 3;  // 广播数据
+}
+
+// UpdateSwapBroadcastResultRequest 用于在“外部已广播”后补齐 swap_svc_transactions（不做签名/不做广播）
+message UpdateSwapBroadcastResultRequest {
+  string swap_id = 1;          // ExecuteSwap返回的swap_id（必填）
+  int64 chain_id = 2;          // 链ID（可选，用于验证）
+  string tx_hash = 3;          // 广播后的交易哈希（必填）
+  int64 broadcasted_at = 4;    // 广播时间戳（Unix秒；可选，0表示用服务端当前时间）
+  bool broadcast_success = 5;  // 是否广播成功（必填）
+  string error_code = 6;       // 错误码（可选；broadcast_success=false 时使用）
+  string error_message = 7;    // 错误信息（可选；broadcast_success=false 时使用）
+}
+
+message UpdateSwapBroadcastResultResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================================
+// OKX DEX Specific APIs
+// ============================================================================
+
+// GetLiquiditySourcesRequest 获取流动性来源请求（特定链支持的DEX列表）
+message GetLiquiditySourcesRequest {
+  int64 chain_id = 1;  // 链ID（例如：1 表示以太坊）
+}
+
+// GetLiquiditySourcesResponse 获取流动性来源响应
+message GetLiquiditySourcesResponse {
+  bool success = 1;                          // 是否成功
+  string message = 2;                        // 响应消息
+  repeated LiquiditySource liquidity_sources = 3;  // 流动性来源列表
+}
+
+// GetExternalSwapStatusRequest 获取外部兑换状态请求
+message GetExternalSwapStatusRequest {
+  int64 chain_id = 1;           // 链ID（例如：1 表示以太坊）
+  string tx_hash = 2;           // 要查询的交易哈希
+  bool is_from_my_project = 3;  // 是否仅返回当前API Key所属项目的订单
+}
+
+// GetExternalSwapStatusResponse 获取外部兑换状态响应
+message GetExternalSwapStatusResponse {
+  bool success = 1;              // 是否成功
+  string message = 2;            // 响应消息
+  ChainSwapHistoryItem data = 3; // 链上交易历史数据
+}
+
+// ============================================================================
+// API Key Management (admin-protected)
+// ============================================================================
+
+// CreateSwapApiKeyRequest 创建Swap API密钥请求
+message CreateSwapApiKeyRequest {
+  string project_name = 1;     // 项目名称
+  string key_name = 2;         // 密钥名称（可选但推荐，项目内唯一，如 "production"、"dev"）
+  string rate_limit_tier = 3;  // 限流等级
+  int64 expires_at_unix = 4;   // 过期时间（Unix秒时间戳，0表示永不过期）
+}
+
+// SwapApiKeyItem Swap API密钥项
+message SwapApiKeyItem {
+  int64 id = 1;                 // 密钥ID
+  string project_name = 2;      // 项目名称
+  string key_name = 3;          // 密钥名称（项目内唯一，如 "production"、"dev"）
+  string rate_limit_tier = 4;   // 限流等级
+  bool is_active = 5;           // 是否激活
+  int64 created_at_unix = 6;    // 创建时间（Unix秒时间戳）
+  int64 expires_at_unix = 7;    // 过期时间（Unix秒时间戳，0表示永不过期）
+  string token_display = 8;     // 完整密钥（用于显示和引用）
+}
+
+// CreateSwapApiKeyResponse 创建Swap API密钥响应
+message CreateSwapApiKeyResponse {
+  bool success = 1;       // 是否成功
+  string message = 2;     // 响应消息
+  string api_key = 3;     // API密钥（仅返回一次，不以明文存储）
+  SwapApiKeyItem item = 4;  // 密钥项详情
+}
+
+// RevokeSwapApiKeyRequest 撤销Swap API密钥请求
+message RevokeSwapApiKeyRequest {
+  int64 id = 1;  // 密钥ID
+}
+
+// RevokeSwapApiKeyResponse 撤销Swap API密钥响应
+message RevokeSwapApiKeyResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// ListSwapApiKeysRequest 列出Swap API密钥请求
+message ListSwapApiKeysRequest {
+  int32 page = 1;       // 页码
+  int32 page_size = 2;  // 每页条数
+}
+
+// ListSwapApiKeysResponse 列出Swap API密钥响应
+message ListSwapApiKeysResponse {
+  bool success = 1;                // 是否成功
+  string message = 2;              // 响应消息
+  repeated SwapApiKeyItem items = 3;  // 密钥列表
+  SwapPagination pagination = 4;   // 分页信息
+}
+
+
+// ==================== 项目启用的服务商 ====================
+// ProjectEnabledProviderItem 项目启用的服务商项
+message ProjectEnabledProviderItem {
+  int64 id = 1;                // 记录ID
+  string project_name = 2;     // 项目名称
+  int64 provider_id = 3;       // 服务商ID
+  string provider_name = 4;    // 服务商名称
+  string provider_type = 5;    // 服务商类型
+  bool is_enabled = 6;         // 是否启用
+  int32 priority = 7;          // 优先级
+  string config_json = 8;      // 配置JSON
+  string created_at = 9;       // 创建时间
+  string updated_at = 10;      // 更新时间
+}
+
+// ListProjectEnabledProvidersRequest 列出项目启用的服务商请求
+message ListProjectEnabledProvidersRequest {
+  string project_name = 1;  // 项目名称（必填）
+  int32 page = 2;           // 页码
+  int32 page_size = 3;      // 每页条数
+}
+
+// ListProjectEnabledProvidersResponse 列出项目启用的服务商响应
+message ListProjectEnabledProvidersResponse {
+  bool success = 1;                          // 是否成功
+  string message = 2;                        // 响应消息
+  repeated ProjectEnabledProviderItem providers = 3;  // 服务商列表
+  SwapPagination pagination = 4;             // 分页信息
+}
+
+// EnableProjectProviderRequest 启用项目服务商请求
+message EnableProjectProviderRequest {
+  string project_name = 1;  // 项目名称
+  int64 provider_id = 2;    // 服务商ID
+  bool is_enabled = 3;      // 是否启用
+  int32 priority = 4;       // 优先级
+  string config_json = 5;   // 配置JSON
+}
+
+// EnableProjectProviderResponse 启用项目服务商响应
+message EnableProjectProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+  int64 id = 3;      // 记录ID
+}
+
+// UpdateProjectProviderRequest 更新项目服务商请求
+message UpdateProjectProviderRequest {
+  int64 id = 1;            // 记录ID
+  bool is_enabled = 2;     // 是否启用
+  int32 priority = 3;      // 优先级
+  string config_json = 4;  // 配置JSON
+}
+
+// UpdateProjectProviderResponse 更新项目服务商响应
+message UpdateProjectProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// DisableProjectProviderRequest 禁用项目服务商请求
+message DisableProjectProviderRequest {
+  int64 id = 1;  // 记录ID
+}
+
+// DisableProjectProviderResponse 禁用项目服务商响应
+message DisableProjectProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// ==================== 项目启用的链 ====================
+// ProjectEnabledChainItem 项目启用的链项
+message ProjectEnabledChainItem {
+  int64 id = 1;                      // 记录ID
+  string project_name = 2;           // 项目名称
+  int64 provider_chain_id = 3;       // 服务商链ID
+  int64 provider_id = 4;             // 服务商ID
+  string provider_name = 5;          // 服务商名称
+  int64 chain_id = 6;                // 链ID
+  string chain_name = 7;             // 链名称
+  string chain_symbol = 8;           // 链符号
+  string router_address = 9;         // 路由合约地址
+  bool is_enabled = 10;              // 是否启用
+  // 项目级别可覆盖的配置（空字符串表示使用全局）
+  string min_swap_amount_usd = 11;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 12;   // 最大兑换金额（USD）
+  string default_slippage = 13;      // 默认滑点
+  string max_slippage = 14;          // 最大滑点
+  string fee_rate = 15;              // 手续费率
+  string config_json = 16;           // 配置JSON
+  string created_at = 17;            // 创建时间
+  string updated_at = 18;            // 更新时间
+}
+
+// ListProjectEnabledChainsRequest 列出项目启用的链请求
+message ListProjectEnabledChainsRequest {
+  string project_name = 1;  // 项目名称（必填）
+  int64 chain_id = 2;       // 链ID（可选过滤）
+  int32 page = 3;           // 页码
+  int32 page_size = 4;      // 每页条数
+}
+
+// ListProjectEnabledChainsResponse 列出项目启用的链响应
+message ListProjectEnabledChainsResponse {
+  bool success = 1;                      // 是否成功
+  string message = 2;                    // 响应消息
+  repeated ProjectEnabledChainItem chains = 3;  // 链列表
+  SwapPagination pagination = 4;         // 分页信息
+}
+
+// EnableProjectChainRequest 启用项目链请求
+message EnableProjectChainRequest {
+  string project_name = 1;          // 项目名称
+  int64 provider_chain_id = 2;      // 服务商链ID
+  bool is_enabled = 3;              // 是否启用
+  // 可选：项目级别覆盖配置
+  string min_swap_amount_usd = 4;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 5;   // 最大兑换金额（USD）
+  string default_slippage = 6;      // 默认滑点
+  string max_slippage = 7;          // 最大滑点
+  string fee_rate = 8;              // 手续费率
+  string config_json = 9;           // 配置JSON
+}
+
+// EnableProjectChainResponse 启用项目链响应
+message EnableProjectChainResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+  int64 id = 3;      // 记录ID
+}
+
+// UpdateProjectChainRequest 更新项目链请求
+message UpdateProjectChainRequest {
+  int64 id = 1;                     // 记录ID
+  bool is_enabled = 2;              // 是否启用
+  string min_swap_amount_usd = 3;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 4;   // 最大兑换金额（USD）
+  string default_slippage = 5;      // 默认滑点
+  string max_slippage = 6;          // 最大滑点
+  string fee_rate = 7;              // 手续费率
+  string config_json = 8;           // 配置JSON
+}
+
+// UpdateProjectChainResponse 更新项目链响应
+message UpdateProjectChainResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// DisableProjectChainRequest 禁用项目链请求
+message DisableProjectChainRequest {
+  int64 id = 1;  // 记录ID
+}
+
+// DisableProjectChainResponse 禁用项目链响应
+message DisableProjectChainResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// ==================== 项目启用的代币 ====================
+// ProjectEnabledTokenItem 项目启用的代币项
+message ProjectEnabledTokenItem {
+  int64 id = 1;                  // 记录ID
+  string project_name = 2;       // 项目名称
+  int64 provider_token_id = 3;   // 服务商代币ID
+  int64 provider_chain_id = 4;   // 服务商链ID
+  int64 chain_id = 5;            // 链ID
+  string chain_name = 6;         // 链名称
+  string token_symbol = 7;       // 代币符号
+  string token_name = 8;         // 代币名称
+  string contract_address = 9;   // 合约地址
+  int32 decimals = 10;           // 代币精度
+  string icon_url = 11;          // 图标URL
+  bool is_enabled = 12;          // 是否启用
+  // 项目级别可覆盖的配置
+  string min_amount = 13;        // 最小数量
+  string max_amount = 14;        // 最大数量
+  string created_at = 15;        // 创建时间
+  string updated_at = 16;        // 更新时间
+}
+
+// ListProjectEnabledTokensRequest 列出项目启用的代币请求
+message ListProjectEnabledTokensRequest {
+  string project_name = 1;  // 项目名称（必填）
+  int64 chain_id = 2;       // 链ID（可选过滤）
+  int32 page = 3;           // 页码
+  int32 page_size = 4;      // 每页条数
+}
+
+// ListProjectEnabledTokensResponse 列出项目启用的代币响应
+message ListProjectEnabledTokensResponse {
+  bool success = 1;                      // 是否成功
+  string message = 2;                    // 响应消息
+  repeated ProjectEnabledTokenItem tokens = 3;  // 代币列表
+  SwapPagination pagination = 4;         // 分页信息
+}
+
+// EnableProjectTokenRequest 启用项目代币请求
+message EnableProjectTokenRequest {
+  string project_name = 1;       // 项目名称
+  int64 provider_token_id = 2;   // 服务商代币ID
+  bool is_enabled = 3;           // 是否启用
+  string min_amount = 4;         // 最小数量（可选）
+  string max_amount = 5;         // 最大数量（可选）
+}
+
+// EnableProjectTokenResponse 启用项目代币响应
+message EnableProjectTokenResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+  int64 id = 3;      // 记录ID
+}
+
+// UpdateProjectTokenRequest 更新项目代币请求
+message UpdateProjectTokenRequest {
+  int64 id = 1;           // 记录ID
+  bool is_enabled = 2;    // 是否启用
+  string min_amount = 3;  // 最小数量
+  string max_amount = 4;  // 最大数量
+}
+
+// UpdateProjectTokenResponse 更新项目代币响应
+message UpdateProjectTokenResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// DisableProjectTokenRequest 禁用项目代币请求
+message DisableProjectTokenRequest {
+  int64 id = 1;  // 记录ID
+}
+
+// DisableProjectTokenResponse 禁用项目代币响应
+message DisableProjectTokenResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// ============================================================================
+// Provider管理 Messages (Provider Management)
+// ============================================================================
+
+// SwapProviderItem Swap服务商项
+message SwapProviderItem {
+  int64 id = 1;                      // 服务商ID
+  string provider_code = 2;          // 服务商代码
+  string provider_name = 3;          // 服务商名称
+  string description = 4;            // 描述
+  string logo_url = 5;               // 图标URL
+  bool is_enabled = 6;               // 是否启用
+  string min_swap_amount_usd = 7;    // 最小兑换金额（USD）
+  string max_swap_amount_usd = 8;    // 最大兑换金额（USD）
+  string default_slippage = 9;       // 默认滑点
+  string max_slippage = 10;          // 最大滑点
+  string fee_rate = 11;              // 手续费率
+  string config_json = 12;           // 配置JSON
+  string created_at = 13;            // 创建时间
+  string updated_at = 14;            // 更新时间
+}
+
+// SwapCreateProviderRequest 创建Swap服务商请求
+message SwapCreateProviderRequest {
+  string provider_code = 1;          // 服务商代码
+  string provider_name = 2;          // 服务商名称
+  string description = 3;            // 描述
+  string logo_url = 4;               // 图标URL
+  bool is_enabled = 5;               // 是否启用
+  string min_swap_amount_usd = 6;    // 最小兑换金额（USD）
+  string max_swap_amount_usd = 7;    // 最大兑换金额（USD）
+  string default_slippage = 8;       // 默认滑点
+  string max_slippage = 9;           // 最大滑点
+  string fee_rate = 10;              // 手续费率
+  string config_json = 11;           // 配置JSON
+}
+
+// SwapCreateProviderResponse 创建Swap服务商响应
+message SwapCreateProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+  int64 id = 3;      // 服务商ID
+}
+
+// SwapUpdateProviderRequest 更新Swap服务商请求
+message SwapUpdateProviderRequest {
+  int64 id = 1;                      // 服务商ID
+  string provider_name = 2;          // 服务商名称
+  string description = 3;            // 描述
+  string logo_url = 4;               // 图标URL
+  bool is_enabled = 5;               // 是否启用
+  string min_swap_amount_usd = 6;    // 最小兑换金额（USD）
+  string max_swap_amount_usd = 7;    // 最大兑换金额（USD）
+  string default_slippage = 8;       // 默认滑点
+  string max_slippage = 9;           // 最大滑点
+  string fee_rate = 10;              // 手续费率
+  string config_json = 11;           // 配置JSON
+}
+
+// SwapUpdateProviderResponse 更新Swap服务商响应
+message SwapUpdateProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// SwapListProvidersRequest 列出Swap服务商请求
+message SwapListProvidersRequest {
+  string provider_code = 1;  // 服务商代码（可选过滤）
+  bool is_enabled = 2;       // 是否启用（可选过滤，默认所有）
+  int32 page = 3;            // 页码
+  int32 page_size = 4;       // 每页条数
+}
+
+// SwapListProvidersResponse 列出Swap服务商响应
+message SwapListProvidersResponse {
+  bool success = 1;                       // 是否成功
+  string message = 2;                     // 响应消息
+  repeated SwapProviderItem providers = 3;  // 服务商列表
+  SwapPagination pagination = 4;          // 分页信息
+}
+
+// SwapGetProviderDetailRequest 获取Swap服务商详情请求
+message SwapGetProviderDetailRequest {
+  int64 id = 1;  // 服务商ID
+}
+
+// SwapGetProviderDetailResponse 获取Swap服务商详情响应
+message SwapGetProviderDetailResponse {
+  bool success = 1;            // 是否成功
+  string message = 2;          // 响应消息
+  SwapProviderItem provider = 3;  // 服务商详情
+}
+
+// SwapDeleteProviderRequest 删除Swap服务商请求
+message SwapDeleteProviderRequest {
+  int64 id = 1;  // 服务商ID
+}
+
+// SwapDeleteProviderResponse 删除Swap服务商响应
+message SwapDeleteProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// SwapEnableProviderRequest 启用Swap服务商请求
+message SwapEnableProviderRequest {
+  int64 id = 1;  // 服务商ID
+}
+
+// SwapEnableProviderResponse 启用Swap服务商响应
+message SwapEnableProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// SwapDisableProviderRequest 禁用Swap服务商请求
+message SwapDisableProviderRequest {
+  int64 id = 1;  // 服务商ID
+}
+
+// SwapDisableProviderResponse 禁用Swap服务商响应
+message SwapDisableProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// ==================== Provider简化���表（用于下拉框） ====================
+// SwapProviderDropdownItem Swap服务商下拉项
+message SwapProviderDropdownItem {
+  int64 id = 1;              // 服务商ID
+  string provider_name = 2;  // 服务商名称
+}
+
+// SwapListProvidersForDropdownRequest 列出Swap服务商下拉列表请求
+message SwapListProvidersForDropdownRequest {
+  // 无需参数，返回所有启用的服务商
+}
+
+// SwapListProvidersForDropdownResponse 列出Swap服务商下拉列表响应
+message SwapListProvidersForDropdownResponse {
+  bool success = 1;                           // 是否成功
+  string message = 2;                         // 响应消息
+  repeated SwapProviderDropdownItem providers = 3;  // 服务商下拉列表
+}
+
+// ============================================================================
+// 简化配置管理 Messages (Simplified Config Management)
+// ============================================================================
+
+// ==================== 全局配置 CRUD ====================
+// SwapConfigItem Swap配置项
+message SwapConfigItem {
+  int64 id = 1;                      // 配置ID
+  int64 provider_id = 2;             // 服务商ID（关联swap_provider.id）
+  string provider = 3;               // 服务商代码（冗余字段）
+  string provider_name = 4;          // 服务商名称（冗余字段）
+  int64 chain_id = 5;                // 链ID
+  string chain_name = 6;             // 链名称
+  string chain_symbol = 7;           // 链符号
+  string token_symbol = 8;           // 代币符号
+  string token_name = 9;             // 代币名称
+  string contract_address = 10;      // 合约地址
+  int32 decimals = 11;               // 代币精度
+  string icon_url = 12;              // 图标URL
+  bool is_enabled = 13;              // 是否启用
+  int32 priority = 14;               // 优先级
+  string router_address = 15;        // 路由合约地址
+  string min_swap_amount_usd = 16;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 17;   // 最大兑换金额（USD）
+  string default_slippage = 18;      // 默认滑点
+  string max_slippage = 19;          // 最大滑点
+  string fee_rate = 20;              // 手续费率
+  string config_json = 21;           // 配置JSON
+  string created_at = 22;            // 创建时间
+  string updated_at = 23;            // 更新时间
+}
+
+// SwapListSwapConfigsRequest 列出Swap配置请求
+message SwapListSwapConfigsRequest {
+  int64 provider_id = 1;    // 服务商ID（可选过滤）
+  int64 chain_id = 2;       // 链ID（可选过滤）
+  string token_symbol = 3;  // 代币符号（可选过滤）
+  bool is_enabled = 4;      // 是否启用（可选过滤，默认所有）
+  int32 page = 5;           // 页码
+  int32 page_size = 6;      // 每页条数
+}
+
+// SwapListSwapConfigsResponse 列出Swap配置响应
+message SwapListSwapConfigsResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 响应消息
+  repeated SwapConfigItem configs = 3;  // 配置列表
+  SwapPagination pagination = 4;      // 分页信息
+}
+
+// SwapGetSwapConfigDetailRequest 获取Swap配置详情请求
+message SwapGetSwapConfigDetailRequest {
+  int64 id = 1;  // 配置ID
+}
+
+// SwapGetSwapConfigDetailResponse 获取Swap配置详情响应
+message SwapGetSwapConfigDetailResponse {
+  bool success = 1;          // 是否成功
+  string message = 2;        // 响应消息
+  SwapConfigItem config = 3; // 配置详情
+}
+
+// SwapCreateSwapConfigRequest 创建Swap配置请求
+message SwapCreateSwapConfigRequest {
+  int64 provider_id = 1;             // 服务商ID
+  string provider_name = 2;          // 服务商名称（可选，从provider自动填充）
+  int64 chain_id = 3;                // 链ID
+  string chain_name = 4;             // 链名称
+  string chain_symbol = 5;           // 链符号
+  string token_symbol = 6;           // 代币符号
+  string token_name = 7;             // 代币名称
+  string contract_address = 8;       // 合约地址
+  int32 decimals = 9;                // 代币精度
+  string icon_url = 10;              // 图标URL
+  bool is_enabled = 11;              // 是否启用
+  int32 priority = 12;               // 优先级
+  string router_address = 13;        // 路由合约地址
+  string min_swap_amount_usd = 14;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 15;   // 最大兑换金额（USD）
+  string default_slippage = 16;      // 默认滑点
+  string max_slippage = 17;          // 最大滑点
+  string fee_rate = 18;              // 手续费率
+  string config_json = 19;           // 配置JSON
+}
+
+// SwapCreateSwapConfigResponse 创建Swap配置响应
+message SwapCreateSwapConfigResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+  int64 id = 3;      // 配置ID
+}
+
+// SwapUpdateSwapConfigDetailRequest 更新Swap配置详情请求
+message SwapUpdateSwapConfigDetailRequest {
+  int64 id = 1;                      // 配置ID
+  string provider_name = 2;          // 服务商名称
+  string chain_name = 3;             // 链名称
+  string chain_symbol = 4;           // 链符号
+  string token_name = 5;             // 代币名称
+  string icon_url = 6;               // 图标URL
+  bool is_enabled = 7;               // 是否启用
+  int32 priority = 8;                // 优先级
+  string router_address = 9;         // 路由合约地址
+  string min_swap_amount_usd = 10;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 11;   // 最大兑换金额（USD）
+  string default_slippage = 12;      // 默认滑点
+  string max_slippage = 13;          // 最大滑点
+  string fee_rate = 14;              // 手续费率
+  string config_json = 15;           // 配置JSON
+}
+
+// SwapUpdateSwapConfigDetailResponse 更新Swap配置详情响应
+message SwapUpdateSwapConfigDetailResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// SwapDeleteSwapConfigRequest 删除Swap配置请求
+message SwapDeleteSwapConfigRequest {
+  int64 id = 1;  // 配置ID
+}
+
+// SwapDeleteSwapConfigResponse 删除Swap配置响应
+message SwapDeleteSwapConfigResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// ==================== 项目配置管理 ====================
+// ProjectSwapConfigItem 项目Swap配置项
+message ProjectSwapConfigItem {
+  int64 enabled_id = 1;              // 启用记录ID
+  string project_name = 2;           // 项目名称
+  int64 config_id = 3;               // 配置ID
+  bool project_enabled = 4;          // 项目是否启用
+  // 关联的全局配置信息
+  int64 provider_id = 5;             // 服务商ID
+  string provider = 6;               // 服务商代码
+  string provider_name = 7;          // 服务商名称
+  int64 chain_id = 8;                // 链ID
+  string chain_name = 9;             // 链名称
+  string chain_symbol = 10;          // 链符号
+  string token_symbol = 11;          // 代币符号
+  string token_name = 12;            // 代币名称
+  string contract_address = 13;      // 合约地址
+  int32 decimals = 14;               // 代币精度
+  string icon_url = 15;              // 图标URL
+  bool global_enabled = 16;          // 全局是否启用
+  int32 priority = 17;               // 优先级
+  string router_address = 18;        // 路由合约地址
+  string min_swap_amount_usd = 19;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 20;   // 最大兑换金额（USD）
+  string default_slippage = 21;      // 默认滑点
+  string max_slippage = 22;          // 最大滑点
+  string fee_rate = 23;              // 手续费率
+  string created_at = 24;            // 创建时间
+  string updated_at = 25;            // 更新时间
+}
+
+// SwapListProjectSwapConfigsRequest 列出项目Swap配置请求
+message SwapListProjectSwapConfigsRequest {
+  string project_name = 1;  // 项目名称（必填）
+  string provider = 2;      // 服务商代码（可选过滤）
+  int64 chain_id = 3;       // 链ID（可选过滤）
+  bool project_enabled = 4; // 项目是否启用（可选过滤，默认所有）
+  int32 page = 5;           // 页码
+  int32 page_size = 6;      // 每页条数
+}
+
+// SwapListProjectSwapConfigsResponse 列出项目Swap配置响应
+message SwapListProjectSwapConfigsResponse {
+  bool success = 1;                       // 是否成功
+  string message = 2;                     // 响应消息
+  repeated ProjectSwapConfigItem configs = 3;  // 配置列表
+  SwapPagination pagination = 4;          // 分页信息
+}
+
+// SwapEnableSwapConfigForProjectRequest 为项目启用Swap配置请求
+message SwapEnableSwapConfigForProjectRequest {
+  string project_name = 1;  // 项目名称
+  int64 config_id = 2;      // 配置ID
+  bool is_enabled = 3;      // 是否启用
+}
+
+// SwapEnableSwapConfigForProjectResponse 为项目启用Swap配置响应
+message SwapEnableSwapConfigForProjectResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+  int64 id = 3;      // 启用记录ID
+}
+
+// SwapDisableSwapConfigForProjectRequest 为项目禁用Swap配置请求
+message SwapDisableSwapConfigForProjectRequest {
+  int64 id = 1;  // 启用记录ID（swap_project_enabled.id）
+}
+
+// SwapDisableSwapConfigForProjectResponse 为项目禁用Swap配置响应
+message SwapDisableSwapConfigForProjectResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// ============================================================================
+// Business API - My Swap Configs Query (API Key authenticated)
+// ============================================================================
+
+// SwapGetMySwapConfigsRequest 获取我的Swap配置请求
+message SwapGetMySwapConfigsRequest {
+  // 不需要 project_name，从 API Key context 自动获取
+  string provider = 1;  // 服务商代码（可选过滤，例如 "1inch", "okx"）
+  int64 chain_id = 2;   // 链ID（可选过滤）
+  int32 page = 3;       // 页码
+  int32 page_size = 4;  // 每页条数
+}
+
+// SwapGetMySwapConfigsResponse 获取我的Swap配置响应
+message SwapGetMySwapConfigsResponse {
+  bool success = 1;                       // 是否成功
+  string message = 2;                     // 响应消息
+  repeated ProjectSwapConfigItem configs = 3;  // 配置列表（复用已有的配置结构）
+  SwapPagination pagination = 4;          // 分页信息
+}
+
+// ============================================================================
+// 统计与查询 (Statistics and Queries)
+// ============================================================================
+
+// SwapSvcStatisticsSummary Swap服务统计摘要（已废弃）
+message SwapSvcStatisticsSummary {
+  int64 total_swaps = 1;           // 总兑换次数
+  string total_volume_usd = 2;     // 总交易量（USD）
+  string total_fee_usd = 3;        // 总手续费（USD）
+  string avg_swap_amount_usd = 4;  // 平均兑换金额（USD）
+  string success_rate = 5;         // 成功率
+  int64 unique_wallets = 6;        // 唯一钱包数
+}
+
+// SwapSvcStatisticsByChain 按链统计（已废弃）
+message SwapSvcStatisticsByChain {
+  int64 chain_id = 1;      // 链ID
+  string chain_name = 2;   // 链名称
+  int64 swap_count = 3;    // 兑换次数
+  string volume_usd = 4;   // 交易量（USD）
+}
+
+// SwapSvcStatisticsByProvider 按服务商统计（已废弃）
+message SwapSvcStatisticsByProvider {
+  string provider = 1;      // 服务商代码
+  int64 swap_count = 2;     // 兑换次数
+  string volume_usd = 3;    // 交易量（USD）
+  string success_rate = 4;  // 成功率
+}
+
+// SwapSvcStatisticsTrend 统计趋势（已废弃）
+message SwapSvcStatisticsTrend {
+  string date = 1;         // 日期
+  int64 swap_count = 2;    // 兑换次数
+  string volume_usd = 3;   // 交易量（USD）
+}
+
+// SwapGetSwapStatisticsRequest 获取Swap统计请求（已废弃）
+message SwapGetSwapStatisticsRequest {
+  string period = 1;      // 时间周期（7d, 30d, 90d）
+  string start_date = 2;  // 开始日期（可选，YYYY-MM-DD）
+  string end_date = 3;    // 结束日期（可选，YYYY-MM-DD）
+}
+
+// SwapGetSwapStatisticsResponse 获取Swap统计响应（已废弃）
+message SwapGetSwapStatisticsResponse {
+  bool success = 1;                              // 是否成功
+  string message = 2;                            // 响应消息
+  SwapSvcStatisticsSummary summary = 3;          // 统计摘要
+  repeated SwapSvcStatisticsByChain by_chain = 4;      // 按链统计
+  repeated SwapSvcStatisticsByProvider by_provider = 5;  // 按服务商统计
+  repeated SwapSvcStatisticsTrend trend = 6;     // 统计趋势
+}
+
+// ==================== 交易列表查询 ====================
+// SwapTransactionItem Swap交易项
+message SwapTransactionItem {
+  int64 id = 1;                     // 交易ID
+  string project_name = 2;          // 项目名称
+  string wallet_address = 3;        // 钱包地址
+  int64 chain_id = 4;               // 链ID
+  string chain_name = 5;            // 链名称
+  string provider = 6;              // 服务商代码
+  string from_token_symbol = 7;     // 源代币符号
+  string from_token_address = 8;    // 源代币合约地址
+  int32 from_token_decimals = 9;    // 源代币精度
+  string to_token_symbol = 10;      // 目标代币符号
+  string to_token_address = 11;     // 目标代币合约地址
+  int32 to_token_decimals = 12;     // 目标代币精度
+  string from_amount = 13;          // 源代币数量
+  string to_amount = 14;            // 目标代币数量
+  string tx_hash = 15;              // 交易哈希
+  string status = 16;               // 交易状态
+  string fee_usd = 17;              // 手续费（USD）
+  string gas = 18;                  // Gas消耗
+  string created_at = 19;           // 创建时间
+  string broadcasted_at = 20;       // 广播时间
+}
+
+// SwapListSwapTransactionsRequest 列出Swap交易请求
+message SwapListSwapTransactionsRequest {
+  string wallet_address = 1;  // 钱包地址（可选）
+  int64 chain_id = 2;         // 链ID（可选）
+  string provider = 3;        // 服务商代码（可选）
+  string status = 4;          // 交易状态（可选）
+  string start_date = 5;      // 开始日期（可选，YYYY-MM-DD）
+  string end_date = 6;        // 结束日期（可选，YYYY-MM-DD）
+  int32 page = 7;             // 页码
+  int32 page_size = 8;        // 每页条数
+}
+
+// SwapListSwapTransactionsResponse 列出Swap交易响应
+message SwapListSwapTransactionsResponse {
+  bool success = 1;                     // 是否成功
+  string message = 2;                   // 响应消息
+  repeated SwapTransactionItem items = 3;  // 交易列表
+  SwapPagination pagination = 4;        // 分页信息
+}

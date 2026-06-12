@@ -1,0 +1,354 @@
+Name: chainsync
+ListenOn: 0.0.0.0:9001
+Mode: dev
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: chainsync.rpc
+
+# 雪花ID配置（必须配置，范围0-1023，每个服务唯一）
+NodeID: 10
+
+# MySQL配置
+# 密码从环境变量/AWS Secrets Manager注入
+MySQL:
+  Host: 127.0.0.1
+  Port: 3306
+  Username: crypto
+  Password: ""  # 占位符，实际值从 secrets 包注入（见 chainsync.go）
+  Database: chainsync
+  MaxIdleConns: 10
+  MaxOpenConns: 100
+  ConnMaxLifetime: 3600
+  LogLevel: 1
+  SlowThreshold: 200
+
+# Redis配置
+# 密码从环境变量/AWS Secrets Manager注入
+CacheRedis:
+  - Host: 127.0.0.1:6379
+    Pass: ""  # 占位符，实际值从 secrets 包注入（见 chainsync.go）
+    Type: node
+
+# Kafka配置
+Kafka:
+  Brokers:
+    - "localhost:9092"
+  Username: ""                 # 如果需要SASL认证
+  Password: ""                 # 如果需要SASL认证
+  Security: "PLAINTEXT"        # 安全协议: PLAINTEXT, SASL_PLAINTEXT, SASL_SSL, SSL
+  SASLMech: "PLAIN"           # SASL机制: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512
+  ClientID: "chainsync-producer" # 客户端ID
+  Compression: "gzip"         # 压缩算法: none, gzip, snappy, lz4, zstd
+  MaxRetries: 3               # 最大重试次数
+  Timeout: 30                 # 超时时间（秒）
+  UseAsync: false             # 是否使用异步生产者
+  # Topic配置（所有链共用）
+  Topics:
+    TransactionDeposit: "wallet.transactions.confirm.deposit" # deposit（Web2 充值地址）
+    TransactionWeb3: "wallet.transactions.confirm.web3"       # web3（用户导入地址）
+    TransactionVault: "wallet.transactions.confirm.vault"     # vault/company（公司/金库地址）
+    TransactionManual: "wallet.transactions.confirm.manual"   # manual monitors（chainsync 手动监控）
+    TransactionUnknown: "wallet.transactions.confirm.unknown" # fallback/legacy
+    BalanceChange: "wallet.balance.changes" # 余额变动通知主题
+    AddressMonitorEvent: "wallet.address.monitor.events" # 地址监控事件主题
+
+# Kafka 消费者配置（用于消费地址监控事件等）
+KafkaConsumer:
+  Enabled: true
+  GroupID: "chainsync-address-monitor"
+  # Brokers 为空时复用 Kafka.Brokers
+  SessionTimeout: 30
+  RebalanceTimeout: 60
+  MaxProcessingTime: 300
+
+# Signer服务配置（已废弃，改用 Admin 服务获取监控地址）
+Signer:
+  Etcd:
+    Hosts:
+      - "127.0.0.1:2379"  # etcd集群地址，根据实际情况修改
+    Key: "signer.rpc"      # signer服务在etcd中的键
+  NonBlock: true           # 非阻塞模式
+
+# Admin服务配置（用于获取监控地址列表）
+Admin:
+  Etcd:
+    Hosts:
+      - "127.0.0.1:2379"  # etcd集群地址，根据实际情况修改
+    Key: "admin.rpc"       # admin服务在etcd中的键
+  Timeout: 5000            # 请求超时时间（毫秒）
+  NonBlock: true           # 非阻塞模式
+
+# 区块链服务商配置
+Providers:
+  Ethereum:
+    Enabled: false
+    Name: "Ethereum"
+    Endpoint: "https://ethereum-sepolia-rpc.publicnode.com"
+    APIKey: ""
+    Weight: 1.0
+    Timeout: 30
+    RateLimit: 5
+    MaxRetries: 3
+    RetryDelay: 1
+    Headers:
+      Content-Type: "application/json"
+      User-Agent: "ChainSync-Test/1.0"
+    HealthCheck:
+      Enabled: true
+      Interval: 30
+      Timeout: 10
+      FailureCount: 3
+  QuickNode:
+    Enabled: false
+    Name: "QuickNode"
+    Endpoint: ""
+    APIKey: ""
+    Weight: 1.0
+    Timeout: 30
+    RateLimit: 100
+    MaxRetries: 3
+    RetryDelay: 1
+    HealthCheck:
+      Enabled: true
+      Interval: 30
+      Timeout: 10
+      FailureCount: 3
+  Infura:
+    Enabled: false
+    Name: "Infura"
+    Endpoint: ""
+    APIKey: ""
+    Weight: 1.0
+    Timeout: 30
+    RateLimit: 100
+    MaxRetries: 3
+    RetryDelay: 1
+    HealthCheck:
+      Enabled: true
+      Interval: 30
+      Timeout: 10
+      FailureCount: 3
+  Alchemy:
+    Enabled: false
+    Name: "Alchemy"
+    Endpoint: ""
+    APIKey: ""
+    Weight: 1.0
+    Timeout: 30
+    RateLimit: 100
+    MaxRetries: 3
+    RetryDelay: 1
+    HealthCheck:
+      Enabled: true
+      Interval: 30
+      Timeout: 10
+      FailureCount: 3
+  BSC:
+    Enabled: false
+    Name: "BSC"
+    # BSC 主网公共 RPC 节点 (选择一个可用的)
+    # Endpoint: "https://bsc-dataseed.binance.org"
+    # Endpoint: "https://bsc-dataseed1.ninicoin.io"
+    #    Endpoint: "https://bsc-rpc.publicnode.com"  # 推荐：稳定的公共节点
+    # 测试网
+    Endpoint: "https://endpoints.omniatech.io/v1/bsc/testnet/public"
+    APIKey: ""
+    Weight: 1.0
+    Timeout: 10  # 主网区块大，适当增加超时
+    RateLimit: 10
+    MaxRetries: 3
+    RetryDelay: 1
+    HealthCheck:
+      Enabled: true
+      Interval: 30
+      Timeout: 10
+      FailureCount: 3
+  Tron:
+    Enabled: false
+    Name: "tron"
+    #      Endpoint: "grpc.trongrid.io:50051"  # TRON官方gRPC端点
+    #      Endpoint: "https://tron-evm-rpc.publicnode.com"  # HTTP RPC端点（备用）
+    Endpoint: "grpc.nile.trongrid.io:50051"    #nile 测试网地址
+    APIKey: ""  # 可以添加API Key以获得更高的速率限制
+    Weight: 1.0
+    Timeout: 10  # TRON gRPC需要更长超时
+    RateLimit: 100  # 增加速率限制以避免限速
+    MaxRetries: 5   # 增加重试次数以应对网络波动
+    RetryDelay: 3   # 重试延迟
+    HealthCheck:
+      Enabled: true
+      Interval: 60   # 增加健康检查间隔
+      Timeout: 20    # 增加健康检查超时
+      FailureCount: 3
+
+  # 自建节点服务商配置 - 基于 RPC 代理服务
+  SelfHosted:
+    - Enabled: true  # 设为 true 启用自建节点
+      Name: "ethereum-self-hosted"
+      Endpoint: "http://15.235.229.70"  # RPC代理服务地址
+      APIKey: ""  # API Key，用于身份认证
+      Type: "ethereum"                         # 链类型: "ethereum", "bsc", "tron"
+      Weight: 3.0                               # 较高的权重，优先使用自建节点
+      Timeout: 30                               # 请求超时时间（秒）
+      RateLimit: 200                            # 速率限制（请求/秒）
+      MaxRetries: 3                             # 最大重试次数
+      RetryDelay: 1                             # 重试延迟（秒）
+      # 健康检查配置
+      HealthCheck:
+        Enabled: true
+        Interval: 30                            # 检查间隔（秒）
+        Timeout: 10                             # 检查超时（秒）
+        FailureCount: 3                         # 失败次数阈值
+
+    - Enabled: true
+      Name: "bsc-self-hosted"
+      Endpoint: "http://15.235.229.70"  # RPC代理服务地址
+      APIKey: ""  # API Key，用于身份认证
+      Type: "bsc"
+      Weight: 3.0
+      Timeout: 30
+      RateLimit: 200
+      HealthCheck:
+        Enabled: true
+        Interval: 30
+        Timeout: 10
+        FailureCount: 3
+
+    - Enabled: true
+      Name: "tron-self-hosted"
+      Endpoint: "http://15.235.229.70"  # RPC代理服务地址
+      APIKey: ""  # API Key，用于身份认证
+      Type: "tron"
+      Weight: 3.0
+      Timeout: 30
+      RateLimit: 200
+      HealthCheck:
+        Enabled: true
+        Interval: 30
+        Timeout: 10
+        FailureCount: 3
+
+  Custom: []
+
+# 链配置
+Chains:
+  Ethereum:
+    Enabled: true
+    Name: "Ethereum"
+    ChainID: 1  #  mainnet 1 testnet 11155111
+    ChainType: "ethereum"
+    BlockLookback: 20     # 从最新区块往前回溯的区块数（无缓存时使用：最新区块 - 此值）
+    Confirmations: 3      # 确认区块数
+    BlockTime: 12
+    DefaultProviders: ["ethereum-self-hosted", "Ethereum"]  # 优先自建节点
+    ContractAddresses:
+      WETH: "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14"
+      USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"  # 实际主网USDC
+      USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7"  # 实际主网USDT
+    GasConfig:
+      GasPriceMultiplier: 1.0
+      GasLimitMultiplier: 1.1
+      MaxGasPrice: "20000000000"  # 20 Gwei
+    ScanConfig:
+      BatchSize: 100         # 每批处理区块数
+      CheckInterval: 5     # 检查间隔（秒）
+      ProgressLogStep: 100  # 进度日志间隔
+  BSC:
+    Enabled: true
+    Name: "BSC"
+    ChainID: 56     # mainnet: 56, testnet: 97
+    ChainType: "bsc"
+    BlockLookback: 50     # BSC 出块快，可适当加大回溯区块数
+    Confirmations: 3
+    BlockTime: 3
+    DefaultProviders: ["bsc-self-hosted", "BSC"]  # 优先使用自建节点
+    ContractAddresses:
+      WETH: "0x9c3c9283d3e44854697cd22d3faa240cfb032889"
+      # BSC mainnet stablecoins (Binance-Peg). Decimals are 18 on-chain.
+      # Ref: BscScan token pages.
+      USDC: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d"
+      USDT: "0x55d398326f99059fF775485246999027B3197955"
+    GasConfig:
+      GasPriceMultiplier: 1.0
+      GasLimitMultiplier: 1.1
+      MaxGasPrice: "20000000000"  # 20 Gwei
+    ScanConfig:
+      BatchSize: 100         # 每批处理区块数
+      CheckInterval: 5       # 检查间隔（秒）
+      ProgressLogStep: 50    # 更频繁的日志
+  TRON:
+    Enabled: true
+    Name: "TRON"
+    ChainID: 728126428
+    ChainType: "tron"
+    BlockLookback: 50     # TRON 出块快，可适当加大回溯区块数
+    Confirmations: 3   # 确认区块数
+    BlockTime: 3
+    DefaultProviders: ["tron-self-hosted", "Tron"]  # 优先使用自建节点
+    ContractAddresses:
+      USDT: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"  # TRON主网USDT (TRC20)
+      USDC: "TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8"  # TRON主网USDC (TRC20)
+    ScanConfig:
+      BatchSize: 100         # 每批处理区块数
+      CheckInterval: 5       # 检查间隔（秒）
+      ProgressLogStep: 50    # 更频繁的日志
+
+
+
+# 同步配置（自建节点场景默认关闭）
+Sync:
+  Enabled: true                # 区块同步开关（要自动发现入金必须开启）
+  MaxConcurrentSyncs: 10
+  DefaultRetryCount: 3
+  HealthCheckInterval: 30      # 秒
+  FailoverThreshold: 3         # 连续失败次数阈值
+  ProviderSwitchCooldown: 60   # 服务商切换冷却时间（秒）
+  BatchSize: 100               # 批量处理大小
+  MaxRetryDelay: 60            # 最大重试延迟（秒）
+  BatchUpdateInterval: 30      # 批量更新间隔（秒）
+  InitialDelay: 5              # 启动延迟（秒）
+  TaskRetryInterval: 5         # 任务重试间隔（秒）
+
+# 监控配置
+Monitoring:
+  MetricsEnabled: true
+  PrometheusPort: 9090
+  # 地址池监控开关 (默认关闭)
+  AddressPoolMonitoring: true
+  # 地址注册表（全量刷新为准，事件增量更新为辅）
+  AddressRegistry:
+    RefreshIntervalSeconds: 60
+    MonitorWeb3Addresses: true
+    TreatWeb3AsInternal: false
+  # 地址监控配置（基于区块的增量扫描）
+  AddressMonitoring:
+    CheckInterval: 5       # 新区块检查间隔（秒），检查是否有新区块需要扫描
+    InitialDelay: 3        # 启动延迟（秒）
+    Timeout: 30            # 请求超时（秒）
+    WorkerPoolSize: 10     # 工作池大小
+  # 余额校验配置
+  BalanceValidation:
+    Enabled: true        # 启用余额校验功能
+    CheckInterval: 5     # 校验间隔（分钟）
+    BatchSize: 20        # 批量查询大小
+    Timeout: 10          # 请求超时（秒）
+  # 交易确认管理器配置
+  TransactionConfirmation:
+    CheckInterval: 10      # 检查间隔（秒）
+    InitialDelay: 5       # 启动延迟（秒）
+    MaxRetries: 3         # 最大重试次数
+    Timeout: 30           # 请求超时（秒）
+    CleanupInterval: 300   # 清理过期交易间隔（秒）
+
+# 存储配置
+Storage:
+  # 区块数据存储配置，默认关闭（自建节点无需存储）
+  StoreBlockData: false
+  # 区块数据保留天数，仅当StoreBlockData=true时有效
+  BlockDataRetentionDays: 7
+
+# 日志配置
+Log:
+  ServiceName: chainsync
+  Mode: console

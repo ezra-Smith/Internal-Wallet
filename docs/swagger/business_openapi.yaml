@@ -1,0 +1,881 @@
+openapiOptions:
+  method:
+    - method: business.Business.GetCountryCodes
+      option:
+        tags:
+          - Auth
+        summary: "获取支持的国家/地区区号"
+        description: "返回系统支持的手机号国家/地区区号列表（E.164，带 + 前缀）"
+
+    - method: business.Business.SendSMSCode
+      option:
+        tags:
+          - Auth
+        summary: "发送手机验证码"
+        description: "向手机号发送验证码"
+
+    - method: business.Business.SendEmailCode
+      option:
+        tags:
+          - Auth
+        summary: "发送邮箱验证码"
+        description: "向邮箱发送验证码（请求体需提供 email）"
+
+    - method: business.Business.LoginByEmailCode
+      option:
+        tags:
+          - Auth
+        summary: "邮箱验证码登录/注册"
+        description: "使用邮箱与验证码登录，首次使用自动注册"
+
+    - method: business.Business.LoginByPhoneCode
+      option:
+        tags:
+          - Auth
+        summary: "手机验证码登录/注册"
+        description: "使用手机号（country_code + phone）与验证码登录，首次使用自动注册"
+
+    - method: business.Business.LoginByGoogle
+      option:
+        tags:
+          - Auth
+        summary: "Google OAuth 登录"
+        description: "使用 Google OAuth ID Token 登录或注册，支持自动注册新用户"
+
+    - method: business.Business.RefreshToken
+      option:
+        tags:
+          - Auth
+        summary: "刷新令牌"
+        description: "使用刷新令牌获取新的访问令牌"
+
+    - method: business.Business.ForgotPasswordByEmail
+      option:
+        tags:
+          - Auth
+        summary: "忘记密码（邮箱）"
+        description: "通过邮箱验证码重置登录密码"
+
+    - method: business.Business.ForgotPasswordByPhone
+      option:
+        tags:
+          - Auth
+        summary: "忘记密码（手机）"
+        description: "通过短信验证码重置登录密码"
+
+    - method: business.Business.ValidateGeetest
+      option:
+        tags:
+          - Auth
+        summary: "Geetest 验证"
+        description: "校验 Geetest v4 验证参数"
+
+    - method: business.Business.Logout
+      option:
+        tags:
+          - Auth
+        summary: "登出"
+        description: "销毁会话并使令牌失效"
+
+    - method: business.Business.GetMyOverview
+      option:
+        tags:
+          - Me
+        summary: "我的页"
+        description: "获取我的页面概览信息"
+
+    - method: business.Business.GetAssetOverview
+      option:
+        tags:
+          - Assets
+        summary: "资产页"
+        description: "获取用户资产概览"
+
+    - method: business.Business.GetAssetDetail
+      option:
+        tags:
+          - Assets
+        summary: "资产页-详情"
+        description: "获取资产详情与交易记录"
+
+    - method: business.Business.GetAssetConfig
+      option:
+        tags:
+          - Assets
+        summary: "获取所有资产配置"
+        description: "获取所有资产配置信息（包含精度、状态等）"
+
+    - method: business.Business.ListTransactionRecords
+      option:
+        tags:
+          - Assets
+        summary: "资产页-交易记录"
+        description: "分页获取资产相关的交易记录"
+
+    - method: business.Business.GetTransactionRecordDetail
+      option:
+        tags:
+          - Assets
+        summary: "资产页-交易记录-详情"
+        description: "获取交易记录的详细信息"
+
+    - method: business.Business.GetDepositInfo
+      option:
+        tags:
+          - Assets
+        summary: "资产-充值"
+        description: "获取可充值资产与网络信息"
+
+    - method: business.Business.CreateDeposit
+      option:
+        tags:
+          - Assets
+        summary: "CreateDeposit"
+
+    - method: business.Business.ListDepositRecords
+      option:
+        tags:
+          - Assets
+        summary: "资产-充值记录"
+        description: "分页获取充值记录"
+
+    - method: business.Business.GetDepositDetail
+      option:
+        tags:
+          - Assets
+        summary: "资产-充值详情"
+        description: "获取指定充值记录详情"
+
+    - method: business.Business.ListDepositAddressBook
+      option:
+        tags:
+          - Assets
+        summary: "资产-充值地址簿列表"
+        description: "获取用户充值地址簿（支持同链多地址，按链/币种统计）"
+
+    - method: business.Business.CreateDepositAddressBook
+      option:
+        tags:
+          - Assets
+        summary: "资产-新增充值地址"
+        description: "为指定链生成新的充值地址（可设为默认）"
+
+    - method: business.Business.GetDepositAddressBookDetail
+      option:
+        tags:
+          - Assets
+        summary: "资产-充值地址详情"
+        description: "获取单个充值地址详情（含累计收款统计）"
+
+    - method: business.Business.UpdateDepositAddressBook
+      option:
+        tags:
+          - Assets
+        summary: "资产-更新充值地址备注"
+        description: "更新充值地址的标签/备注"
+
+    - method: business.Business.DeleteDepositAddressBook
+      option:
+        tags:
+          - Assets
+        summary: "资产-删除充值地址"
+        description: "删除充值地址（校验是否存在待确认充值、以及同链至少保留一个地址）"
+
+    - method: business.Business.SetDefaultDepositAddressBook
+      option:
+        tags:
+          - Assets
+        summary: "资产-设置默认充值地址"
+        description: "设置同链默认充值地址（自动取消同链其他默认）"
+
+    - method: business.Business.ListDepositAddressBookDeposits
+      option:
+        tags:
+          - Assets
+        summary: "资产-充值地址收款记录"
+        description: "获取指定充值地址的充值记录列表"
+
+    - method: business.Business.ListWithdrawRecords
+      option:
+        tags:
+          - Assets
+        summary: "资产-提现记录"
+        description: "分页获取提现记录"
+
+    - method: business.Business.ListActionAssets
+      option:
+        tags:
+          - Assets
+        summary: "资产页-币种列表"
+        description: "获取充值/提现相关资产列表"
+
+    - method: business.Business.ListActionNetworks
+      option:
+        tags:
+          - Assets
+        summary: "资产页-网络列表"
+        description: "获取指定资产的可用网络及费用"
+
+    - method: business.Business.GetAssetWithdrawFeeConfig
+      option:
+        tags:
+          - Assets
+        summary: "资产页-获取指定代币的可提现区间金额"
+        description: "获取指定代币的可提现区间金额（包含最小值、最大值）"
+
+    - method: business.Business.GetExchangeRate
+      option:
+        tags:
+          - Assets
+        summary: "资产页-汇率查询"
+        description: "查询两个币种之间的实时汇率（从 market 服务获取价格数据）"
+
+    - method: business.Business.ListFiatRates
+      option:
+        tags:
+          - Assets
+        summary: "资产页-法币汇率列表"
+        description: "查询 1 USDT = n 法币汇率列表（支持传入多个法币过滤；未命中返回 missing 列表）"
+
+    - method: business.Business.GetWithdrawInfo
+      option:
+        tags:
+          - Assets
+        summary: "资产页-提币"
+        description: "获取可提现资产与网络信息"
+
+    - method: business.Business.EstimateWithdrawFee
+      option:
+        tags:
+          - Assets
+        summary: "Web2 提币手续费预估"
+        description: "仅按后端提币手续费规则（fixed/percent）预估手续费，不构建链上交易，不使用 Web3 gas 接口"
+
+    - method: business.Business.CalcWithdrawFee
+      option:
+        tags:
+          - Assets
+        summary: "Web2 提币手续费计算"
+        description: "校验资产/网络/余额后按后端规则计算手续费，返回 fee/min_withdraw_amount/required_amount"
+
+    - method: business.Business.CreateWithdraw
+      option:
+        tags:
+          - Assets
+        summary: "资产页-提币"
+        description: "创建提现请求"
+
+    - method: business.Business.GetWithdrawAuditStatus
+      option:
+        tags:
+          - Assets
+        summary: "资产页-提币审核状态"
+        description: "查询提现审核状态"
+
+    - method: business.Business.GetWithdrawDetail
+      option:
+        tags:
+          - Assets
+        summary: "资产页-提现详情"
+        description: "获取提现记录详情"
+
+    - method: business.Business.ListNotifications
+      option:
+        tags:
+          - Notifications
+        summary: "资产页-消息通知"
+        description: "获取通知列表"
+
+    - method: business.Business.MarkNotificationRead
+      option:
+        tags:
+          - Notifications
+        summary: "资产页-消息通知"
+        description: "标记单条通知为已读"
+
+    - method: business.Business.MarkAllNotificationsRead
+      option:
+        tags:
+          - Notifications
+        summary: "资产页-消息通知"
+        description: "标记所有通知为已读"
+
+    - method: business.Business.DeleteNotification
+      option:
+        tags:
+          - Notifications
+        summary: "资产页-消息通知"
+        description: "删除单条通知"
+
+    - method: business.Business.ClearAllNotifications
+      option:
+        tags:
+          - Notifications
+        summary: "资产页-消息通知"
+        description: "清空所有通知"
+
+    - method: business.Business.RegisterDevice
+      option:
+        tags:
+          - Notifications
+        summary: "设备注册（Web3用户）"
+        description: "注册设备，绑定设备ID和极光registration_id，用于推送通知"
+
+    - method: business.Business.SendPushNotificationByAlias
+      option:
+        tags:
+          - Notifications
+        summary: "通过别名批量推送通知"
+        description: "通过别名（user_id或设备ID）批量发送推送通知，最多支持1000个别名"
+
+    - method: business.Business.SendPushNotificationByDeviceToken
+      option:
+        tags:
+          - Notifications
+        summary: "推送通知（Web3用户）"
+        description: "通过设备ID发送推送通知，用于Web3用户场景"
+
+    - method: business.Business.GetUserInfo
+      option:
+        tags:
+          - Me
+        summary: "我的页-资料"
+        description: "获取个人资料"
+
+    - method: business.Business.UpdateUserInfo
+      option:
+        tags:
+          - Me
+        summary: "我的页-资料"
+        description: "更新个人资料"
+
+    - method: business.Business.BindEmail
+      option:
+        tags:
+          - Settings
+        summary: "我的页-邮箱"
+        description: "绑定邮箱"
+
+    - method: business.Business.ChangeEmail
+      option:
+        tags:
+          - Settings
+        summary: "我的页-邮箱"
+        description: "更换邮箱"
+
+    - method: business.Business.BindPhone
+      option:
+        tags:
+          - Settings
+        summary: "我的页-手机号"
+        description: "绑定手机号"
+
+    - method: business.Business.ChangePhone
+      option:
+        tags:
+          - Settings
+        summary: "我的页-手机号"
+        description: "更换手机号"
+
+    - method: business.Business.ListWalletProviders
+      option:
+        tags:
+          - LinkedWallets
+        summary: "我的页-关联钱包"
+        description: "列出支持的钱包提供方"
+
+    - method: business.Business.ListProviderAccounts
+      option:
+        tags:
+          - LinkedWallets
+        summary: "我的页-关联钱包"
+        description: "列出第三方钱包账号"
+
+    - method: business.Business.LinkWalletAccount
+      option:
+        tags:
+          - LinkedWallets
+        summary: "我的页-关联钱包"
+        description: "绑定并关联第三方钱包账号"
+
+    - method: business.Business.UnlinkWalletAccount
+      option:
+        tags:
+          - LinkedWallets
+        summary: "我的页-关联钱包"
+        description: "解除关联第三方钱包账号"
+
+    - method: business.Business.SetPrimaryLinkedWallet
+      option:
+        tags:
+          - LinkedWallets
+        summary: "我的页-关联钱包"
+        description: "设置主关联钱包账号"
+
+    - method: business.Business.GetLinkedWalletAccounts
+      option:
+        tags:
+          - LinkedWallets
+        summary: "我的页-关联钱包"
+        description: "获取已关联的钱包账号列表"
+
+    - method: business.Business.ChangePassword
+      option:
+        tags:
+          - Settings
+        summary: "我的页-登录密码"
+        description: "修改登录密码"
+
+    - method: business.Business.SetTradePassword
+      option:
+        tags:
+          - Settings
+        summary: "我的页-交易密码"
+        description: "设置资金交易密码"
+
+    - method: business.Business.ResetTradePassword
+      option:
+        tags:
+          - Settings
+        summary: "我的页-交易密码"
+        description: "重置资金交易密码"
+
+    - method: business.Business.VerifyTradePassword
+      option:
+        tags:
+          - Settings
+        summary: "我的页-交易密码"
+        description: "验证资金交易密码"
+
+    - method: business.Business.SetWeb3TradePassword
+      option:
+        tags:
+          - Settings
+        summary: "Web3用户-设置交易密码"
+        description: "Web3用户设置交易密码（基于device_id）"
+
+    - method: business.Business.VerifyWeb3TradePassword
+      option:
+        tags:
+          - Settings
+        summary: "Web3用户-验证交易密码"
+        description: "Web3用户验证交易密码（用于swap等敏感操作前验证）"
+
+    - method: business.Business.UpdateWeb3TradePassword
+      option:
+        tags:
+          - Settings
+        summary: "Web3用户-修改交易密码"
+        description: "Web3用户修改交易密码（需要验证旧密码）"
+
+    - method: business.Business.RegisterBiometricKey
+      option:
+        tags:
+          - Settings
+        summary: "我的页-生物识别"
+        description: "注册/更新生物识别公钥（需要交易密码校验）"
+
+    - method: business.Business.CreateWithdrawBiometricChallenge
+      option:
+        tags:
+          - Settings
+        summary: "我的页-生物识别"
+        description: "创建提币生物识别挑战（用于签名）"
+
+    - method: business.Business.CreateWithdrawAuditWhitelistBindingBiometricChallenge
+      option:
+        tags:
+          - Settings
+        summary: "我的页-生物识别"
+        description: "创建提现免审白名单绑定生物识别挑战（用于签名）"
+
+    - method: business.Business.CreateResetTradePasswordBiometricChallenge
+      option:
+        tags:
+          - Settings
+        summary: "我的页-生物识别"
+        description: "创建重置交易密码生物识别挑战（用于签名）"
+
+    - method: business.Business.UnbindBiometric
+      option:
+        tags:
+          - Settings
+        summary: "我的页-生物识别"
+        description: "解绑当前用户生物识别（仅交易密码）"
+
+    - method: business.Business.GetGoogleAuthSetup
+      option:
+        tags:
+          - Settings
+        summary: "我的页-双重认证"
+        description: "获取 Google 验证器设置信息（生成 secret 和 QR 码）"
+
+    - method: business.Business.BindGoogleAuth
+      option:
+        tags:
+          - Settings
+        summary: "我的页-双重认证"
+        description: "绑定谷歌验证器"
+
+    - method: business.Business.UnbindGoogleAuth
+      option:
+        tags:
+          - Settings
+        summary: "我的页-双重认证"
+        description: "解绑谷歌验证器"
+
+    - method: business.Business.DisableGoogleAuth2FA
+      option:
+        tags:
+          - Settings
+        summary: "我的页-双重认证"
+        description: "关闭双重认证（不解绑谷歌验证器）"
+
+    - method: business.Business.EnableGoogleAuth2FA
+      option:
+        tags:
+          - Settings
+        summary: "我的页-双重认证"
+        description: "开启双重认证（已绑定GA，传验证码开启）"
+
+    - method: business.Business.DisableGoogleAuth2FAWithCode
+      option:
+        tags:
+          - Settings
+        summary: "我的页-双重认证"
+        description: "关闭双重认证（已绑定GA，传验证码关闭）"
+
+    - method: business.Business.VerifyGoogleAuthCode
+      option:
+        tags:
+          - Settings
+        summary: "我的页-双重认证"
+        description: "校验Google验证器验证码（仅校验，不做任何状态修改）"
+
+    - method: business.Business.ListLoginRecords
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－登录记录"
+        description: "获取登录记录列表"
+
+    - method: business.Business.ListWalletAddresses
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－钱包地址"
+        description: "获取钱包地址列表"
+
+    - method: business.Business.AddWalletAddress
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－钱包地址"
+        description: "添加钱包地址"
+
+    - method: business.Business.UpdateWalletAddress
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－钱包地址"
+        description: "更新钱包地址"
+
+    - method: business.Business.DeleteWalletAddress
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－钱包地址"
+        description: "删除钱包地址"
+
+    - method: business.Business.SetDefaultWalletAddress
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－钱包地址"
+        description: "设置默认钱包地址"
+
+    - method: business.Business.ValidateWalletAddress
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－钱包地址"
+        description: "验证钱包地址有效性"
+
+    - method: business.Business.ListInternalWalletAddresses
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－内部地址列表"
+        description: "获取内部地址列表（通过UID/邮箱添加的平台内用户）"
+
+    - method: business.Business.AddInternalWalletAddress
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－添加内部地址"
+        description: "通过UID或邮箱添加平台内部用户地址"
+
+    - method: business.Business.UpdateInternalWalletAddress
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－更新内部地址"
+        description: "更新内部地址标签/备注"
+
+    - method: business.Business.DeleteInternalWalletAddress
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－删除内部地址"
+        description: "删除内部地址"
+
+    - method: business.Business.LookupInternalUser
+      option:
+        tags:
+          - Settings
+        summary: "我的页-使用设置－查找内部用户"
+        description: "通过UID或邮箱查找平台内部用户（添加前预览）"
+
+    - method: business.Business.ValidateInternalTransferTarget
+      option:
+        tags:
+          - InternalTransfer
+        summary: "校验内部转账目标用户"
+        description: "校验内部转账目标用户是否存在（支持 UID 和邮箱）"
+
+    - method: business.Business.SubmitInternalTransfer
+      option:
+        tags:
+          - InternalTransfer
+        summary: "提交内部转账"
+        description: "提交内部转账请求（用户之间的资产转移，根据审核规则可能需要人工审核）"
+
+    - method: business.Business.CancelInternalTransfer
+      option:
+        tags:
+          - InternalTransfer
+        summary: "取消内部转账"
+        description: "取消待审核状态的内部转账订单"
+
+    - method: business.Business.ListWithdrawAuditWhitelistBindableNetworks
+      option:
+        tags:
+          - WithdrawAuditWhitelist
+        summary: "提现免审白名单-可绑定网络"
+        description: "获取用户自绑定提现免审白名单支持的网络列表（数据源同提现）"
+
+    - method: business.Business.SetMyWithdrawAuditWhitelistBinding
+      option:
+        tags:
+          - WithdrawAuditWhitelist
+        summary: "提现免审白名单-自绑定"
+        description: "用户自绑定/解绑提现免审白名单地址（同一资产+链仅保留一条）"
+
+    - method: business.Business.GetMyWithdrawAuditWhitelistBindingStatus
+      option:
+        tags:
+          - WithdrawAuditWhitelist
+        summary: "提现免审白名单-绑定状态"
+        description: "获取当前登录用户的提现免审白名单自绑定状态"
+
+    - method: business.Business.UnbindMyWithdrawAuditWhitelistBindings
+      option:
+        tags:
+          - WithdrawAuditWhitelist
+        summary: "提现免审白名单-解绑全部"
+        description: "解绑当前登录用户的全部提现免审白名单自绑定数据"
+
+    - method: business.Business.GetPreferences
+      option:
+        tags:
+          - Settings
+        summary: "我的页-偏好设置"
+        description: "获取用户偏好设置"
+
+    - method: business.Business.SetPreferences
+      option:
+        tags:
+          - Settings
+        summary: "我的页-偏好设置"
+        description: "设置用户偏好"
+
+    - method: business.Business.GetClientConfig
+      option:
+        tags:
+          - Settings
+        summary: "获取客户端配置"
+        description: "获取客户端配置（如is_show开关等）"
+
+    - method: business.Business.ListLanguageOptions
+      option:
+        tags:
+          - Settings
+        summary: "我的页-偏好设置"
+        description: "获取语言可选项"
+
+    - method: business.Business.ListPriceUnitOptions
+      option:
+        tags:
+          - Settings
+
+    - method: business.Business.SwapGetQuote
+      option:
+        tags:
+          - Swap
+        summary: "Web3 Swap - 获取报价"
+        description: "通过 swap 微服务（OKX）获取兑换报价"
+
+    - method: business.Business.SwapExecuteSwap
+      option:
+        tags:
+          - Swap
+        summary: "Web3 Swap - 构建交易"
+        description: "通过 swap 微服务构建未签名交易（含可选 approve 交易）"
+
+    - method: business.Business.SwapGetApprovalTransaction
+      option:
+        tags:
+          - Swap
+        summary: "Web3 Swap - 获取授权交易"
+        description: "获取未签名的代币授权交易（支持重置授权、无限授权、指定额度授权）"
+
+    - method: business.Business.SwapResetApproval
+      option:
+        tags:
+          - Swap
+        summary: "Web3 Swap - 重置代币授权（广播）"
+        description: "广播已签名的重置授权交易到区块链"
+
+    - method: business.Business.SwapGetSwapStatus
+      option:
+        tags:
+          - Swap
+        summary: "Web3 Swap - 查询状态"
+        description: "通过 swap 微服务按 tx_hash 查询链上确认状态（可选绑定 swap_id）"
+
+    - method: business.Business.SwapGetSwapDetail
+      option:
+        tags:
+          - Swap
+        summary: "Web3 Swap - 查询详情"
+        description: "从 swap_svc_transactions 按 tx_hash（可选 chain_id）查询交易详情"
+
+    - method: business.Business.SwapGetSwapHistory
+      option:
+        tags:
+          - Swap
+        summary: "Web3 Swap - 历史记录"
+        description: "通过 swap 微服务查询指定钱包地址的 swap 历史"
+
+    - method: business.Business.SwapGetExternalSwapStatus
+      option:
+        tags:
+          - Swap
+        summary: "Web3 Swap - 查询外部交易状态"
+        description: "通过 OKX DEX API 查询链上交易历史详情（包含 token details, gas, dex router 等详细信息）"
+
+    - method: business.Business.SwapGetSupportedTokens
+      option:
+        tags:
+          - Swap
+        summary: "Web3 Swap - 支持的 Token"
+        description: "通过 swap 微服务获取指定链支持的 token 列表（带缓存）"
+
+    - method: business.Business.SwapGetSupportedChains
+      option:
+        tags:
+          - Swap
+        summary: "Web3 Swap - 支持的链"
+        description: "通过 swap 微服务获取支持的链列表"
+
+    - method: business.Business.CreateWeb3User
+      option:
+        tags:
+          - Web3Wallet
+        summary: "创建 Web3 用户"
+        description: "基于设备 ID 创建 Web3 自托管钱包用户，用于链上交易记录追踪"
+
+    - method: business.Business.BatchAddWeb3UserAddress
+      option:
+        tags:
+          - Web3Wallet
+        summary: "批量添加 Web3 用户地址"
+        description: "为 Web3 用户批量添加钱包地址（一次添加多条链的地址，最多10个）"
+
+    - method: business.Business.ListWeb3Chains
+      option:
+        tags:
+          - Web3Wallet
+        summary: "获取 Web3 可用链列表"
+        description: "返回 Web3 可用链列表（无需鉴权）"
+
+    - method: business.Business.GetWeb3UserByDeviceId
+      option:
+        tags:
+          - Web3Wallet
+        summary: "获取 Web3 用户信息"
+        description: "根据 device_id 获取 Web3 用户信息（设备信息、安全设置等）"
+
+    - method: business.Business.GetWeb3AssetOverview
+      option:
+        tags:
+          - Web3Wallet
+        summary: "获取 Web3 用户资产概览"
+        description: "获取 Web3 用户的资产列表和总估值（包含多链多地址）"
+
+    - method: business.Business.ListWeb3Transactions
+      option:
+        tags:
+          - Web3Wallet
+        summary: "获取 Web3 交易记录列表"
+        description: "获取 Web3 用户的链上交易记录，支持按资产、类型、时间筛选和分页"
+
+    - method: business.Business.GetWeb3TransactionDetail
+      option:
+        tags:
+          - Web3Wallet
+        summary: "获取 Web3 交易详情"
+        description: "根据交易哈希获取链上交易的完整详情（包含地址标签、确认数、区块浏览器链接等）"
+
+    - method: business.Business.GetWeb3TransactionResult
+      option:
+        tags:
+          - Web3Wallet
+        summary: "Web3 交易结果查询"
+        description: "根据交易哈希查询 Web3 交易结果（状态、确认数等）。优先从数据库查询，如果数据库没有且提供了 network 参数，则实时查询链上状态"
+
+    - method: business.Business.ListWeb3SupportedAssets
+      option:
+        tags:
+          - Web3Wallet
+        summary: "获取 Web3 支持的资产列表"
+        description: "根据链代码获取该链支持的资产列表（包含合约地址、图标、充值提现配置等）"
+
+    - method: business.Business.BroadcastWeb3Transaction
+      option:
+        tags:
+          - Web3Wallet
+        summary: "广播 Web3 交易"
+        description: "Web3 用户广播已签名的交易（自动记录到交易记录表）"
+
+    - method: business.Business.GetWeb3Nonce
+      option:
+        tags:
+          - Web3Wallet
+        summary: "获取 Web3 地址的 Nonce"
+        description: "获取 Web3 用户地址的 Nonce 值（用于构建 EVM 交易）。返回已确认的 nonce 和 pending nonce（推荐使用 pending nonce 以包含待确认交易）"
+
+    - method: business.Business.BuildTronTransaction
+      option:
+        tags:
+          - Web3Wallet
+        summary: "构建 TRON 交易"
+        description: "构建 TRON 交易（支持 TRX 主币转账和 TRC20 代币转账），返回未签名的 rawData（hex编码的protobuf序列化数据），供客户端签名后广播。contract_address 为空时为 TRX 转账，有值时为 TRC20 代币转账"
+
+    - method: business.Business.GetWeb3TokenDetail
+      option:
+        tags:
+          - Web3Wallet
+        summary: "获取 Web3 代币详细信息"
+        description: "获取 Web3 代币的详细信息，包括价格、基本信息（合约地址、网络、铸造时间、发行地址）和概览（总供应量、流通供应量、总市值、流通市值、持有者数量）。主币的 contract_address 可为空，代币必须提供合约地址。"
+

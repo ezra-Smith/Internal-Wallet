@@ -1,0 +1,214 @@
+Name: admin.rpc
+ListenOn: 0.0.0.0:9013
+Mode: dev
+
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: admin.rpc
+
+# 雪花ID配置（必须配置，范围0-1023，每个服务唯一）
+# 建议分配：business=1, chainrpc=2, chainsync=3, signer=4, admin=5
+NodeID: 5
+
+# 日志配置
+Log:
+  ServiceName: admin.rpc
+  Mode: console
+  Path: logs/admin
+  Level: info
+  Compress: true
+  KeepDays: 7
+  StackCooldownMillis: 100
+
+# GORM MySQL/MariaDB 配置（使用 common/db 统一配置）
+MySQL:
+  Host: localhost
+  Port: 3306
+  Username: crypto
+  Password: crypto123456
+  Database: crypto_wallet
+  MaxIdleConns: 10
+  MaxOpenConns: 100
+  ConnMaxLifetime: 3600
+  LogLevel: 4
+  SlowThreshold: 200
+
+CacheRedis:
+  - Host: localhost:6379
+    Pass: redis123456
+    Type: node
+
+# Kafka producer (optional) - address monitor events for chainsync incremental updates
+Kafka:
+  Brokers:
+    - "localhost:9092"
+  Username: ""
+  Password: ""
+  Security: "PLAINTEXT"
+  SASLMech: "PLAIN"
+  ClientID: "admin-producer"
+  Compression: "gzip"
+  MaxRetries: 3
+  Timeout: 30
+  UseAsync: false
+  Topics:
+    AddressMonitorEvent: "wallet.address.monitor.events"
+
+# RPC clients (optional)
+ChainSyncRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: chainsync.rpc
+  Timeout: 5000
+  NonBlock: true
+
+ChainRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: chainrpc.rpc
+  Timeout: 5000
+  NonBlock: true
+
+SignerRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: signer.rpc
+  Timeout: 5000
+  NonBlock: true
+
+AccountingRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: accounting.rpc
+  Timeout: 5000
+  NonBlock: true
+
+
+SwapRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: swap.rpc
+  Timeout: 5000
+  NonBlock: true
+
+ConsolidationRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: consolidation.rpc
+  Timeout: 5000
+  NonBlock: true
+
+
+# Swap 服务授权配置（用于 Admin 调用 Swap 服务）
+# 优先使用环境变量 ADMIN_SWAP_ADMIN_TOKEN
+SwapAuth:
+  AdminToken: ""  # 通过环境变量 ADMIN_SWAP_ADMIN_TOKEN 注入
+
+
+# SMTP 邮件（用于管理员创建/重置密码通知）
+# 优先级：环境变量 > 本配置
+# 环境变量：
+# - EMAIL_SMTP_HOST
+# - EMAIL_SMTP_PORT
+# - EMAIL_FROM_ADDRESS
+# - EMAIL_FROM_PASSWORD
+# - EMAIL_FROM_NAME
+# - EMAIL_INSECURE_SKIP_VERIFY
+# - EMAIL_FREEZE_ACCOUNT_URL
+# - EMAIL_SUPPORT_EMAIL
+# - EMAIL_COMPANY_NAME
+# - EMAIL_LOGO_URL
+# - EMAIL_SOCIAL_X_URL
+# - EMAIL_SOCIAL_TELEGRAM_URL
+# - EMAIL_SOCIAL_TIKTOK_URL
+# - EMAIL_SOCIAL_LINKEDIN_URL
+# - EMAIL_SOCIAL_FACEBOOK_URL
+# - EMAIL_SOCIAL_REDDIT_URL
+# - EMAIL_APP_GOOGLEPLAY_URL
+# - EMAIL_APP_APPSTORE_URL
+Email:
+  SMTPHost: "smtp.gmail.com"
+  SMTPPort: "587"
+  FromAddress: ""
+  FromPassword: "zinkfinance@gmail.com"
+  FromName: "Zink Wallet"
+  InsecureSkipVerify: false
+
+  # 邮件模板配置
+  FreezeAccountURL: ""  # 冻结账号页面 URL
+  SupportEmail: "support@zink.com"  # 客服邮箱
+  CompanyName: "Zink"  # 公司名称
+
+  # S3 图片资源 URL（执行 scripts/upload_email_assets.go 后填写实际 URL）
+  # 使用方法：
+  # 1. 配置 S3（在 api-gateway/etc/gateway.yaml 中配置 S3）
+  # 2. 运行：cd scripts && go run upload_email_assets.go --config ../api-gateway/etc/gateway.yaml
+  # 3. 将脚本输出的 URL 复制到下方
+  LogoURL: "https://white-zex.s3.ap-northeast-1.amazonaws.com/admin/emails/assets/logo.png"
+  SocialXURL: "https://white-zex.s3.ap-northeast-1.amazonaws.com/admin/emails/assets/social_x.png"
+  SocialTelegramURL: "https://white-zex.s3.ap-northeast-1.amazonaws.com/admin/emails/assets/social_telegram.png"
+  SocialTikTokURL: "https://white-zex.s3.ap-northeast-1.amazonaws.com/admin/emails/assets/social_tiktok.png"
+  SocialLinkedInURL: "https://white-zex.s3.ap-northeast-1.amazonaws.com/admin/emails/assets/social_linkedin.png"
+  SocialFacebookURL: "https://white-zex.s3.ap-northeast-1.amazonaws.com/admin/emails/assets/social_facebook.png"
+  SocialRedditURL: "https://white-zex.s3.ap-northeast-1.amazonaws.com/admin/emails/assets/social_reddit.png"
+  AppGooglePlayURL: "https://white-zex.s3.ap-northeast-1.amazonaws.com/admin/emails/assets/app_googleplay.png"
+  AppAppStoreURL: "https://white-zex.s3.ap-northeast-1.amazonaws.com/admin/emails/assets/app_appstore.png"
+
+# Admin JWT（独立密钥对）
+# 注意：需与 api-gateway/etc/gateway.yaml 的 AdminAuth 保持一致
+JWT:
+  AccessSecret: "4kKh3PGT4ByQyDZFny+T9ZXO0SHsWJVpddZCXzfOKo2t9XHn2nDp7xEiKviDTn8eJbz/k5kn8a//GRVUTHsGGg=="
+  AccessExpire: 28800
+  RefreshSecret: "GwOJj9HIRijQk34JYz7nZhMH8zsp/gIrtp3XsRdjyU8qjGIn57Rj/jaAapzoZ/tLUYB4ikxQc59Qujcpm+D5IA=="
+  RefreshExpire: 604800
+
+# 安全策略（默认对齐 SRD）
+Security:
+  SessionTimeoutMinutes: 480
+  MaxLoginAttempts: 5
+  LockoutDurationMinutes: 30
+  PasswordExpiryDays: 90
+  PasswordMinLength: 10
+  Require2FA: true
+  RefreshWindowSeconds: 7200
+  TwoFATempTokenTTLSeconds: 300
+
+# 数据库自动迁移配置（仅开发/测试环境建议启用）
+AutoMigrate: false
+
+# 后台任务：转账批次执行（内部账本加款）
+TransferBatchWorker:
+  Enabled: true
+  PollIntervalSeconds: 2
+  BatchSize: 20
+  ItemTimeoutSeconds: 15
+  ProcessingLeaseSeconds: 600
+  MinRetryIntervalSeconds: 3
+
+# 后台任务：金库余额定时同步（定期从链上同步所有金库地址的余额）
+VaultBalanceSyncScheduler:
+  Enabled: true
+  SyncIntervalSeconds: 300  # 同步间隔（秒），默认5分钟（300秒）。建议范围：60-1800秒
+
+# 后台任务：金库余额Telegram通知（定期发送金库余额报告到Telegram）
+VaultBalanceNotification:
+  Enabled: true  # 是否启用（需要先在admin_system_configs表中配置Telegram）
+  NotificationIntervalSeconds: 600  # 通知间隔（秒），默认10分钟（600秒）
+
+Telemetry:
+  Name: admin.rpc
+  Endpoint: http://localhost:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger
+
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9094
+  Path: /metrics

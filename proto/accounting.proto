@@ -1,0 +1,505 @@
+syntax = "proto3";
+
+package accounting;
+
+option go_package = "./pb";
+
+// Accounting service is the single source of truth for all financial writes.
+// It enforces strict double-entry bookkeeping and prevents negative balances.
+service Accounting {
+  // ==================== Setup ====================
+  rpc EnsureUserAccountingSetup(EnsureUserAccountingSetupRequest) returns (EnsureUserAccountingSetupResponse);
+  rpc EnsureSystemAccounts(EnsureSystemAccountsRequest) returns (EnsureSystemAccountsResponse);
+
+  // ==================== Assets (source of truth) ====================
+  rpc GetAssetOverview(Empty) returns (AcctAssetOverviewResponse);
+  rpc ListAssets(ListAssetsRequest) returns (ListAssetsResponse);
+  rpc GetAsset(GetAssetRequest) returns (AcctAssetResponse);
+  rpc CreateAsset(CreateAssetRequest) returns (AcctAssetResponse);
+  rpc UpdateAsset(UpdateAssetRequest) returns (AcctAssetResponse);
+  rpc UpdateAssetStatus(UpdateAssetStatusRequest) returns (AcctAssetResponse);
+  rpc UpdateAssetIcon(UpdateAssetIconRequest) returns (AcctAssetResponse);
+
+  // ==================== Account Types ====================
+  rpc CreateAccountType(CreateAccountTypeRequest) returns (AcctAccountTypeResponse);
+  rpc UpdateAccountType(UpdateAccountTypeRequest) returns (AcctAccountTypeResponse);
+  rpc DeleteAccountType(DeleteAccountTypeRequest) returns (Empty);
+  rpc GetAccountType(GetAccountTypeRequest) returns (AcctAccountTypeResponse);
+  rpc ListAccountTypes(ListAccountTypesRequest) returns (ListAccountTypesResponse);
+  rpc SetAccountTypeAssets(SetAccountTypeAssetsRequest) returns (Empty);
+
+  // ==================== Read APIs ====================
+  rpc GetUserBalances(GetUserBalancesRequest) returns (GetUserBalancesResponse);
+  rpc ListLedgerTx(ListLedgerTxRequest) returns (ListLedgerTxResponse);
+  rpc GetLedgerTxDetail(GetLedgerTxDetailRequest) returns (GetLedgerTxDetailResponse);
+  rpc ListUserTransactionRecords(ListUserTransactionRecordsRequest) returns (ListUserTransactionRecordsResponse);
+  rpc GetUserTransactionRecordDetail(GetUserTransactionRecordDetailRequest) returns (GetUserTransactionRecordDetailResponse);
+  rpc UpsertUserTransactionRecordMeta(UpsertUserTransactionRecordMetaRequest) returns (UpsertUserTransactionRecordMetaResponse);
+
+  // ==================== Fixed double-entry templates ====================
+  rpc FreezeWithdraw(FreezeWithdrawRequest) returns (LedgerTxResponse);
+  rpc UnfreezeWithdraw(UnfreezeWithdrawRequest) returns (LedgerTxResponse);
+  rpc SettleWithdraw(SettleWithdrawRequest) returns (LedgerTxResponse);
+  rpc ConfirmDeposit(ConfirmDepositRequest) returns (LedgerTxResponse);
+  rpc AdminAdjust(AdminAdjustRequest) returns (LedgerTxResponse);
+  rpc Transfer(TransferRequest) returns (LedgerTxResponse);
+  rpc FundSystemWallet(FundSystemWalletRequest) returns (LedgerTxResponse);
+  rpc FreezeUserAssets(FreezeUserAssetsRequest) returns (LedgerTxResponse);
+  rpc UnfreezeUserAssets(UnfreezeUserAssetsRequest) returns (LedgerTxResponse);
+}
+
+message Empty {}
+
+enum NormalSide {
+  NORMAL_SIDE_UNSPECIFIED = 0;
+  NORMAL_SIDE_DEBIT = 1;
+  NORMAL_SIDE_CREDIT = 2;
+}
+
+enum OwnerType {
+  OWNER_TYPE_UNSPECIFIED = 0;
+  OWNER_TYPE_USER = 1;
+  OWNER_TYPE_SYSTEM = 2;
+}
+
+enum BalanceBucket {
+  BUCKET_UNSPECIFIED = 0;
+  BUCKET_AVAILABLE = 1;
+  BUCKET_LOCKED = 2;
+}
+
+enum AdjustDirection {
+  ADJUST_DIRECTION_UNSPECIFIED = 0;
+  ADJUST_INCREASE = 1;
+  ADJUST_DECREASE = 2;
+}
+
+message AcctAsset {
+  string code = 1;
+  string name = 2;
+  string icon_url = 3;
+  int32 precision = 4;
+  int32 status = 5; // 1=enabled 2=disabled
+  bool is_hot = 6;  // 是否热门资产（首页展示）
+}
+
+message AcctAssetResponse {
+  bool success = 1;
+  string message = 2;
+  AcctAsset item = 3;
+}
+
+message AcctAssetOverviewResponse {
+  bool success = 1;
+  string message = 2;
+  int64 total = 3;
+  int64 enabled = 4;
+  int64 disabled = 5;
+}
+
+message ListAssetsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string keyword = 3;
+  int32 status = 4; // 0=all 1=enabled 2=disabled
+}
+
+message ListAssetsResponse {
+  bool success = 1;
+  string message = 2;
+  int64 total = 3;
+  repeated AcctAsset items = 4;
+}
+
+message GetAssetRequest {
+  string code = 1;
+}
+
+message CreateAssetRequest {
+  string code = 1;
+  string name = 2;
+  int32 precision = 3;
+  int32 status = 4;
+  string icon_url = 5;
+}
+
+message UpdateAssetRequest {
+  string code = 1;
+  string name = 2;
+  int32 precision = 3; // optional, 0 means no change (valid range: 0-30)
+}
+
+message UpdateAssetStatusRequest {
+  string code = 1;
+  int32 status = 2;
+}
+
+message UpdateAssetIconRequest {
+  string code = 1;
+  string icon_url = 2;
+}
+
+message EnsureUserAccountingSetupRequest {
+  int64 user_id = 1;
+}
+
+message EnsureUserAccountingSetupResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message EnsureSystemAccountsRequest {
+  // For SYS_WALLET_HOT accounts, chain_code must be provided (e.g. TRON/ETH/BSC/BTC).
+  string chain_code = 1;
+}
+
+message EnsureSystemAccountsResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message AcctAccountType {
+  string code = 1;
+  string name = 2;
+  string description = 5;
+  NormalSide normal_side = 3;
+  repeated string asset_codes = 4;
+}
+
+message AcctAccountTypeResponse {
+  bool success = 1;
+  string message = 2;
+  AcctAccountType item = 3;
+}
+
+message CreateAccountTypeRequest {
+  string code = 1;
+  string name = 2;
+  NormalSide normal_side = 3;
+  string description = 4;
+}
+
+message UpdateAccountTypeRequest {
+  string code = 1;
+  string name = 2;
+  NormalSide normal_side = 3;
+  string description = 4;
+}
+
+message DeleteAccountTypeRequest {
+  string code = 1;
+}
+
+message GetAccountTypeRequest {
+  string code = 1;
+}
+
+message ListAccountTypesRequest {
+  bool include_deleted = 1;
+}
+
+message ListAccountTypesResponse {
+  repeated AcctAccountType items = 1;
+}
+
+message SetAccountTypeAssetsRequest {
+  string account_type_code = 1;
+  repeated string asset_codes = 2;
+}
+
+message GetUserBalancesRequest {
+  int64 user_id = 1;
+}
+
+message UserBalanceItem {
+  string asset_code = 1;
+  int32 scale = 2;
+
+  // Human-readable decimal strings in asset units.
+  string available = 3;
+  string locked = 4;
+
+  // Raw smallest unit integers (DECIMAL(65,0) serialized as string).
+  string available_raw = 5;
+  string locked_raw = 6;
+}
+
+message GetUserBalancesResponse {
+  repeated UserBalanceItem items = 1;
+}
+
+// ==================== Ledger Read APIs ====================
+
+message ListLedgerTxRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+
+  // Optional filters (best-effort).
+  int64 tx_id = 3;
+  string op_type = 4;
+  string biz_ref = 5;
+  string idempotency_key = 6;
+  string asset_code = 7;
+  int64 user_id = 8;
+  string created_from = 9; // YYYY-MM-DD
+  string created_to = 10;  // YYYY-MM-DD
+}
+
+message LedgerTxItem {
+  int64 tx_id = 1;
+  string created_at = 2; // RFC3339 UTC
+  string op_type = 3;
+  string biz_ref = 4;
+  string idempotency_key = 5;
+  string request_hash = 6;
+}
+
+message ListLedgerTxResponse {
+  bool success = 1;
+  string message = 2;
+  int64 total = 3;
+  repeated LedgerTxItem items = 4;
+}
+
+message GetLedgerTxDetailRequest {
+  int64 tx_id = 1;
+}
+
+message LedgerPostingItem {
+  int32 seq = 1;
+  string asset_code = 2;
+  int32 scale = 3;
+  string bucket = 4; // available|locked
+
+  int64 account_id = 5;
+  string owner_type = 6; // user|system
+  int64 owner_id = 7;
+
+  string account_type_code = 8;
+  string account_type_name = 9;
+  string account_type_description = 10;
+  string account_normal_side = 11; // debit|credit
+  string chain_scope = 12;
+
+  string debit_raw = 13;
+  string credit_raw = 14;
+  string debit_decimal = 15;
+  string credit_decimal = 16;
+}
+
+message GetLedgerTxDetailResponse {
+  bool success = 1;
+  string message = 2;
+  LedgerTxItem tx = 3;
+  repeated LedgerPostingItem postings = 4;
+}
+
+// ==================== User Transaction Records (Read Model) ====================
+
+message ListUserTransactionRecordsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+
+  int64 user_id = 3; // optional，不传则查询所有用户
+  int32 tx_type = 4; // 0=all, 1=deposit(充值), 2=withdraw(提现), 3=internal_transfer(内部转账)
+
+  string asset_code = 5; // optional
+  string chain_code = 6; // optional
+  string status = 7;     // optional
+
+  int64 start_time = 8; // unix seconds (optional)
+  int64 end_time = 9;   // unix seconds (optional)
+}
+
+message UserTransactionRecordItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  int32 tx_type = 3; // 1=deposit(充值), 2=withdraw(提现), 3=internal_transfer(内部转账)
+
+  string asset_code = 4;
+  string chain_code = 5;
+
+  string amount_decimal = 6;
+  string fee_decimal = 7;
+  string status = 8;
+  string memo = 9;
+
+  string from_address = 10;
+  string to_address = 11;
+  string tx_hash = 12;
+
+  int64 timestamp = 13; // unix seconds (created_at)
+
+  int64 freeze_ledger_tx_id = 14;
+  int64 settle_ledger_tx_id = 15;
+  int64 confirm_ledger_tx_id = 16;
+
+  string biz_ref = 17;
+  string idempotency_key = 18;
+  string created_at = 19;  // 创建时间（格式：2006-01-02 15:04:05）
+  string updated_at = 20;  // 更新时间（格式：2006-01-02 15:04:05）
+}
+
+message ListUserTransactionRecordsResponse {
+  bool success = 1;
+  string message = 2;
+  int64 total = 3;
+  repeated UserTransactionRecordItem items = 4;
+}
+
+message GetUserTransactionRecordDetailRequest {
+  int64 id = 1;
+}
+
+message GetUserTransactionRecordDetailResponse {
+  bool success = 1;
+  string message = 2;
+  UserTransactionRecordItem item = 3;
+}
+
+message UpsertUserTransactionRecordMetaRequest {
+  int64 id = 1; // record id
+  int32 tx_type = 2; // optional (0=keep)
+
+  // Best-effort metadata updates.
+  string status = 3;
+  string memo = 4;
+  string from_address = 5;
+  string to_address = 6;
+  string tx_hash = 7;
+}
+
+message UpsertUserTransactionRecordMetaResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message LedgerTxResponse {
+  bool success = 1;
+  string message = 2;
+  int64 tx_id = 3;
+  bool duplicate = 4;
+}
+
+message FreezeWithdrawRequest {
+  string idempotency_key = 1;
+  string biz_ref = 2;
+  int64 user_id = 3;
+  string asset_code = 4;
+  string amount_decimal = 5;
+
+  // Optional metadata for user transaction record (read model).
+  string chain_code = 6;
+  string to_address = 7;
+  string principal_decimal = 8; // withdraw principal (amount)
+  string fee_decimal = 9;       // withdraw fee
+  string memo = 10;             // memo/tag
+}
+
+message UnfreezeWithdrawRequest {
+  string idempotency_key = 1;
+  string biz_ref = 2;
+  int64 user_id = 3;
+  string asset_code = 4;
+  string amount_decimal = 5;
+
+  // Optional metadata for user transaction record (read model).
+  string final_status = 6; // failed|cancelled
+  string tx_hash = 7;
+  string reason = 8;
+}
+
+message SettleWithdrawRequest {
+  string idempotency_key = 1;
+  string biz_ref = 2;
+  int64 user_id = 3;
+  string asset_code = 4;
+  string chain_code = 5;
+
+  // Amount user receives (principal) in asset units.
+  string amount_decimal = 6;
+  // Fee charged to user, in same asset units (can be zero).
+  string fee_decimal = 7;
+
+  // Optional metadata for user transaction record (read model).
+  string tx_hash = 8;
+  string from_address = 9;
+  string to_address = 10;
+  string memo = 11;
+
+  // Skip precision check (used for admin manual completion with historical data).
+  bool skip_precision_check = 12;
+}
+
+message ConfirmDepositRequest {
+  string idempotency_key = 1;
+  string biz_ref = 2;
+  int64 user_id = 3;
+  string asset_code = 4;
+  string chain_code = 5;
+  string amount_decimal = 6;
+
+  // Optional metadata for user transaction record (read model).
+  string tx_hash = 7;
+  string from_address = 8;
+  string to_address = 9;
+  string memo = 10;
+}
+
+message AdminAdjustRequest {
+  string idempotency_key = 1;
+  string biz_ref = 2;
+
+  OwnerType target_owner_type = 3;
+  int64 target_owner_id = 4;
+  string target_account_type_code = 5;
+  string chain_code = 6;
+  BalanceBucket bucket = 7;
+
+  AdjustDirection direction = 8;
+  string asset_code = 9;
+  string amount_decimal = 10;
+  string note = 11;
+}
+
+message TransferRequest {
+  string idempotency_key = 1;
+  string biz_ref = 2;
+
+  int64 from_user_id = 3;
+  int64 to_user_id = 4;
+  BalanceBucket from_bucket = 5;
+  BalanceBucket to_bucket = 6;
+
+  string asset_code = 7;
+  string amount_decimal = 8;
+
+  // Skip precision check (used for admin approval with historical data).
+  bool skip_precision_check = 9;
+}
+
+message FundSystemWalletRequest {
+  string idempotency_key = 1;
+  string biz_ref = 2;
+  string chain_code = 3;
+  string asset_code = 4;
+  string amount_decimal = 5;
+}
+
+message FreezeUserAssetsRequest {
+  string idempotency_key = 1;
+  string biz_ref = 2;          // e.g., "user_freeze:1082"
+  int64 user_id = 3;
+  string asset_code = 4;        // 资产代码
+  string amount_decimal = 5;    // 冻结金额
+  string reason = 6;            // 冻结原因
+}
+
+message UnfreezeUserAssetsRequest {
+  string idempotency_key = 1;
+  string biz_ref = 2;           // e.g., "user_unfreeze:1082"
+  int64 user_id = 3;
+  string asset_code = 4;        // 资产代码
+  string amount_decimal = 5;    // 解冻金额
+  string reason = 6;            // 解冻原因
+}

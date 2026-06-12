@@ -1,0 +1,664 @@
+syntax = "proto3";
+
+package chainsync;
+
+option go_package = "./pb";
+
+// ============================================================================
+// 扫链服务定义 - 区块链数据同步服务
+// ============================================================================
+
+// 区块链同步服务 - 监控区块链状态、交易确认、余额变更等
+service ChainSync {
+  // ==================== 区块链状态管理 ====================
+  // 启动区块链同步
+  rpc StartSync(StartSyncReq) returns (StartSyncResp);
+
+  // 停止区块链同步
+  rpc StopSync(StopSyncReq) returns (StopSyncResp);
+
+  // 获取同步状态
+  rpc GetSyncStatus(GetSyncStatusReq) returns (GetSyncStatusResp);
+
+  // 重置同步位置
+  rpc ResetSync(ResetSyncReq) returns (ResetSyncResp);
+
+  // ==================== 地址监控 ====================
+  // 添加地址监控
+  rpc AddAddressMonitor(AddAddressMonitorReq) returns (AddAddressMonitorResp);
+
+  // 移除地址监控
+  rpc RemoveAddressMonitor(RemoveAddressMonitorReq) returns (RemoveAddressMonitorResp);
+
+  // 获取监控地址列表
+  rpc GetMonitoredAddresses(GetMonitoredAddressesReq) returns (GetMonitoredAddressesResp);
+
+  // 查询地址是否为内部地址（充值地址/公司钱包/Vault 地址）
+  rpc IsInternalAddress(IsInternalAddressReq) returns (IsInternalAddressResp);
+
+  // 获取地址监控统计信息（含全量刷新与事件增量状态）
+  rpc GetAddressMonitorStats(GetAddressMonitorStatsReq) returns (GetAddressMonitorStatsResp);
+
+  // ==================== 交易监控 ====================
+  // 获取交易详情
+  rpc GetTransaction(GetChainTransactionReq) returns (GetChainTransactionResp);
+
+  // 获取地址交易历史
+  rpc GetAddressTransactions(GetAddressTransactionsReq) returns (GetAddressTransactionsResp);
+
+  // 查询特定区块的交易
+  rpc GetBlockTransactions(GetBlockTransactionsReq) returns (GetBlockTransactionsResp);
+
+  // ==================== 余额监控 ====================
+  // 获取地址余额
+  rpc GetAddressBalance(GetAddressBalanceReq) returns (GetAddressBalanceResp);
+
+  // 获取多地址余额
+  rpc GetMultiAddressBalance(GetMultiAddressBalanceReq) returns (GetMultiAddressBalanceResp);
+
+  // ==================== 服务商管理 ====================
+  // 获取服务商状态
+  rpc GetProviderStatus(GetProviderStatusReq) returns (GetProviderStatusResp);
+
+  // 切换服务商
+  rpc SwitchProvider(SwitchProviderReq) returns (SwitchProviderResp);
+
+  // 测试服务商连接
+  rpc TestProvider(TestProviderReq) returns (TestProviderResp);
+
+  // ==================== 数据统计 ====================
+  // 获取同步统计信息
+  rpc GetSyncStats(GetSyncStatsReq) returns (GetSyncStatsResp);
+
+  // 获取性能指标
+  rpc GetPerformanceMetrics(GetPerformanceMetricsReq) returns (GetPerformanceMetricsResp);
+
+  // ==================== 余额校验 ====================
+  // 获取余额校验状态
+  rpc GetBalanceValidationStatus(GetBalanceValidationStatusReq) returns (GetBalanceValidationStatusResp);
+}
+
+// ============================================================================
+// 枚举定义
+// ============================================================================
+
+// 区块链类型
+enum BlockChainType {
+  CHAIN_TYPE_UNSPECIFIED = 0;
+  CHAIN_TYPE_TRON = 1;      // TRON
+  CHAIN_TYPE_BSC = 2;       // Binance Smart Chain
+  CHAIN_TYPE_ETHEREUM = 3;  // Ethereum
+}
+
+// 同步状态
+enum SyncStatus {
+  SYNC_STATUS_UNSPECIFIED = 0;
+  SYNC_STATUS_STOPPED = 1;   // 已停止
+  SYNC_STATUS_SYNCING = 2;   // 同步中
+  SYNC_STATUS_CAUGHT_UP = 3; // 已追上最新区块
+  SYNC_STATUS_ERROR = 4;     // 错误
+  SYNC_STATUS_PAUSED = 5;    // 暂停
+}
+
+// 交易状态
+enum TransactionStatus {
+  TRANSACTION_STATUS_UNSPECIFIED = 0;
+  TRANSACTION_STATUS_PENDING = 1;     // 待确认
+  TRANSACTION_STATUS_CONFIRMED = 2;   // 已确认
+  TRANSACTION_STATUS_FAILED = 3;      // 失败
+  TRANSACTION_STATUS_REVERTED = 4;    // 已回滚
+}
+
+// 服务商类型
+enum ProviderType {
+  PROVIDER_TYPE_UNSPECIFIED = 0;
+  PROVIDER_TYPE_QUICKNODE = 1;
+  PROVIDER_TYPE_INFURA = 2;
+  PROVIDER_TYPE_ALCHEMY = 3;
+  PROVIDER_TYPE_MORALIS = 4;
+  PROVIDER_TYPE_ANKR = 5;
+  PROVIDER_TYPE_CUSTOM = 6;
+  PROVIDER_TYPE_SELF_HOSTED = 7; // 自建节点服务商
+}
+
+// 监控类型
+enum MonitorType {
+  MONITOR_TYPE_UNSPECIFIED = 0;
+  MONITOR_TYPE_BALANCE = 1;    // 余额变更监控
+  MONITOR_TYPE_TRANSACTION = 2; // 交易监控
+  MONITOR_TYPE_CONTRACT = 3;   // 合约事件监控
+  MONITOR_TYPE_ALL = 4;        // 全部监控
+}
+
+// 优先级
+enum Priority {
+  PRIORITY_UNSPECIFIED = 0;
+  PRIORITY_LOW = 1;
+  PRIORITY_NORMAL = 2;
+  PRIORITY_HIGH = 3;
+  PRIORITY_CRITICAL = 4;
+}
+
+// ============================================================================
+// 区块链状态管理 - 消息定义
+// ============================================================================
+
+// ==================== 启动同步 ====================
+message StartSyncReq {
+  BlockChainType chain = 1;
+  uint64 start_block = 2;      // 开始区块号，0表示从最新区块开始
+  uint64 end_block = 3;        // 结束区块号，0表示持续同步
+  bool enable_real_time = 4;   // 是否启用实时同步
+  repeated string addresses = 5; // 监控的地址列表
+  MonitorType monitor_type = 6; // 监控类型
+  Priority priority = 7;       // 优先级
+}
+
+message StartSyncResp {
+  bool success = 1;
+  string message = 2;
+  string sync_id = 3;          // 同步任务ID
+  uint64 current_block = 4;    // 当前区块号
+  uint64 latest_block = 5;     // 最新区块号
+}
+
+// ==================== 停止同步 ====================
+message StopSyncReq {
+  string sync_id = 1;          // 同步任务ID
+  BlockChainType chain = 2;         // 区块链类型（可选）
+}
+
+message StopSyncResp {
+  bool success = 1;
+  string message = 2;
+  string sync_id = 3;
+  SyncStatus final_status = 4;
+}
+
+// ==================== 获取同步状态 ====================
+message GetSyncStatusReq {
+  BlockChainType chain = 1;         // 区块链类型
+  string sync_id = 2;          // 同步任务ID（可选）
+}
+
+message SyncInfo {
+  string sync_id = 1;
+  BlockChainType chain = 2;
+  SyncStatus status = 3;
+  uint64 current_block = 4;
+  uint64 latest_block = 5;
+  uint64 start_block = 6;
+  uint64 end_block = 7;
+  int64 blocks_per_second = 8;
+  int64 estimated_remaining_seconds = 9;
+  string last_error = 10;
+  int64 last_update_time = 11;
+  int64 start_time = 12;
+  repeated string monitored_addresses = 13;
+  Priority priority = 14;
+}
+
+message GetSyncStatusResp {
+  bool success = 1;
+  repeated SyncInfo sync_infos = 2;
+  int32 total_syncs = 3;
+  int32 active_syncs = 4;
+}
+
+// ==================== 重置同步 ====================
+message ResetSyncReq {
+  BlockChainType chain = 1;
+  uint64 reset_block = 2;      // 重置到哪个区块
+  string sync_id = 3;          // 可选，不填则重置该链的所有同步任务
+}
+
+message ResetSyncResp {
+  bool success = 1;
+  string message = 2;
+  string sync_id = 3;
+  uint64 reset_to_block = 4;
+}
+
+// ============================================================================
+// 地址监控 - 消息定义
+// ============================================================================
+
+// ==================== 添加地址监控 ====================
+message AddAddressMonitorReq {
+  BlockChainType chain = 1;
+  string address = 2;
+  MonitorType monitor_type = 3;
+  Priority priority = 4;
+  string tag = 5;              // 标签（用于识别）
+  string webhook_url = 6;      // 回调URL
+  map<string, string> metadata = 7; // 额外元数据
+}
+
+message AddAddressMonitorResp {
+  bool success = 1;
+  string message = 2;
+  string monitor_id = 3;
+}
+
+// ==================== 移除地址监控 ====================
+message RemoveAddressMonitorReq {
+  string monitor_id = 1;
+  BlockChainType chain = 2;         // 可选
+  string address = 3;          // 可选
+}
+
+message RemoveAddressMonitorResp {
+  bool success = 1;
+  string message = 2;
+  int32 removed_count = 3;
+}
+
+// ==================== 获取监控地址 ====================
+message GetMonitoredAddressesReq {
+  BlockChainType chain = 1;         // 可选
+  MonitorType monitor_type = 2; // 可选
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message AddressMonitor {
+  string monitor_id = 1;
+  BlockChainType chain = 2;
+  string address = 3;
+  MonitorType monitor_type = 4;
+  Priority priority = 5;
+  string tag = 6;
+  string webhook_url = 7;
+  bool active = 8;
+  int64 created_at = 9;
+  int64 last_activity = 10;
+  map<string, string> metadata = 11;
+}
+
+message GetMonitoredAddressesResp {
+  bool success = 1;
+  repeated AddressMonitor monitors = 2;
+  int32 total = 3;
+  int32 active_count = 4;
+}
+
+// ==================== 内部地址识别 ====================
+message IsInternalAddressReq {
+  BlockChainType chain = 1;
+  string address = 2;
+}
+
+message IsInternalAddressResp {
+  bool success = 1;
+  bool is_internal = 2;
+  string message = 3;
+}
+
+// ==================== 地址监控统计 ====================
+message GetAddressMonitorStatsReq {}
+
+message AddressMonitorChainStats {
+  BlockChainType chain = 1;
+  int32 monitored_total = 2; // 当前生效的监控地址数量（含事件增量）
+  int32 internal_total = 3;  // 当前生效的内部地址数量（充值/公司/Vault + 可选 Web3）
+  int32 deposit_total = 4;
+  int32 company_total = 5;
+  int32 vault_total = 6;
+  int32 web3_total = 7;
+  int32 manual_total = 8;
+  int32 delta_entries = 9;   // 事件增量条目数量（未被下一次全量刷新吸收）
+}
+
+message AddressMonitorStatsData {
+  int64 last_full_refresh_at = 1;          // unix seconds
+  int64 last_full_refresh_duration_ms = 2;
+  int32 last_full_refresh_added = 3;
+  int32 last_full_refresh_removed = 4;
+  int64 last_event_applied_at = 5;         // unix seconds
+  int32 last_event_applied_added = 6;
+  int32 last_event_applied_removed = 7;
+  string last_event_source = 8;
+  BlockChainType last_event_chain = 9;
+  string last_event_address = 10;
+  string last_event_action = 11;
+
+  int32 monitored_total = 12;
+  int32 internal_total = 13;
+  int32 deposit_total = 14;
+  int32 company_total = 15;
+  int32 vault_total = 16;
+  int32 web3_total = 17;
+  int32 manual_total = 18;
+
+  repeated AddressMonitorChainStats chains = 19;
+}
+
+message GetAddressMonitorStatsResp {
+  bool success = 1;
+  string message = 2;
+  AddressMonitorStatsData data = 3;
+}
+
+// ============================================================================
+// 交易监控 - 消息定义
+// ============================================================================
+
+// ==================== 获取交易详情 ====================
+message GetChainTransactionReq {
+  BlockChainType chain = 1;
+  string tx_hash = 2;
+  bool include_trace = 3;      // 是否包含交易跟踪
+}
+
+message Transaction {
+  string tx_hash = 1;
+  BlockChainType chain = 2;
+  uint64 block_number = 3;
+  string block_hash = 4;
+  int64 block_timestamp = 5;
+  uint64 transaction_index = 6;
+  string from_address = 7;
+  string to_address = 8;
+  string value = 9;            // 交易金额（最小单位）
+  string gas_price = 10;
+  uint64 gas_used = 11;        // EVM链的Gas消耗
+  string gas_fee = 12;
+  TransactionStatus status = 13;
+  string nonce = 14;
+  bytes input_data = 15;
+  uint64 confirmations = 16;
+  string contract_address = 17; // 合约地址（合约调用时）
+  repeated TransactionLog logs = 18; // 事件日志
+  string error_message = 19;   // 错误信息（失败时）
+  string gas_limit = 20;
+  
+  // TRON 专用字段
+  uint64 energy_used = 21;     // TRON 能量消耗（Energy）
+  uint64 bandwidth_used = 22;  // TRON 带宽消耗（Bandwidth/NetUsage）
+  
+  // 内部交易（智能合约内部的 ETH 转账）
+  repeated InternalTransaction internal_transactions = 23;
+}
+
+message TransactionLog {
+  string log_index = 1;
+  string transaction_hash = 2;
+  string address = 3;
+  repeated string topics = 4;
+  bytes data = 5;
+  uint64 block_number = 6;
+  int64 block_timestamp = 7;
+}
+
+message InternalTransaction {
+  string from_address = 1;
+  string to_address = 2;
+  string value = 3;                // 转账金额（Wei）
+  string gas = 4;                  // Gas limit
+  uint64 gas_used = 5;             // 实际使用的 Gas
+  string input = 6;                // 调用数据
+  string output = 7;               // 返回数据
+  string type = 8;                 // 类型：call, delegatecall, staticcall, create
+  uint64 trace_address_index = 9;  // 追踪索引
+  string error = 10;               // 错误信息（如果失败）
+}
+
+message GetChainTransactionResp {
+  bool success = 1;
+  Transaction transaction = 2;
+}
+
+// ==================== 获取地址交易历史 ====================
+message GetAddressTransactionsReq {
+  BlockChainType chain = 1;
+  string address = 2;
+  uint64 start_block = 3;      // 开始区块号
+  uint64 end_block = 4;        // 结束区块号
+  int32 page = 5;
+  int32 page_size = 6;
+  TransactionStatus status_filter = 7; // 状态过滤
+}
+
+message GetAddressTransactionsResp {
+  bool success = 1;
+  repeated Transaction transactions = 2;
+  int32 total = 3;
+  uint64 current_block = 4;
+}
+
+// ==================== 获取区块交易 ====================
+message GetBlockTransactionsReq {
+  BlockChainType chain = 1;
+  uint64 block_number = 2;
+  string block_hash = 3;       // 二选一
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+message ChainBlockInfo {
+  uint64 block_number = 1;
+  string block_hash = 2;
+  string parent_hash = 3;
+  int64 timestamp = 4;
+  uint64 transaction_count = 5;
+  string miner = 6;
+  string difficulty = 7;
+  string total_difficulty = 8;
+  string size = 9;
+  uint64 gas_limit = 10;
+  uint64 gas_used = 11;
+  int64 chain_id= 12;
+}
+
+message GetBlockTransactionsResp {
+  bool success = 1;
+  ChainBlockInfo block_info = 2;
+  repeated Transaction transactions = 3;
+  int32 total_transactions = 4;
+}
+
+// ============================================================================
+// 余额监控 - 消息定义
+// ============================================================================
+
+// ==================== 获取地址余额 ====================
+message GetAddressBalanceReq {
+  BlockChainType chain = 1;
+  string address = 2;
+  repeated string tokens = 3;  // 代币合约地址，空数组则获取原生代币
+}
+
+message TokenBalance {
+  string token_address = 1;
+  string token_symbol = 2;
+  uint32 token_decimals = 3;
+  string balance = 4;
+  string formatted_balance = 5;
+  double usd_value = 6;        // USD价值
+}
+
+message GetAddressBalanceResp {
+  bool success = 1;
+  string native_balance = 2;   // 原生代币余额
+  string formatted_native_balance = 3;
+  repeated TokenBalance token_balances = 4;
+  double total_usd_value = 5;
+  int64 last_updated = 6;
+}
+
+// ==================== 获取多地址余额 ====================
+message GetMultiAddressBalanceReq {
+  BlockChainType chain = 1;
+  repeated string addresses = 2;
+  repeated string tokens = 3;  // 代币合约地址列表
+}
+
+message AddressBalanceInfo {
+  string address = 1;
+  string native_balance = 2;
+  repeated TokenBalance token_balances = 3;
+  double total_usd_value = 4;
+  bool success = 5;
+  string error_message = 6;
+}
+
+message GetMultiAddressBalanceResp {
+  bool success = 1;
+  repeated AddressBalanceInfo addresses = 2;
+  double total_usd_value = 3;
+  int32 failed_count = 4;
+}
+
+// ============================================================================
+// 服务商管理 - 消息定义
+// ============================================================================
+
+// ==================== 获取服务商状态 ====================
+message GetProviderStatusReq {
+  BlockChainType chain = 1;         // 可选
+  ProviderType provider_type = 2; // 可选
+}
+
+message ProviderInfo {
+  string provider_id = 1;
+  ProviderType provider_type = 2;
+  BlockChainType chain = 3;
+  string name = 4;
+  string endpoint = 5;
+  bool healthy = 6;
+  int64 response_time_ms = 7;
+  int32 success_rate = 8;      // 成功率百分比
+  int64 total_requests = 9;
+  int64 failed_requests = 10;
+  int64 last_success_time = 11;
+  int64 last_error_time = 12;
+  string last_error = 13;
+  bool is_primary = 14;        // 是否为主要服务商
+  double weight = 15;          // 权重
+  map<string, string> config = 16; // 配置信息
+}
+
+message GetProviderStatusResp {
+  bool success = 1;
+  repeated ProviderInfo providers = 2;
+  int32 healthy_count = 3;
+  int32 total_count = 4;
+}
+
+// ==================== 切换服务商 ====================
+message SwitchProviderReq {
+  BlockChainType chain = 1;
+  string provider_id = 2;      // 指定服务商ID
+  bool force_switch = 3;       // 强制切换
+}
+
+message SwitchProviderResp {
+  bool success = 1;
+  string message = 2;
+  string old_provider_id = 3;
+  string new_provider_id = 4;
+  string switch_reason = 5;
+}
+
+// ==================== 测试服务商 ====================
+message TestProviderReq {
+  string provider_id = 1;
+  BlockChainType chain = 2;
+  string endpoint = 3;         // 自定义端点
+  map<string, string> credentials = 4; // 认证信息
+}
+
+message TestProviderResp {
+  bool success = 1;
+  string message = 2;
+  int64 response_time_ms = 3;
+  string latest_block = 4;
+  map<string, string> provider_info = 5;
+}
+
+// ============================================================================
+// 数据统计 - 消息定义
+// ============================================================================
+
+// ==================== 同步统计 ====================
+message GetSyncStatsReq {
+  BlockChainType chain = 1;         // 可选
+  int64 start_time = 2;        // 统计开始时间
+  int64 end_time = 3;          // 统计结束时间
+}
+
+message SyncStats {
+  BlockChainType chain = 1;
+  int64 total_blocks_synced = 2;
+  int64 total_transactions_processed = 3;
+  int64 total_addresses_monitored = 4;
+  double avg_sync_speed = 5;   // 平均同步速度（块/秒）
+  int64 uptime_seconds = 6;
+  int64 downtime_seconds = 7;
+  double success_rate = 8;     // 成功率
+  repeated ErrorStats error_stats = 9;
+}
+
+message ErrorStats {
+  string error_type = 1;
+  int32 count = 2;
+  string last_occurrence = 3;
+  string example_error = 4;
+}
+
+message GetSyncStatsResp {
+  bool success = 1;
+  repeated SyncStats chain_stats = 2;
+  SyncStats total_stats = 3;
+}
+
+// ==================== 性能指标 ====================
+message GetPerformanceMetricsReq {
+  BlockChainType chain = 1;         // 可选
+  string metric_type = 2;      // 指标类型：latency, throughput, errors等
+  int64 time_window = 3;       // 时间窗口（秒）
+}
+
+message PerformanceMetrics {
+  string metric_name = 1;
+  double current_value = 2;
+  double avg_value = 3;
+  double min_value = 4;
+  double max_value = 5;
+  string unit = 6;
+  int64 timestamp = 7;
+  repeated DataPoint data_points = 8;
+}
+
+message DataPoint {
+  int64 timestamp = 1;
+  double value = 2;
+  string label = 3;
+}
+
+message GetPerformanceMetricsResp {
+  bool success = 1;
+  repeated PerformanceMetrics metrics = 2;
+  int64 generated_at = 3;
+}
+
+// ==================== 余额校验状态 ====================
+message GetBalanceValidationStatusReq {
+  // 暂时无参数，可以后续添加过滤条件
+}
+
+message BalanceValidationStatus {
+  bool is_enabled = 1;         // 是否启用
+  bool is_running = 2;         // 是否运行中
+  uint64 total_checks = 3;     // 总校验次数
+  uint64 match_count = 4;      // 匹配次数
+  uint64 mismatch_count = 5;   // 差异次数
+  uint64 error_count = 6;      // 错误次数
+  int64 last_check_time = 7;   // 最后检查时间
+}
+
+message GetBalanceValidationStatusResp {
+  bool success = 1;
+  string message = 2;
+  BalanceValidationStatus status = 3;
+}

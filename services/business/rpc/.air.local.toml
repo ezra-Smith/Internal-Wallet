@@ -1,0 +1,28 @@
+# Air - live reloading for business-rpc (local dev).
+#
+# Usage (inside repo root):
+#   cd services/business/rpc
+#   air -c .air.local.toml
+#
+# Note:
+# - This uses repo config files (./services/business/rpc/etc/business.local.yaml).
+
+root = "../../.."
+tmp_dir = ".air"
+
+[build]
+  # This config is intended to be run from `services/business/rpc`.
+  cmd = "go build -o ../../../.air/business-rpc ."
+  bin = "../../../.air/business-rpc"
+  full_bin = "../../../.air/business-rpc -f etc/business.local.yaml"
+  include_ext = ["go", "yaml", "yml"]
+  include_dir = ["services/business/rpc", "common", "proto"]
+  exclude_dir = [".air", ".git", ".cache", ".gocache", ".gomodcache", "web"]
+  delay = 300
+  stop_on_error = false
+
+[log]
+  time = false
+
+[misc]
+  clean_on_exit = true

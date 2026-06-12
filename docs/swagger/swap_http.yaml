@@ -1,0 +1,8 @@
+type: google.api.Service
+config_version: 3
+name: swap
+http:
+  rules:
+    - selector: swap.Swap.GetMySwapConfigs
+      get: /api/v1/swap/my/configs
+

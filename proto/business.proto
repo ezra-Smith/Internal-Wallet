@@ -1,0 +1,2822 @@
+syntax = "proto3";
+
+package business;
+
+option go_package = "./pb";
+
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Internal Wallet Business API"
+    version: "v1"
+    description: "企业内部钱包系统 业务服务 API 文档"
+  }
+  host: "127.0.0.1:8080"
+  schemes: HTTP
+  security_definitions: {
+    security: {
+      key: "Bearer"
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+        description: "JWT Bearer Token，格式：Bearer {token}"
+      }
+    }
+  }
+  security: {
+    security_requirement: {
+      key: "Bearer"
+      value: {}
+    }
+  }
+};
+
+// 业务服务
+service Business {
+  // ==================== Auth ====================
+  // 登录（邮箱+验证码）
+  rpc LoginByEmailCode(LoginByEmailCodeRequest) returns (LoginByEmailCodeResponse);
+  // 登录（手机+验证码）
+  rpc LoginByPhoneCode(LoginByPhoneCodeRequest) returns (LoginByPhoneCodeResponse);
+  // 登录（Google OAuth）
+  rpc LoginByGoogle(LoginByGoogleRequest) returns (LoginByGoogleResponse);
+  // 忘记密码（邮箱+验证码）
+  rpc ForgotPasswordByEmail(ForgotPasswordByEmailRequest) returns (ForgotPasswordByEmailResponse);
+  // 忘记密码（手机+验证码）
+  rpc ForgotPasswordByPhone(ForgotPasswordByPhoneRequest) returns (ForgotPasswordByPhoneResponse);
+  // Geetest 验证
+  rpc ValidateGeetest(ValidateGeetestRequest) returns (ValidateGeetestResponse);
+  // 获取支持的国家/地区区号
+  rpc GetCountryCodes(GetCountryCodesRequest) returns (GetCountryCodesResponse);
+
+  rpc RefreshToken(RefreshTokenReq) returns (RefreshTokenResp);
+  // 发送手机验证码
+
+  rpc SendSMSCode(SendSMSCodeReq) returns (SendSMSCodeResp);
+  // 发送邮箱验证码
+
+  rpc SendEmailCode(SendEmailCodeReq) returns (SendEmailCodeResp);
+  // 登出
+  rpc Logout(LogoutReq) returns (LogoutResp);
+  // 资产页
+  rpc GetAssetOverview(GetAssetOverviewReq) returns (GetAssetOverviewResp);
+  // 资产页-详情
+
+  rpc GetAssetDetail(GetAssetDetailReq) returns (GetAssetDetailResp);
+  // 获取所有资产配置（包含精度等信息）
+  rpc GetAssetConfig(GetAssetConfigReq) returns (GetAssetConfigResp);
+  // 资产页-交易记录
+
+  rpc ListTransactionRecords(ListTransactionRecordsReq) returns (ListTransactionRecordsResp);
+  // 资产页-交易记录-详情
+
+  rpc GetTransactionRecordDetail(GetTransactionRecordDetailReq) returns (GetTransactionRecordDetailResp);
+  // 资产-充值
+
+  rpc GetDepositInfo(GetDepositInfoReq) returns (GetDepositInfoResp);
+  rpc CreateDeposit(CreateDepositReq) returns (CreateDepositResp);
+
+  rpc ListDepositRecords(ListDepositRecordsReq) returns (ListDepositRecordsResp);
+
+  rpc GetDepositDetail(GetDepositDetailReq) returns (GetDepositDetailResp);
+  // 资产-充值地址簿（同链多地址）
+  rpc ListDepositAddressBook(ListDepositAddressBookReq) returns (ListDepositAddressBookResp);
+  rpc CreateDepositAddressBook(CreateDepositAddressBookReq) returns (CreateDepositAddressBookResp);
+  rpc GetDepositAddressBookDetail(GetDepositAddressBookDetailReq) returns (GetDepositAddressBookDetailResp);
+  rpc UpdateDepositAddressBook(UpdateDepositAddressBookReq) returns (UpdateDepositAddressBookResp);
+  rpc DeleteDepositAddressBook(DeleteDepositAddressBookReq) returns (DeleteDepositAddressBookResp);
+  rpc SetDefaultDepositAddressBook(SetDefaultDepositAddressBookReq) returns (SetDefaultDepositAddressBookResp);
+  rpc ListDepositAddressBookDeposits(ListDepositAddressBookDepositsReq) returns (ListDepositAddressBookDepositsResp);
+  // 资产页-币种列表
+
+  rpc ListActionAssets(ListActionAssetsReq) returns (ListActionAssetsResp);
+  // 资产页-网络列表
+
+  rpc ListActionNetworks(ListActionNetworksReq) returns (ListActionNetworksResp);
+  // 资产页-币种提现手续费规则配置查询
+  rpc GetAssetWithdrawFeeConfig(GetAssetWithdrawFeeConfigReq) returns (GetAssetWithdrawFeeConfigResp);
+  // 资产页-汇率查询
+  rpc GetExchangeRate(GetExchangeRateReq) returns (GetExchangeRateResp);
+  // 资产页-法币汇率列表（1 USDT = n 法币）
+  rpc ListFiatRates(ListFiatRatesReq) returns (ListFiatRatesResp);
+  // 资产页-提币
+
+  rpc GetWithdrawInfo(GetWithdrawInfoReq) returns (GetWithdrawInfoResp);
+  // Web2 提币手续费预估（仅计算手续费规则，不构建链上交易，不使用 Web3 gas 接口）
+  rpc EstimateWithdrawFee(EstimateWithdrawFeeReq) returns (EstimateWithdrawFeeResp);
+  // Web2 提币手续费计算（校验余额；返回 fee/min_withdraw_amount/required_amount）
+  rpc CalcWithdrawFee(CalcWithdrawFeeReq) returns (CalcWithdrawFeeResp);
+  rpc CreateWithdraw(CreateWithdrawReq) returns (CreateWithdrawResp);
+  rpc ListWithdrawRecords(ListWithdrawRecordsReq) returns (ListWithdrawRecordsResp);
+
+  rpc GetWithdrawAuditStatus(GetWithdrawAuditStatusReq) returns (GetWithdrawAuditStatusResp);
+
+  rpc GetWithdrawDetail(GetWithdrawDetailReq) returns (GetWithdrawDetailResp);
+  // 资产页-消息通知（Web2 用户）
+  rpc ListNotifications(ListNotificationsReq) returns (ListNotificationsResp);
+
+  rpc MarkNotificationRead(MarkNotificationReadReq) returns (MarkNotificationReadResp);
+
+  rpc MarkAllNotificationsRead(MarkAllNotificationsReadReq) returns (MarkAllNotificationsReadResp);
+
+  rpc DeleteNotification(DeleteNotificationReq) returns (DeleteNotificationResp);
+
+  rpc ClearAllNotifications(ClearAllNotificationsReq) returns (ClearAllNotificationsResp);
+  
+  // 内部接口：创建消息通知（供业务逻辑调用）
+  rpc CreateUserNotification(CreateUserNotificationReq) returns (CreateUserNotificationResp);
+  
+  // 推送通知：通过别名发送推送（供业务逻辑调用）
+  rpc SendPushNotificationByAlias(SendPushNotificationByAliasReq) returns (SendPushNotificationByAliasResp);
+  
+  // 推送通知：通过设备ID发送推送（Web3用户专用）
+  rpc SendPushNotificationByDeviceToken(SendPushNotificationByDeviceTokenReq) returns (SendPushNotificationByDeviceTokenResp);
+  
+  // 设备管理：注册设备（Web3用户专用）
+  rpc RegisterDevice(RegisterDeviceReq) returns (RegisterDeviceResp);
+  
+  // 我的页
+
+  rpc GetMyOverview(GetMyOverviewReq) returns (GetMyOverviewResp);
+  // 我的页-资料
+
+  rpc GetUserInfo(GetUserInfoReq) returns (GetUserInfoResp);
+
+  rpc UpdateUserInfo(UpdateUserInfoReq) returns (UpdateUserInfoResp);
+  // 我的页-邮箱
+
+  rpc BindEmail(BindEmailReq) returns (BindEmailResp);
+
+  rpc ChangeEmail(ChangeEmailReq) returns (ChangeEmailResp);
+  // 我的页-手机号
+  rpc BindPhone(BindPhoneReq) returns (BindPhoneResp);
+  rpc ChangePhone(ChangePhoneReq) returns (ChangePhoneResp);
+  // 我的页-关联钱包
+
+  rpc ListWalletProviders(ListWalletProvidersReq) returns (ListWalletProvidersResp);
+
+  rpc ListProviderAccounts(ListProviderAccountsReq) returns (ListProviderAccountsResp);
+
+  rpc LinkWalletAccount(LinkWalletAccountReq) returns (LinkWalletAccountResp);
+
+  rpc UnlinkWalletAccount(UnlinkWalletAccountReq) returns (UnlinkWalletAccountResp);
+
+  rpc SetPrimaryLinkedWallet(SetPrimaryLinkedWalletReq) returns (SetPrimaryLinkedWalletResp);
+
+  rpc GetLinkedWalletAccounts(GetLinkedWalletAccountsReq) returns (GetLinkedWalletAccountsResp);
+  // 我的页-登录密码
+  rpc ChangePassword(ChangePasswordReq) returns (ChangePasswordResp);
+  // 我的页-交易密码
+
+  rpc SetTradePassword(SetTradePasswordReq) returns (SetTradePasswordResp);
+
+  rpc ResetTradePassword(ResetTradePasswordReq) returns (ResetTradePasswordResp);
+
+  rpc VerifyTradePassword(VerifyTradePasswordReq) returns (VerifyTradePasswordResp);
+
+  // 我的页-Web3交易密码
+  rpc SetWeb3TradePassword(SetWeb3TradePasswordReq) returns (SetWeb3TradePasswordResp);
+  rpc VerifyWeb3TradePassword(VerifyWeb3TradePasswordReq) returns (VerifyWeb3TradePasswordResp);
+  rpc UpdateWeb3TradePassword(UpdateWeb3TradePasswordReq) returns (UpdateWeb3TradePasswordResp);
+
+  // 我的页-使用设置-生物识别（Web2）
+  // 注册/更新生物识别公钥（需要交易密码校验）
+  rpc RegisterBiometricKey(RegisterBiometricKeyReq) returns (RegisterBiometricKeyResp);
+  // 创建提币生物识别挑战（用于签名）
+  rpc CreateWithdrawBiometricChallenge(CreateWithdrawBiometricChallengeReq) returns (CreateBiometricChallengeResp);
+  // 创建提现免审白名单绑定生物识别挑战（用于签名）
+  rpc CreateWithdrawAuditWhitelistBindingBiometricChallenge(CreateWithdrawAuditWhitelistBindingBiometricChallengeReq) returns (CreateBiometricChallengeResp);
+  // 创建重置交易密码生物识别挑战（用于签名）
+  rpc CreateResetTradePasswordBiometricChallenge(CreateResetTradePasswordBiometricChallengeReq) returns (CreateBiometricChallengeResp);
+  // 解绑当前用户生物识别（仅交易密码）
+  rpc UnbindBiometric(UnbindBiometricReq) returns (UnbindBiometricResp);
+
+  // 我的页-使用设置-双重认证
+  // 获取 Google 验证器设置信息（生成 secret 和 QR 码）
+  rpc GetGoogleAuthSetup(GetGoogleAuthSetupReq) returns (GetGoogleAuthSetupResp);
+  // 绑定 Google 验证器
+  rpc BindGoogleAuth(BindGoogleAuthReq) returns (BindGoogleAuthResp);
+  // 解绑 Google 验证器
+  rpc UnbindGoogleAuth(UnbindGoogleAuthReq) returns (UnbindGoogleAuthResp);
+  // 关闭双重认证（不解绑 Google 验证器）
+  rpc DisableGoogleAuth2FA(DisableGoogleAuth2FAReq) returns (DisableGoogleAuth2FAResp);
+  // 开启双重认证（已绑定GA，传验证码开启）
+  rpc EnableGoogleAuth2FA(EnableGoogleAuth2FAReq) returns (EnableGoogleAuth2FAResp);
+  // 关闭双重认证（已绑定GA，传验证码关闭）
+  rpc DisableGoogleAuth2FAWithCode(DisableGoogleAuth2FAWithCodeReq) returns (DisableGoogleAuth2FAWithCodeResp);
+  // 校验Google验证器验证码（仅校验，不做任何状态修改）
+  rpc VerifyGoogleAuthCode(VerifyGoogleAuthCodeReq) returns (VerifyGoogleAuthCodeResp);
+  // 我的页-使用设置－登录记录
+  rpc ListLoginRecords(ListLoginRecordsReq) returns (ListLoginRecordsResp);
+  // 我的页-使用设置－钱包地址（链上地址）
+  rpc ListWalletAddresses(ListWalletAddressesReq) returns (ListWalletAddressesResp);
+  rpc AddWalletAddress(AddWalletAddressReq) returns (AddWalletAddressResp);
+  rpc UpdateWalletAddress(UpdateWalletAddressReq) returns (UpdateWalletAddressResp);
+  rpc DeleteWalletAddress(DeleteWalletAddressReq) returns (DeleteWalletAddressResp);
+  rpc SetDefaultWalletAddress(SetDefaultWalletAddressReq) returns (SetDefaultWalletAddressResp);
+  rpc ValidateWalletAddress(ValidateWalletAddressReq) returns (ValidateWalletAddressResp);
+
+  // 我的页-使用设置－钱包地址（内部地址，通过UID/邮箱添加平台内用户）
+  rpc ListInternalWalletAddresses(ListInternalWalletAddressesReq) returns (ListInternalWalletAddressesResp);
+  rpc AddInternalWalletAddress(AddInternalWalletAddressReq) returns (AddInternalWalletAddressResp);
+  rpc UpdateInternalWalletAddress(UpdateInternalWalletAddressReq) returns (UpdateInternalWalletAddressResp);
+  rpc DeleteInternalWalletAddress(DeleteInternalWalletAddressReq) returns (DeleteInternalWalletAddressResp);
+  rpc LookupInternalUser(LookupInternalUserReq) returns (LookupInternalUserResp);
+
+  // 内部转账（用户之间的资产转移，支持审核）
+  // 校验内部转账目标用户是否存在（支持 UID 和邮箱）
+  rpc ValidateInternalTransferTarget(ValidateInternalTransferTargetReq) returns (ValidateInternalTransferTargetResp);
+  rpc SubmitInternalTransfer(SubmitInternalTransferReq) returns (SubmitInternalTransferResp);
+  rpc CancelInternalTransfer(CancelInternalTransferReq) returns (CancelInternalTransferResp);
+
+  // 提现免审白名单（用户自绑定）
+  rpc ListWithdrawAuditWhitelistBindableNetworks(ListWithdrawAuditWhitelistBindableNetworksReq) returns (ListWithdrawAuditWhitelistBindableNetworksResp);
+  rpc SetMyWithdrawAuditWhitelistBinding(SetMyWithdrawAuditWhitelistBindingReq) returns (SetMyWithdrawAuditWhitelistBindingResp);
+  rpc GetMyWithdrawAuditWhitelistBindingStatus(GetMyWithdrawAuditWhitelistBindingStatusReq) returns (GetMyWithdrawAuditWhitelistBindingStatusResp);
+  rpc UnbindMyWithdrawAuditWhitelistBindings(UnbindMyWithdrawAuditWhitelistBindingsReq) returns (UnbindMyWithdrawAuditWhitelistBindingsResp);
+  // 我的页-偏好设置
+  rpc GetPreferences(GetPreferencesReq) returns (GetPreferencesResp);
+  rpc ListLanguageOptions(ListLanguageOptionsReq) returns (ListLanguageOptionsResp);
+  rpc ListPriceUnitOptions(ListPriceUnitOptionsReq) returns (ListPriceUnitOptionsResp);
+  rpc SetPreferences(SetPreferencesReq) returns (SetPreferencesResp);
+  // 获取客户端配置
+  rpc GetClientConfig(GetClientConfigReq) returns (GetClientConfigResp);
+
+  // ==================== Web3 Swap (proxy to swap microservice) ====================
+  rpc SwapGetQuote(BusinessSwapGetQuoteRequest) returns (BusinessSwapGetQuoteResponse);
+  rpc SwapExecuteSwap(BusinessSwapExecuteSwapRequest) returns (BusinessSwapExecuteSwapResponse);
+  rpc SwapGetApprovalTransaction(BusinessSwapGetApprovalTransactionRequest) returns (BusinessSwapGetApprovalTransactionResponse);
+  rpc SwapResetApproval(BusinessSwapResetApprovalRequest) returns (BusinessSwapResetApprovalResponse);
+  rpc SwapGetSwapStatus(BusinessSwapGetSwapStatusRequest) returns (BusinessSwapGetSwapStatusResponse);
+  rpc SwapGetSwapDetail(BusinessSwapGetSwapDetailRequest) returns (BusinessSwapGetSwapDetailResponse);
+  rpc SwapGetSwapHistory(BusinessSwapGetSwapHistoryRequest) returns (BusinessSwapGetSwapHistoryResponse);
+  rpc SwapGetSupportedTokens(BusinessSwapGetSupportedTokensRequest) returns (BusinessSwapGetSupportedTokensResponse);
+  rpc SwapGetSupportedChains(BusinessSwapGetSupportedChainsRequest) returns (BusinessSwapGetSupportedChainsResponse);
+  rpc SwapGetExternalSwapStatus(BusinessSwapGetExternalSwapStatusRequest) returns (BusinessSwapGetExternalSwapStatusResponse);
+
+  // ==================== Web3 User Management ====================
+  // 创建 Web3 用户（基于设备）
+  rpc CreateWeb3User(CreateWeb3UserReq) returns (CreateWeb3UserResp);
+  // 添加 Web3 用户地址
+  rpc AddWeb3UserAddress(AddWeb3UserAddressReq) returns (AddWeb3UserAddressResp);
+  // 批量添加 Web3 用户地址（一次添加多条链的地址）
+  rpc BatchAddWeb3UserAddress(BatchAddWeb3UserAddressReq) returns (BatchAddWeb3UserAddressResp);
+  // 查询可用链列表（Web3 用户）
+  rpc ListWeb3Chains(ListWeb3ChainsReq) returns (ListWeb3ChainsResp);
+  // 根据 device_id 获取 Web3 用户信息
+  rpc GetWeb3UserByDeviceId(GetWeb3UserByDeviceIdReq) returns (GetWeb3UserByDeviceIdResp);
+  // 获取 Web3 用户资产概览
+  rpc GetWeb3AssetOverview(GetWeb3AssetOverviewReq) returns (GetWeb3AssetOverviewResp);
+  // 获取 Web3 用户交易记录列表
+  rpc ListWeb3Transactions(ListWeb3TransactionsReq) returns (ListWeb3TransactionsResp);
+  // 获取 Web3 交易详情
+  rpc GetWeb3TransactionDetail(GetWeb3TransactionDetailReq) returns (GetWeb3TransactionDetailResp);
+  // Web3 交易结果查询（根据交易哈希查询状态和结果）
+  rpc GetWeb3TransactionResult(GetWeb3TransactionResultReq) returns (GetWeb3TransactionResultResp);
+  // 广播 Web3 交易（Web3 用户专用）
+  rpc BroadcastWeb3Transaction(BroadcastWeb3TransactionReq) returns (BroadcastWeb3TransactionResp);
+  // 获取 Web3 支持的资产列表（根据链）
+  rpc ListWeb3SupportedAssets(ListWeb3SupportedAssetsReq) returns (ListWeb3SupportedAssetsResp);
+  // 获取 Web3 用户地址的 Nonce（用于构建 EVM 交易）
+  rpc GetWeb3Nonce(GetWeb3NonceReq) returns (GetWeb3NonceResp);
+
+  // 构建 Web3 TRON 交易（返回未签名的 rawData，供客户端签名）
+  rpc BuildTronTransaction(BuildTronTransactionReq) returns (BuildTronTransactionResp);
+  // 获取 Web3 代币详细信息（合约地址、网络、价格、市值、持有者等）
+  rpc GetWeb3TokenDetail(GetWeb3TokenDetailReq) returns (GetWeb3TokenDetailResp);
+}
+
+// ============================================================================
+// Web3 Swap (Business -> Swap Microservice Proxy)
+// NOTE: 为避免与 swap 微服务 proto 的 Go types 冲突，这里统一使用 BusinessSwap* 前缀。
+// ============================================================================
+
+message BusinessSwapPagination {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 total = 3;
+  int32 total_pages = 4;
+  bool has_next = 5;
+  bool has_prev = 6;
+}
+
+enum BusinessSwapTxStatus {
+  BUSINESS_SWAP_TX_STATUS_UNSPECIFIED = 0;
+  BUSINESS_SWAP_TX_STATUS_CREATED = 1;
+  BUSINESS_SWAP_TX_STATUS_PENDING = 2;
+  BUSINESS_SWAP_TX_STATUS_SUCCESS = 3;
+  BUSINESS_SWAP_TX_STATUS_FAILED = 4;
+}
+
+message BusinessSwapChainInfo {
+  int64 chain_id = 1;
+  string name = 2;
+  bool enabled = 3;
+  uint64 required_confirmations = 4;
+}
+
+message BusinessSwapTokenInfo {
+  string address = 1;
+  string symbol = 2;
+  string name = 3;
+  uint32 decimals = 4;
+  string logo_uri = 5;
+  string min_swap_amount_usd = 6;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 7;   // 最大兑换金额（USD）
+}
+
+message BusinessSwapUnsignedTransaction {
+  int64 chain_id = 1;
+  string from = 2;
+  string to = 3;
+  string data = 4;  // hex string (0x...)
+  string value = 5; // wei, decimal string
+  string gas = 6;   // wei, decimal string (optional)
+  string gas_price = 7; // wei, decimal string (optional)
+}
+
+message BusinessSwapGetQuoteRequest {
+  int64 chain_id = 1;
+  string from_token_address = 2;
+  string to_token_address = 3;
+  string amount = 4; // amount in minimal units (wei), decimal string
+  bool include_protocols = 5;
+}
+
+message BusinessSwapQuoteData {
+  int64 chain_id = 1;
+  BusinessSwapTokenInfo from_token = 2;
+  BusinessSwapTokenInfo to_token = 3;
+  string from_amount = 4; // wei, decimal string
+  string to_amount = 5;   // wei, decimal string
+  uint64 estimated_gas = 6;
+  string provider = 7; // e.g. "1inch"
+  string trade_fee = 8; // DEX 交易手续费（USD 计价，例如 "0.5"）
+  string price_impact = 9; // 价格冲击百分比（例如 "0.5" 表示 0.5%）
+  string gas_fee_percentage = 10; // 矿工费百分比（例如 "0.1" 表示 0.1%，相对于交易金额）
+}
+
+message BusinessSwapGetQuoteResponse {
+  bool success = 1;
+  string message = 2;
+  BusinessSwapQuoteData data = 3;
+}
+
+message BusinessSwapExecuteSwapRequest {
+  int64 chain_id = 1;
+  string wallet_address = 2; // EVM address (0x...)
+  string from_token_address = 3;
+  string to_token_address = 4;
+  string amount = 5; // amount in minimal units (wei), decimal string
+  int32 slippage_bps = 6; // 1 = 0.01%, 100 = 1%
+  string recipient = 7; // optional; defaults to wallet_address
+  bool check_allowance = 8;
+  bool include_approve_tx = 9;
+  uint64 estimated_gas = 10; // 预估 gas（询价时返回，用于执行 swap 时设置 gasLimit）
+}
+
+message BusinessSwapExecuteSwapData {
+  string swap_id = 1;
+  string provider = 2;
+  BusinessSwapQuoteData quote = 3;
+  BusinessSwapUnsignedTransaction approve_tx = 4;
+  BusinessSwapUnsignedTransaction swap_tx = 5;
+}
+
+message BusinessSwapExecuteSwapResponse {
+  bool success = 1;
+  string message = 2;
+  BusinessSwapExecuteSwapData data = 3;
+}
+
+// BusinessSwapGetApprovalTransactionRequest 获取授权交易请求
+message BusinessSwapGetApprovalTransactionRequest {
+  int64 chain_id = 1;                 // 链ID
+  string wallet_address = 2;          // 钱包地址
+  string token_address = 3;           // 代币合约地址
+  string amount = 4;                  // 授权额度（"0"表示重置授权，不填或"max"表示无限授权）
+}
+
+// BusinessSwapGetApprovalTransactionResponse 获取授权交易响应
+message BusinessSwapGetApprovalTransactionResponse {
+  bool success = 1;
+  string message = 2;
+  BusinessSwapUnsignedTransaction tx = 3; // 未签名的授权交易
+}
+
+// BusinessSwapResetApprovalRequest 重置授权请求（广播签名后的重置授权交易）
+message BusinessSwapResetApprovalRequest {
+  int64 chain_id = 1;          // 链ID
+  string wallet_address = 2;   // 钱包地址
+  string token_address = 3;    // 代币合约地址
+  string signed_tx_hex = 4;    // 必填：签名后的交易hex字符串（Web3用户提供）
+}
+
+// BusinessSwapResetApprovalData 重置授权数据（广播结果）
+message BusinessSwapResetApprovalData {
+  string tx_hash = 1;                                   // 交易哈希
+  int64 broadcasted_at = 2;                             // 广播时间戳（Unix秒）
+}
+
+// BusinessSwapResetApprovalResponse 重置授权响应
+message BusinessSwapResetApprovalResponse {
+  bool success = 1;
+  string message = 2;
+  BusinessSwapResetApprovalData data = 3;
+}
+
+message BusinessSwapGetSwapStatusRequest {
+  int64 chain_id = 1;
+  string tx_hash = 2;
+  string swap_id = 3; // optional; used to bind tx_hash to a created swap record
+}
+
+message BusinessSwapStatusData {
+  string swap_id = 1;
+  int64 chain_id = 2;
+  string tx_hash = 3;
+  BusinessSwapTxStatus status = 4;
+  uint64 confirmations = 5;
+  uint64 required_confirmations = 6;
+  bool is_confirmed = 7;
+  string block_number = 8;
+  string provider = 9;
+}
+
+message BusinessSwapGetSwapStatusResponse {
+  bool success = 1;
+  string message = 2;
+  BusinessSwapStatusData data = 3;
+}
+
+message BusinessSwapGetSwapDetailRequest {
+  int64 chain_id = 1; // optional; 0 means not specified
+  string tx_hash = 2; // required
+}
+
+message BusinessSwapDetailData {
+  string swap_id = 1;          // swap_svc_transactions.id (snowflake) as string
+  int64 api_key_id = 2;        // internal
+  string project_name = 3;
+  string wallet_address = 4;
+  int64 chain_id = 5;
+  string provider = 6;
+
+  string from_token = 7;
+  string to_token = 8;
+  string from_amount = 9;
+  string to_amount = 10;
+
+  string tx_from = 11;
+  string tx_to = 12;
+  string tx_data = 13;
+  string tx_value = 14;
+  string tx_gas = 15;
+  string tx_gas_price = 16;
+  string tx_nonce = 17;
+  string tx_signature_data = 18;
+
+  string tx_hash = 19;
+  string status = 20;
+  string error_code = 21;
+  string error_message = 22;
+  string broadcasted_at = 23; // RFC3339; empty if null
+
+  string created_at = 24; // RFC3339
+  string updated_at = 25; // RFC3339
+
+  // Token names from swap_configs
+  string from_token_name = 26;  // 源代币名称
+  string to_token_name = 27;    // 目标代币名称
+}
+
+message BusinessSwapGetSwapDetailResponse {
+  bool success = 1;
+  string message = 2;
+  BusinessSwapDetailData data = 3;
+}
+
+message BusinessSwapGetSwapHistoryRequest {
+  string wallet_address = 1;
+  int64 chain_id = 2; // optional (0 means all)
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message BusinessSwapHistoryItem {
+  string swap_id = 1;
+  int64 chain_id = 2;
+  string provider = 3;
+  string wallet_address = 4;
+  string from_token_address = 5;
+  string to_token_address = 6;
+  string from_amount = 7;
+  string to_amount = 8;
+  string tx_hash = 9;
+  BusinessSwapTxStatus status = 10;
+  string created_at = 11; // RFC3339
+  string updated_at = 12; // RFC3339
+}
+
+message BusinessSwapGetSwapHistoryResponse {
+  bool success = 1;
+  string message = 2;
+  repeated BusinessSwapHistoryItem items = 3;
+  BusinessSwapPagination pagination = 4;
+}
+
+message BusinessSwapGetSupportedTokensRequest {
+  int64 chain_id = 1;
+}
+
+message BusinessSwapGetSupportedTokensResponse {
+  bool success = 1;
+  string message = 2;
+  int64 chain_id = 3;
+  repeated BusinessSwapTokenInfo tokens = 4;
+}
+
+message BusinessSwapGetSupportedChainsRequest {}
+
+message BusinessSwapGetSupportedChainsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated BusinessSwapChainInfo chains = 3;
+}
+
+// SwapGetExternalSwapStatus - 获取外部交易状态（通过 OKX DEX API）
+message BusinessSwapGetExternalSwapStatusRequest {
+  int64 chain_id = 1;           // 链ID（例如：1 表示以太坊）
+  string tx_hash = 2;           // 要查询的交易哈希
+  bool is_from_my_project = 3;  // 是否仅返回当前API Key所属项目的订单
+}
+
+message BusinessSwapGetExternalSwapStatusResponse {
+  bool success = 1;                                // 是否成功
+  string message = 2;                              // 响应消息
+  BusinessSwapChainSwapHistoryItem data = 3;       // 链上交易历史数据
+}
+
+// BusinessSwapChainSwapStatus 链上交易状态
+enum BusinessSwapChainSwapStatus {
+  BUSINESS_CHAIN_SWAP_STATUS_UNSPECIFIED = 0;  // 未指定
+  BUSINESS_CHAIN_SWAP_STATUS_PENDING = 1;      // 待确认
+  BUSINESS_CHAIN_SWAP_STATUS_SUCCESS = 2;      // 成功
+  BUSINESS_CHAIN_SWAP_STATUS_FAILED = 3;       // 失败
+}
+
+// BusinessSwapTokenDetail 代币详情
+message BusinessSwapTokenDetail {
+  string symbol = 1;                // 代币符号
+  string amount = 2;                // 代币数量（最小单位，如 wei）
+  string token_address = 3;         // 代币合约地址
+}
+
+// BusinessSwapChainSwapHistoryItem 链上交易历史记录
+message BusinessSwapChainSwapHistoryItem {
+  string chain_index = 1;                          // 链ID（例如："1" 表示以太坊）
+  string tx_hash = 2;                              // 交易哈希
+  string block_height = 3;                         // 区块高度
+  int64 tx_time = 4;                               // 交易时间（Unix毫秒时间戳）
+  BusinessSwapChainSwapStatus status = 5;          // 交易状态
+  string tx_type = 6;                              // 交易类型（Approve/Wrap/Unwrap/Swap）
+  string from_address = 7;                         // 发送地址
+  string dex_router = 8;                           // DEX路由合约地址
+  string to_address = 9;                           // 接收地址
+  repeated BusinessSwapTokenDetail from_tokens = 10;   // 源代币详情
+  repeated BusinessSwapTokenDetail to_tokens = 11;     // 目标代币详情
+  string referral_amount = 12;                     // 推荐奖励金额
+  string error_msg = 13;                           // 错误信息（失败时）
+  string gas_limit = 14;                           // Gas 上限
+  string gas_used = 15;                            // 实际使用 Gas
+  string gas_price = 16;                           // Gas 价格
+  string tx_fee = 17;                              // 交易手续费
+}
+
+// ============================================================================
+// 枚举定义
+// ============================================================================
+
+// 用户状态
+enum UserStatus {
+  USER_STATUS_UNSPECIFIED = 0;
+  USER_STATUS_NORMAL = 1;     // 正常
+  USER_STATUS_FROZEN = 2;     // 冻结
+  USER_STATUS_DISABLED = 3;   // 注销
+}
+
+// KYC等级
+enum KYCLevel {
+  KYC_LEVEL_UNSPECIFIED = 0;
+  KYC_LEVEL_L0 = 1;  // 基础认证（仅邮箱/手机验证）
+  KYC_LEVEL_L1 = 2;  // 初级认证（实名）
+  KYC_LEVEL_L2 = 3;  // 高级认证（人脸）
+  KYC_LEVEL_L3 = 4;  // 机构认证
+}
+
+// 验证码类型
+enum CodeType {
+  CODE_TYPE_UNSPECIFIED = 0;
+  CODE_TYPE_AUTH = 1;            // 认证（注册/登录统一类型）
+  CODE_TYPE_RESET_PASSWORD = 2;  // 重置密码
+  CODE_TYPE_BIND_EMAIL = 3;      // 绑定邮箱
+  CODE_TYPE_BIND_PHONE = 4;      // 绑定手机
+  CODE_TYPE_WITHDRAW = 5;        // 提现
+  CODE_TYPE_2FA = 6;             // 二次验证
+  CODE_TYPE_RESET_TRADE_PASSWORD = 7; // 重置交易密码（资金密码）
+}
+
+// 解绑GA验证方式（四选一）
+enum UnbindVerifyMethod {
+  UNBIND_VERIFY_METHOD_UNSPECIFIED = 0;
+  UNBIND_VERIFY_METHOD_GOOGLE_AUTH = 1;  // GA验证码
+  UNBIND_VERIFY_METHOD_EMAIL = 2;        // 邮箱验证码
+  UNBIND_VERIFY_METHOD_PHONE = 3;        // 手机验证码
+  UNBIND_VERIFY_METHOD_BIOMETRIC = 4;    // 生物识别（Face ID/Touch ID/指纹等）
+}
+
+// 登录方式
+enum LoginMethod {
+  LOGIN_METHOD_UNSPECIFIED = 0;
+  LOGIN_METHOD_PHONE_CODE = 1;      // 手机验证码登录
+  LOGIN_METHOD_OAUTH_GOOGLE = 2;    // Google OAuth 登录
+  LOGIN_METHOD_EMAIL_CODE = 3;      // 邮箱验证码登录
+  LOGIN_METHOD_EMAIL_PASSWORD = 4;  // 邮箱密码登录
+}
+
+// 账号类型
+enum AccountType {
+  ACCOUNT_TYPE_UNSPECIFIED = 0;
+  ACCOUNT_TYPE_EMAIL = 1;
+  ACCOUNT_TYPE_PHONE = 2;
+}
+
+// 平台类型
+enum PlatformType {
+  PLATFORM_TYPE_UNSPECIFIED = 0;
+  PLATFORM_TYPE_WEB = 1;
+  PLATFORM_TYPE_IOS = 2;
+  PLATFORM_TYPE_ANDROID = 3;
+  PLATFORM_TYPE_API = 4;
+}
+
+enum Gender {
+  GENDER_UNSPECIFIED = 0;
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
+}
+
+enum Language {
+  LANGUAGE_UNSPECIFIED = 0;
+  LANGUAGE_ZH_CN = 1;
+  LANGUAGE_EN = 2;
+}
+
+enum PriceUnit {
+  PRICE_UNIT_UNSPECIFIED = 0;
+  PRICE_UNIT_USDT = 1;  // 数据库中的 id=1 对应 USDT
+  PRICE_UNIT_USD = 2;   // 数据库中的 id=2 对应 USD
+  PRICE_UNIT_CNY = 3;   // 数据库中的 id=3 对应 CNY
+}
+
+// 交易类型
+// 注意：内部转账不再使用独立的类型，转出方使用 TRANSACTION_TYPE_WITHDRAW，转入方使用 TRANSACTION_TYPE_DEPOSIT
+enum TransactionType {
+  TRANSACTION_TYPE_UNSPECIFIED = 0;
+  TRANSACTION_TYPE_DEPOSIT = 1;
+  TRANSACTION_TYPE_WITHDRAW = 2;
+  // TRANSACTION_TYPE_INTERNAL_TRANSFER = 3; // 已废弃：内部转账转出方使用 WITHDRAW，转入方使用 DEPOSIT
+}
+
+// ============================================================================
+// 消息定义
+// ============================================================================
+
+// ==================== 发送验证码 ====================
+message SendSMSCodeReq {
+  string phone = 1; // 手机号
+  string country_code = 2; // 国际区号
+  CodeType type = 3; // 验证码类型
+
+  // Geetest 校验参数
+  string lot_number = 4;    // Geetest lot_number
+  string captcha_output = 5; // Geetest captcha_output
+  string pass_token = 6;    // Geetest pass_token
+  string gen_time = 7;      // Geetest gen_time
+}
+
+message SendSMSCodeResp {
+  bool success = 1;
+  string message = 2;
+  int32 expire_seconds = 3;  // 过期时间（秒）
+}
+
+message SendEmailCodeReq {
+  string email = 1;  // 邮箱地址（登录前/未登录场景必填）
+  CodeType type = 2; // 验证码类型
+
+  // Geetest 校验参数
+  string lot_number = 3;    // Geetest lot_number
+  string captcha_output = 4; // Geetest captcha_output
+  string pass_token = 5;    // Geetest pass_token
+  string gen_time = 6;      // Geetest gen_time
+}
+
+message SendEmailCodeResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+  int32 expire_seconds = 3;  // 过期时间（秒）
+}
+
+// ==================== 国家/地区区号 ====================
+message GetCountryCodesRequest {}
+
+message GetCountryCodesResponse {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+  repeated string country_codes = 3; // 支持的国家/地区区号列表（E.164，带 + 前缀）
+}
+
+// ==================== 登录 ====================
+message LoginByEmailCodeRequest {
+  string email = 1; // 邮箱（RFC5322）
+  string code = 2;  // 验证码
+  string lot_number = 3;    // Geetest lot_number
+  string captcha_output = 4; // Geetest captcha_output
+  string pass_token = 5;    // Geetest pass_token
+  string gen_time = 6;      // Geetest gen_time
+}
+
+message LoginByEmailCodeResponse {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+  string user_id = 3; // 用户ID
+  string access_token = 4; // 访问令牌
+  int64 expires_in = 5; // 访问令牌过期时间（秒）
+}
+
+message LoginByPhoneCodeRequest {
+  string country_code = 1; // 国际区号（E.164，带 + 前缀）
+  string phone = 2;        // 手机号（仅数字，不含区号前缀）
+  string code = 3;         // 验证码
+  string lot_number = 4;    // Geetest lot_number
+  string captcha_output = 5; // Geetest captcha_output
+  string pass_token = 6;    // Geetest pass_token
+  string gen_time = 7;      // Geetest gen_time
+}
+
+message LoginByPhoneCodeResponse {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+  string user_id = 3; // 用户ID
+  string access_token = 4; // 访问令牌
+  int64 expires_in = 5; // 访问令牌过期时间（秒）
+}
+
+// Google OAuth 登录请求
+message LoginByGoogleRequest {
+  string id_token = 1;    // Google ID Token (前端从 Google OAuth 获取)
+  string access_token = 2; // Google Access Token (可选，用于获取更多用户信息)
+  string lot_number = 3;    // Geetest lot_number
+  string captcha_output = 4; // Geetest captcha_output
+  string pass_token = 5;    // Geetest pass_token
+  string gen_time = 6;      // Geetest gen_time
+}
+
+// Google OAuth 登录响应
+message LoginByGoogleResponse {
+  bool success = 1;         // 是否成功
+  string message = 2;       // 返回消息
+  string user_id = 3;       // 用户ID
+  string access_token = 4;  // 访问令牌 (JWT)
+  int64 expires_in = 5;     // 访问令牌过期时间（秒）
+  bool is_new_user = 6;     // 是否为新注册用户
+  string email = 7;         // 用户邮箱
+  string name = 8;          // 用户姓名
+  string avatar = 9;        // 用户头像URL
+}
+
+message RefreshTokenReq {
+  string refresh_token = 1; // 刷新令牌
+}
+
+message RefreshTokenResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+  string access_token = 3; // 新访问令牌
+  string refresh_token = 4; // 新刷新令牌（如下发）
+  int64 expires_in = 5; // 新访问令牌过期时间（秒）
+}
+
+// ==================== 2FA验证 ====================
+message Verify2FAReq {
+  string temp_token = 1;        // 临时token
+  string code = 3;              // 验证码
+  bool trust_device = 4;        // 是否信任此设备（30天）
+}
+
+message Verify2FAResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+  string access_token = 3; // 访问令牌
+  string refresh_token = 4; // 刷新令牌
+  int64 expires_in = 5; // 访问令牌过期时间（秒）
+}
+
+message LogoutReq {
+  // 从token中获取用户信息
+}
+
+message LogoutResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+// ==================== 忘记密码 ====================
+message ForgotPasswordByEmailRequest {
+  string email = 1;         // 邮箱（RFC5322）
+  string code = 2;          // 验证码
+  string new_password = 3;  // 新密码
+  string lot_number = 4;    // Geetest lot_number
+  string captcha_output = 5; // Geetest captcha_output
+  string pass_token = 6;    // Geetest pass_token
+  string gen_time = 7;      // Geetest gen_time
+}
+
+message ForgotPasswordByEmailResponse {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message ForgotPasswordByPhoneRequest {
+  string country_code = 1;  // 国际区号（E.164，带 + 前缀）
+  string phone = 2;         // 手机号（仅数字，不含区号前缀）
+  string code = 3;          // 验证码
+  string new_password = 4;  // 新密码
+  string lot_number = 5;    // Geetest lot_number
+  string captcha_output = 6; // Geetest captcha_output
+  string pass_token = 7;    // Geetest pass_token
+  string gen_time = 8;      // Geetest gen_time
+}
+
+// ==================== Geetest ====================
+message ValidateGeetestRequest {
+  string lot_number = 1;
+  string captcha_output = 2;
+  string pass_token = 3;
+  string gen_time = 4;
+}
+
+message ValidateGeetestResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ForgotPasswordByPhoneResponse {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message ChangePasswordReq {
+  string old_password = 1; // 旧密码
+  string new_password = 2; // 新密码
+}
+
+message ChangePasswordResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message GetMyOverviewReq {}
+
+message GetMyOverviewResp {
+  bool success = 1; // 是否成功
+  string uid = 2; // 用户UID
+  string nickname = 3; // 昵称
+  bool email_bound = 4; // 是否绑定邮箱
+  bool phone_bound = 5;       // 是否绑定手机号
+  bool google_auth_enabled = 6; // 是否开启谷歌验证（双重认证开关）
+  bool has_trade_password = 7; // 是否设置资金密码
+  int32 unread_count = 8; // 未读通知数
+  int32 devices_count = 9; // 设备数量
+  int32 language = 10; // 当前语言
+  string theme_mode = 11; // 主题模式
+  int32 price_unit = 12; // 价格单位
+  string avatar_url = 13; // 头像URL
+  string email = 14; // 邮箱地址
+  string phone = 15; // 手机号
+  bool linked_wallet_bound = 16; // 是否已绑定关联钱包
+  int32 linked_wallet_count = 17; // 关联钱包数量
+  bool withdraw_whitelist_bound = 18; // 是否已绑定提现免审白名单
+  bool google_auth_bound = 19; // 是否绑定了Google Authenticator（身份验证app）
+}
+
+
+message GetPreferencesReq {}
+
+message GetPreferencesResp {
+  bool success = 1; // 是否成功
+  int32 language = 2; // 当前语言 (0=未指定, 1=中文, 2=英文)
+  int32 price_unit = 3; // 价格单位 (0=未指定, 1=USDT, 2=USD, 3=CNY)
+}
+
+// 独立接口：获取语言可选项
+message ListLanguageOptionsReq {}
+
+message LanguageItem {
+  int64 code = 1;
+  string name = 2;
+}
+
+message ListLanguageOptionsResp {
+  bool success = 1; // 是否成功
+  repeated LanguageItem items = 2; // 可选语言列表
+}
+
+// 独立接口：获取价格单位可选项
+message ListPriceUnitOptionsReq {}
+
+message PriceUnitItem {
+  int64 code = 1;
+  string name = 2;
+}
+
+message ListPriceUnitOptionsResp {
+  bool success = 1; // 是否成功
+  repeated PriceUnitItem items = 2; // 可选价格单位列表
+}
+
+message SetPreferencesReq {
+  Language language = 1; // 语言
+  PriceUnit price_unit = 2; // 价格单位
+}
+
+message SetPreferencesResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+// 获取客户端配置
+message GetClientConfigReq {
+  string key = 1; // 配置键名，如 "is_show"
+}
+
+message BusinessClientConfigData {
+  bool is_show = 1; // 客户端显示开关
+}
+
+message GetClientConfigResp {
+  bool success = 1;
+  string message = 2;
+  BusinessClientConfigData data = 3;
+}
+
+message Notification {
+  string id = 1; // 通知ID
+  string type = 2;        // 通知类型 system/deposit/withdraw/security 等
+  string title = 3; // 标题
+  string content = 4; // 内容
+  int64 timestamp = 5; // 时间戳
+  bool read = 6; // 是否已读
+}
+
+message ListNotificationsReq {
+  int32 page = 1; // 页码
+  int32 page_size = 2; // 每页数量
+  bool only_unread = 3; // 仅未读
+  string type = 4; // 类型筛选
+}
+
+message ListNotificationsResp {
+  bool success = 1; // 是否成功
+  int32 total = 2; // 总条数
+  int32 unread_count = 3; // 未读数量
+  repeated Notification items = 4; // 列表项
+}
+
+message MarkNotificationReadReq {
+  string id = 1; // 通知ID
+}
+
+message MarkNotificationReadResp {
+  bool success = 1; // 是否成功
+}
+
+message MarkAllNotificationsReadReq {}
+
+message MarkAllNotificationsReadResp {
+  bool success = 1; // 是否成功
+}
+
+message DeleteNotificationReq {
+  string id = 1; // 通知ID
+}
+
+message DeleteNotificationResp {
+  bool success = 1; // 是否成功
+}
+
+message ClearAllNotificationsReq {}
+
+message ClearAllNotificationsResp {
+  bool success = 1; // 是否成功
+  int32 cleared_count = 2; // 清空数量
+}
+
+// 创建消息通知（内部接口）
+message CreateUserNotificationReq {
+  repeated int64 user_ids = 1; // 用户ID列表（支持批量）
+  string type = 2; // 消息类型：transfer/deposit/withdraw/system/security/swap
+  string title = 3; // 标题
+  string content = 4; // 内容
+  map<string, string> data = 5; // 额外数据（JSON）
+}
+
+message CreateUserNotificationResp {
+  bool success = 1; // 是否成功
+  int32 created_count = 2; // 成功创建的消息数
+}
+
+// ==================== 推送通知 ====================
+
+// SendPushNotificationByAliasReq 通过别名发送推送通知请求
+// 说明：用于业务逻辑调用推送服务，通过别名（user_id或设备ID）发送推送
+message SendPushNotificationByAliasReq {
+  repeated string aliases = 1;  // 别名列表（user_id或设备ID），最多1000个，每个最大40字节
+  string notification_type = 2; // 通知类型：transaction|security|system|price_alert
+  string title = 3;             // 推送标题
+  string content = 4;           // 推送内容
+  map<string, string> data = 5; // 扩展数据（用于跳转等）
+  string device_id = 6;         // 设备ID（用于查询Web3用户设置，可选）
+}
+
+message SendPushNotificationByAliasResp {
+  bool success = 1;           // 是否成功
+  string message = 2;         // 返回消息
+  string jpush_msg_id = 3;    // 极光消息ID
+}
+
+// SendPushNotificationByDeviceTokenReq 通过设备ID发送推送通知请求（Web3用户专用）
+// 说明：通过设备ID（device_token）查询设备的 registration_id，然后发送推送
+message SendPushNotificationByDeviceTokenReq {
+  string device_token = 1;    // 设备ID（必填）
+  string notification_type = 2; // 通知类型：transaction|security|system|price_alert
+  string title = 3;           // 推送标题
+  string content = 4;         // 推送内容
+  map<string, string> data = 5; // 扩展数据（用于跳转等）
+}
+
+message SendPushNotificationByDeviceTokenResp {
+  bool success = 1;           // 是否成功
+  string message = 2;         // 返回消息
+  string jpush_msg_id = 3;    // 极光消息ID
+}
+
+// RegisterDeviceReq 注册设备请求（Web3用户专用）
+// 说明：用于Web3用户在登录或启动时注册设备，绑定设备ID和极光registration_id
+// 平台信息从 HTTP Header X-Platform 获取，无需在请求体中传递
+message RegisterDeviceReq {
+  string registration_id = 1; // 极光 Registration ID（必填）
+  string device_token = 2;    // 设备唯一标识/设备ID（必填）
+  string device_model = 3;    // 设备型号（可选）
+  string os_version = 4;      // 操作系统版本（可选）
+  string app_version = 5;     // 应用版本（可选，优先使用入参，为空则使用 X-App-Version）
+}
+
+message RegisterDeviceResp {
+  bool success = 1;           // 是否成功
+  string message = 2;         // 返回消息
+  int64 device_id = 3;        // 设备ID（数据库记录ID）
+  bool is_new_device = 4;     // 是否新设备
+}
+
+// ==================== 资产页 ====================
+message GetAssetOverviewReq {
+  string asset = 1;                // 资产代码，如 USDT/TRX/BNB
+}
+
+message AssetItem {
+  string asset = 1;                // 资产代码，如 USDT/TRX/BNB
+  string total_balance = 2;        // 总余额
+  string available_balance = 3;    // 可用余额
+  string frozen_balance = 4;       // 冻结余额
+  string icon_url = 7;             // 图标URL
+  string price_change_24h = 10;    // 24小时涨跌幅（%）
+  string price_usdt = 11;          // 当前USDT价格
+  string balance_usdt = 12;        // 余额折合USDT估值
+  repeated string sparkline = 13;  // 简易K线价格数组（24h，用于绘制迷你趋势图）
+  int32 decimals = 14;             // 币种精度（小数位数）
+}
+
+message GetAssetOverviewResp {
+  bool success = 1; // 是否成功
+  string asset = 2;     // 资产代码，如 USDT/TRX/BNB
+  string total_balance = 3; // 总资产(USDT估值)
+  string available_balance = 4;    // 可用余额(USDT估值)
+  string frozen_balance = 5;       // 冻结余额(USDT估值)
+  repeated AssetItem items = 6;    // 我的资产列表
+  string price_change_24h = 7; // 24小时涨跌幅（%）
+  string username = 8; // 用户名
+  string uid = 9; // 用户UID
+  string token_volume = 10; // 代币种类数量
+  string token_balance = 11; // 总资产(USDT估值)
+}
+
+message GetAssetDetailReq {
+  string asset = 1; // 资产代码，如 USDT
+  int32 page = 2; // 页码
+  int32 page_size = 3; // 每页数量
+}
+
+message GetAssetDetailResp {
+  bool success = 1; // 是否成功
+  string asset = 2; // 资产代码
+  string asset_name = 3; // 资产名称
+  string icon_url = 4; // 图标URL
+  string total_balance = 5; // 总资产
+  string available_balance = 6; // 可用余额
+  string frozen_balance = 7; // 冻结余额
+  string total_valuation_usdt = 8; // 总估值（USDT）
+  string total_valuation_fiat = 9; // 总估值（法币）
+  string fiat_currency = 10; // 法币币种
+  string fiat_symbol = 11; // 法币符号
+  string price_usdt = 12; // 单价（USDT）
+  string today_change_percent = 13; // 今日涨跌幅（%）
+  int32 total = 14; // 记录总数
+  repeated TransactionRecordItem items = 15; // 交易记录列表
+}
+
+message GetAssetConfigReq {
+  // 空请求，返回所有资产配置
+}
+
+message GetAssetConfigResp {
+  bool success = 1;
+  string message = 2;
+  repeated AssetConfigItem items = 3; // 资产配置列表
+}
+
+message AssetConfigItem {
+  string code = 1;        // 资产代码
+  string name = 2;        // 资产名称
+  string icon_url = 3;    // 图标URL
+  int32 precision = 4;    // 精度（小数位数）
+  int32 status = 5;       // 状态：1=enabled 2=disabled
+  bool is_hot = 6;        // 是否热门资产
+}
+
+message ListTransactionRecordsReq {
+  int32 page = 1; // 页码
+  int32 page_size = 2; // 每页数量
+  string asset = 3;      // 过滤资产（可选）
+  string type = 4;       // 记录类型
+}
+
+message TransactionRecordItem {
+  string id = 1; // 记录ID
+  TransactionType type = 2; // 类型
+  string asset = 3; // 资产
+  string amount = 4; // 金额
+  int64 timestamp = 5; // 时间戳
+  string status = 6; // 状态
+  string memo = 7; // 备注
+  string icon_url = 8; // 资产图标URL
+  string amount_display = 9; // 显示金额（如 +123.00 USDT）
+  string status_text = 10; // 状态文案（如 已完成）
+  string chain = 11; // 链代码
+  string chain_name = 12; // 链名称
+}
+
+message ListTransactionRecordsResp {
+  bool success = 1; // 是否成功
+  int32 total = 2; // 总条数
+  repeated TransactionRecordItem items = 3; // 列表项
+}
+
+message GetWithdrawInfoReq {
+  string asset = 1; // 资产代码（如 USDT）
+}
+
+message GetWithdrawInfoResp {
+  bool success = 1; // 是否成功
+  SecurityTip security_tip = 2; // 安全提示
+}
+
+message SecurityTip {
+  bool has_trade_password = 1; // 是否已设置资金密码
+  bool has_biometric = 2; // 是否已开启生物识别
+  bool has_google_auth = 3; // 是否已绑定谷歌验证
+  string recommended_action = 4; // 建议操作文案
+}
+
+// ==================== 生物识别（Web2，签名验签） ====================
+
+message BiometricProof {
+  string key_id = 1; // 客户端 key_id
+  string challenge_id = 2; // 挑战ID（一次性）
+  string signature = 3; // Base64(ASN.1 DER ECDSA signature), algorithm=SHA256withECDSA (ES256)
+}
+
+message RegisterBiometricKeyReq {
+  string key_id = 1; // 客户端 key_id（用于选择密钥）
+  string algorithm = 2; // 固定：ES256
+  string public_key_format = 3; // SPKI_DER_BASE64 / X963_UNCOMPRESSED_BASE64（public_key 为原始字节的 Base64）
+  string public_key = 4; // Base64(公钥原始字节)
+  string trade_password = 5; // 交易密码（强制，用于开启生物识别前校验）
+}
+
+message RegisterBiometricKeyResp {
+  bool success = 1;
+  string message = 2;
+  string key_id = 3;
+}
+
+message CreateBiometricChallengeResp {
+  bool success = 1;
+  string message = 2;
+  string scene = 3; // withdraw / withdraw_audit_whitelist_bind / reset_trade_password
+  string challenge_id = 4;
+  string challenge = 5;
+  string payload_hash = 6; // sha256 hex
+  int64 expires_in = 7; // seconds
+}
+
+message CreateWithdrawBiometricChallengeReq {
+  string asset = 1; // 资产代码
+  string chain = 2; // 网络
+  string amount = 3; // 提现金额
+  string address = 4; // 提现地址
+  string memo_tag = 5; // 如需Memo/Tag
+}
+
+message CreateWithdrawAuditWhitelistBindingBiometricChallengeReq {
+  repeated SetMyWithdrawAuditWhitelistBindingReqItem items = 1;
+}
+
+message CreateResetTradePasswordBiometricChallengeReq {
+  string new_trade_password = 1; // 新资金密码（用于构造 payload_hash，避免“签名A提交B”）
+}
+
+message UnbindBiometricReq {
+  string trade_password = 1; // 交易密码（必填）
+}
+
+message UnbindBiometricResp {
+  bool success = 1;
+  string message = 2;
+}
+
+message CreateDepositReq {
+  string asset = 1; // 资产代码
+  string chain = 2;               // 网络，如 TRN/ETH/BNB
+}
+
+message CreateDepositResp {
+  bool success = 1; // 是否成功
+  string address = 2; // 充值地址
+  string memo_tag = 3;            // Memo/Tag（如需）
+  string qrcode_url = 4;          // 二维码图片地址
+  string asset = 5;               // 资产码（如 USDT）
+  string chain = 6;               // 链网络（如 TRC20）
+  string min_deposit = 7;         // 最小充值额度展示文案
+  string tips = 8;                // 充值说明/风险提示文案
+  string qrcode_data = 9;         // 二维码原始数据
+  string chain_name = 10;         // 链路显示名
+  string min_deposit_text = 11;   // 最小额度文本（格式化）
+  int32 confirmations_required = 12; // 所需确认数
+  string eta = 13;                // 预计到账时间文案
+  repeated string tips_list = 14; // 提示列表
+  string address_type = 15;       // 地址类型（普通/合约等）
+}
+
+message GetDepositInfoReq {
+  string asset = 1;      // 链代码过滤（如 TRON/ETH，可选）
+  string asset_code = 2; // 资产代码（如 USDT，用于查询最小充币额）
+}
+
+message GetDepositInfoResp {
+  bool success = 1; // 是否成功
+  repeated DepositAddressItem address = 2; // 充值地址列表
+}
+
+message DepositAddressItem {
+  string asset = 1;       // 链代码（如 TRON/ETH/BSC）
+  string address = 2;     // 充值地址
+  string chain_name = 3;  // 网络显示名称（如 TRC20/ERC20）
+  string min_deposit = 4; // 最小充币额（如 "0.01 USDT"）
+  string icon_url = 5;    // 网络图标URL
+}
+
+// ==================== 充值地址簿（同链多地址） ====================
+
+message ListDepositAddressBookReq {
+  string chain = 1;      // 链代码过滤（如 TRON/ETH，可选）
+  string asset_code = 2; // 可选：用于统计累计收款（按币种）
+  int32 page = 3;        // 页码
+  int32 page_size = 4;   // 每页数量
+}
+
+message DepositAddressBookItem {
+  string id = 1;              // 地址ID
+  string chain = 2;           // 链代码（如 TRON/ETH/BSC）
+  string chain_name = 3;      // 网络显示名称（如 TRC20/ERC20）
+  string icon_url = 4;        // 网络图标URL
+  string address = 5;         // 充值地址
+  string label = 6;           // 标签
+  string remark = 7;          // 备注
+  bool is_default = 8;        // 是否默认
+  int32 derivation_change = 9; // BIP44 change（subIndex）
+  string created_at = 10;     // 创建时间
+  string last_used_at = 11;   // 最后使用时间（可空）
+  string total_received = 12; // 累计收款（按 asset_code 统计，格式化展示，如 "0 USDT"）
+  int32 received_count = 13;  // 收款笔数（按 asset_code 统计）
+}
+
+message ListDepositAddressBookResp {
+  bool success = 1; // 是否成功
+  int32 total = 2;  // 总条数
+  repeated DepositAddressBookItem items = 3; // 列表项
+}
+
+message CreateDepositAddressBookReq {
+  string chain = 1;      // 链代码（必填）
+  string label = 2;      // 标签（可选）
+  string remark = 3;     // 备注（可选）
+  bool set_default = 4;  // 是否设为默认
+}
+
+message CreateDepositAddressBookResp {
+  bool success = 1; // 是否成功
+  string message = 2;
+  DepositAddressBookItem item = 3;
+}
+
+message GetDepositAddressBookDetailReq {
+  string id = 1;         // 地址ID
+  string asset_code = 2; // 可选：用于统计累计收款（按币种）
+}
+
+message GetDepositAddressBookDetailResp {
+  bool success = 1; // 是否成功
+  string message = 2;
+  DepositAddressBookItem item = 3;
+}
+
+message UpdateDepositAddressBookReq {
+  string id = 1;     // 地址ID
+  string label = 2;  // 标签（可选）
+  string remark = 3; // 备注（可选）
+}
+
+message UpdateDepositAddressBookResp {
+  bool success = 1; // 是否成功
+  string message = 2;
+}
+
+message DeleteDepositAddressBookReq {
+  string id = 1; // 地址ID
+}
+
+message DeleteDepositAddressBookResp {
+  bool success = 1; // 是否成功
+  string message = 2;
+}
+
+message SetDefaultDepositAddressBookReq {
+  string id = 1; // 地址ID
+}
+
+message SetDefaultDepositAddressBookResp {
+  bool success = 1; // 是否成功
+  string message = 2;
+}
+
+message ListDepositAddressBookDepositsReq {
+  string id = 1;         // 地址ID
+  string asset = 2;      // 币种过滤（如 USDT，可选）
+  int32 page = 3;        // 页码
+  int32 page_size = 4;   // 每页数量
+}
+
+message ListDepositAddressBookDepositsResp {
+  bool success = 1; // 是否成功
+  int32 total = 2;  // 总条数
+  repeated DepositRecordItem items = 3; // 列表项
+}
+
+message ActionAssetItem {
+  string asset = 1; // 资产代码
+  string asset_name = 2; // 资产名称
+  string icon_url = 3; // 图标URL
+  bool is_hot = 4; // 是否热门
+}
+
+message ListActionAssetsReq {
+  string action = 1; // deposit/withdraw
+  string query = 2; // 关键字搜索（可选）
+}
+
+message ListActionAssetsResp {
+  bool success = 1; // 是否成功
+  repeated ActionAssetItem hot_items = 2; // 热门资产列表
+  repeated ActionAssetItem items = 3; // 资产列表
+}
+
+message ActionNetworkItem {
+  string chain = 1; // 链网络代码
+  string chain_name = 2; // 链网络名称
+  string icon_url = 3; // 图标URL
+  string eta = 4; // 预计到账时间文案
+  string min_amount_text = 5; // 最小额度显示文案
+  string fee_text = 6; // 手续费显示文案
+}
+
+message ListActionNetworksReq {
+  string action = 1; // deposit/withdraw（可选，不传则返回全部网络）
+  string asset = 2; // 资产代码
+}
+
+message ListActionNetworksResp {
+  bool success = 1; // 是否成功
+  repeated ActionNetworkItem items = 2; // 网络列表
+}
+
+// ==================== 币种提现手续费规则配置查询 ====================
+message GetAssetWithdrawFeeConfigReq {
+  string asset = 1; // 资产代码（必填）
+  string chain = 2; // 链网络代码（可选，不传则返回所有链的配置）
+}
+
+message AssetWithdrawFeeConfigItem {
+  string chain = 1; // 链网络代码
+  string chain_name = 2; // 链网络名称
+  string min_withdraw_amount = 3; // 提现最小金额（所有规则中的最小值），空字符串表示未配置
+  string max_withdraw_amount = 4; // 提现最大金额（所有规则中的最大值），空字符串表示无上限
+}
+
+message GetAssetWithdrawFeeConfigResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+  repeated AssetWithdrawFeeConfigItem items = 3; // 配置列表
+}
+
+// ==================== 汇率查询 ====================
+message ListFiatRatesReq {
+  repeated string fiat_currencies = 1; // 过滤法币列表（可选），如 ["CNY","USD"]
+}
+
+message FiatRateItem {
+  string fiat_currency = 1; // 法币币种，如 CNY
+  string rate = 2; // 1 USDT = ? 法币（mid）
+  string currency_symbol = 3; // 法币符号（可选）
+  int64 ts = 4; // 价格时间戳（毫秒）
+}
+
+message ListFiatRatesResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+  repeated FiatRateItem items = 3; // 汇率列表
+  repeated string missing_fiat_currencies = 4; // 未命中的法币（当传入过滤条件时）
+}
+
+message GetExchangeRateReq {
+  string from_asset = 1; // 源币种代码，如 BTC/ETH/USDT
+  string to_asset = 2;   // 目标币种代码，如 BTC/ETH/USDT
+}
+
+message GetExchangeRateResp {
+  bool success = 1;              // 是否成功
+  string message = 2;            // 返回消息
+  string from_asset = 3;         // 源币种代码
+  string to_asset = 4;           // 目标币种代码
+  string exchange_rate = 5;      // 汇率（1 from_asset = ? to_asset）
+  int64 timestamp = 6;           // 价格时间戳（毫秒）
+  string from_price_usdt = 7;    // 源币种对 USDT 价格（可选，用于调试）
+  string to_price_usdt = 8;      // 目标币种对 USDT 价格（可选，用于调试）
+}
+
+message CreateWithdrawReq {
+  string asset = 1; // 资产代码
+  string chain = 2;               // 网络
+  string amount = 3; // 提现金额
+  string address = 4; // 提现地址
+  string memo_tag = 5;            // 如需Memo/Tag
+  string trade_password = 6;      // 交易密码（与 biometric 二选一）
+  BiometricProof biometric = 7;   // 生物识别签名（与 trade_password 二选一）
+}
+
+// Web2 提币手续费预估：复用后端提币手续费规则（fixed/percent），用于客户端展示“手续费/实际到账/最小提币”等信息
+message EstimateWithdrawFeeReq {
+  string asset = 1;   // 资产代码，如 USDT
+  string chain = 2;   // 网络，如 ETH/BSC/TRON
+  string amount = 3;  // 提现金额（可选；为空时只返回 min_withdraw 和 fee_rule_summary）
+}
+
+message EstimateWithdrawFeeResp {
+  bool success = 1;
+  string message = 2;
+  string fee = 3;                 // 手续费（与 CreateWithdraw 同口径，单位为 asset）
+  string min_withdraw = 4;         // 最小提现额度（如配置）
+  string fee_rule_source = 5;      // global / asset（与 CreateWithdraw 的 FeeRuleSource 一致）
+  string fee_rule_summary = 6;     // 用于 UI 展示的规则说明（i18n 文案可由前端处理
+  string matched_rule_min_amount = 7;  // 当前匹配规则的最小金额（用于前端限制判断）
+  string matched_rule_max_amount = 8;  // 当前匹配规则的最大金额（用于前端限制判断，空表示无上限）
+}
+
+message CalcWithdrawFeeReq {
+  string asset = 1;   // 资产代码，如 USDT
+  string chain = 2;   // 网络，如 ETH/BSC/TRON
+  string amount = 3;  // 提现金额（必填；gross/内扣口径）
+}
+
+message CalcWithdrawFeeResp {
+  bool success = 1;
+  string message = 2;
+  string fee = 3;                  // 本次提现金额对应手续费（单位为 asset）
+  string min_withdraw_amount = 4;  // 最小到账金额（net）
+  string required_amount = 5;      // 最小提现金额（min_withdraw_amount + fee）
+}
+
+message CreateWithdrawResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+  string withdraw_id = 3; // 提现ID
+  string fee = 4; // 手续费
+  string network = 5; // 使用网络
+}
+
+message GetTransactionRecordDetailReq {
+  string id = 1; // 交易记录ID
+}
+
+message GetTransactionRecordDetailResp {
+  bool success = 1;
+  TransactionType type = 2;       // deposit/withdraw
+  string asset = 3; // 资产
+  string amount = 4; // 金额
+  int64 timestamp = 5; // 时间戳
+  string status = 6;              // success/pending/failed
+  string counterparty = 7;        // 接收方/对手方（如 UID10002）
+  string network = 8;             // 网络
+  string tx_id = 9;               // 交易ID（业务侧）
+  string tx_hash = 10;            // 链上交易哈希（如有）
+  string fee = 11;                // 手续费
+  string memo = 12;               // 备注
+  string explorer_url = 13;       // 区块链浏览器链接（可直接打开）
+}
+
+message UploadAvatarReq {
+  bytes image_data = 1; // 图片数据
+  string file_name = 2; // 文件名
+}
+
+message UploadAvatarResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+  string avatar_url = 3; // 头像URL
+}
+
+// ==================== 2FA管理 ====================
+
+message GetGoogleAuthSetupReq {
+  // 空请求，使用 JWT 中的用户信息
+}
+
+message GetGoogleAuthSetupResp {
+  bool success = 1;           // 是否成功
+  string message = 2;         // 返回消息
+  string secret = 3;          // TOTP secret（Base32 编码）
+  string qr_code = 4;         // QR 码图片（Base64 data URI）
+  string otpauth_url = 5;     // otpauth URL（可用于手动添加）
+  string account_name = 6;    // 账户名称（用于显示）
+}
+
+message BindGoogleAuthReq {
+  string secret = 1;  // setup返回的secret
+  string code = 2;    // 当前6位验证码
+  string biometric_token = 3;  // 可选：生物识别验证token（增强安全性）
+}
+
+message BindGoogleAuthResp {
+  bool success = 1;
+  string message = 2;
+  repeated string backup_codes = 3;  // 备用恢复码
+}
+
+message UnbindGoogleAuthReq {
+  UnbindVerifyMethod method = 1;  // 验证方式（四选一）
+  string google_code = 2;         // GA验证码（method=1时必填）
+  string email_code = 3;          // 邮箱验证码（method=2时必填）
+  string sms_code = 4;            // 短信验证码（method=3时必填）
+  string biometric_token = 5;    // 生物识别验证token（method=4时必填，客户端完成生物识别后生成的签名token）
+}
+
+message UnbindGoogleAuthResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message DisableGoogleAuth2FAReq {
+  UnbindVerifyMethod method = 1;  // 验证方式（四选一）
+  string google_code = 2;         // GA验证码（method=1时必填）
+  string email_code = 3;          // 邮箱验证码（method=2时必填）
+  string sms_code = 4;            // 短信验证码（method=3时必填）
+  string biometric_token = 5;     // 生物识别验证token（method=4时必填）
+}
+
+message DisableGoogleAuth2FAResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+// 开启双重认证（已绑定GA，传验证码开启）
+message EnableGoogleAuth2FAReq {
+  string google_code = 1; // Google验证器6位验证码（必填）
+}
+
+message EnableGoogleAuth2FAResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+// 关闭双重认证（已绑定GA，传验证码关闭）
+message DisableGoogleAuth2FAWithCodeReq {
+  string google_code = 1; // Google验证器6位验证码（必填）
+}
+
+message DisableGoogleAuth2FAWithCodeResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+// 校验Google验证器验证码（仅校验，不做任何状态修改）
+message VerifyGoogleAuthCodeReq {
+  string google_code = 1; // Google验证器6位验证码（必填）
+}
+
+message VerifyGoogleAuthCodeResp {
+  bool success = 1; // 是否成功
+  bool is_valid = 2; // 验证码是否有效
+  string message = 3; // 返回消息
+}
+
+message SetPreferred2FAReq {
+  string preferred = 1;  // google/sms/email
+}
+
+message SetPreferred2FAResp {
+  bool success = 1;
+  string message = 2;
+}
+
+// ==================== 设备管理 ====================
+message GetDevicesReq {}
+
+message Device {
+  string device_id = 1; // 设备ID
+  string device_name = 2; // 设备名称
+  PlatformType platform = 3; // 平台类型
+  string last_login_ip = 4; // 最后登录IP
+  string last_login_location = 5; // 最后登录地点
+  int64 last_login_time = 6; // 最后登录时间戳
+  bool is_current = 7; // 是否当前设备
+  bool is_trusted = 8; // 是否信任设备
+  int32 login_count = 9; // 登录次数
+  int64 first_login_time = 10; // 首次登录时间戳
+}
+
+message GetDevicesResp {
+  bool success = 1; // 是否成功
+  repeated Device devices = 2; // 设备列表
+}
+
+message ListLoginRecordsReq {
+  int32 page = 1; // 页码
+  int32 page_size = 2; // 每页数量
+}
+
+message LoginRecordItem {
+  string device_name = 1; // 设备名称
+  PlatformType platform = 2; // 平台类型
+  string ip_address = 3; // IP地址
+  string location = 4; // 登录地点
+  int64 login_time = 5; // 登录时间戳
+  string result = 6;          // 登录结果 成功/失败
+  bool is_current = 7; // 是否当前设备
+  bool is_trusted = 8; // 是否信任设备
+}
+
+message ListLoginRecordsResp {
+  bool success = 1; // 是否成功
+  int32 total = 2; // 总条数
+  repeated LoginRecordItem items = 3; // 列表项
+}
+
+message WalletAddressItem {
+  string asset = 1;         // 资产，如 BTC/ETH/USDT
+  string chain = 2;         // 网络，如 TRC20/ETH/BSC
+  string address = 3;       // 地址
+  string label = 4;         // 备注标签
+  bool is_default = 5;      // 是否默认
+  int64 created_at = 6;     // 创建时间
+  bool is_internal = 7; // 是否平台内部地址
+  bool is_bound = 8; // 是否绑定的Web3地址
+  int32 withdraw_count = 9; // 提现使用次数
+  int64 last_used_at = 10; // 最后使用时间戳
+  string id = 11;           // 地址ID，用于删除/更新操作
+  string chain_icon = 12;   // 链图标 URL
+}
+
+// 白名单关联钱包地址（精简版）
+message WhitelistAddressItem {
+  string chain = 1;        // 链，如 TRC20/ETH/BSC
+  string address = 2;      // 关联钱包地址
+  string chain_icon = 3;   // 链图标 URL
+}
+
+message ListDepositRecordsReq {
+  int32 page = 1; // 页码
+  int32 page_size = 2; // 每页数量
+  string asset = 3; // 资产筛选
+  string chain = 4; // 链筛选
+  string status = 5; // 状态筛选
+  int64 start_time = 6; // 开始时间戳
+  int64 end_time = 7; // 结束时间戳
+}
+
+message DepositRecordItem {
+  string id = 1; // 记录ID
+  string asset = 2; // 资产
+  string chain = 3; // 链代码
+  string chain_name = 4; // 链名称
+  string amount = 5; // 金额
+  string amount_display = 6; // 显示金额
+  string from_address = 7; // 来源地址
+  string to_address = 8; // 目标地址
+  string tx_hash = 9; // 交易哈希
+  string explorer_url = 10; // 区块浏览器链接
+  string status = 11; // 状态
+  string status_text = 12; // 状态文案
+  int32 confirmations = 13; // 已确认数
+  int32 required_confirmations = 14; // 所需确认数
+  string created_at = 15; // 创建时间
+  string confirmed_at = 16; // 确认时间
+  string icon_url = 17; // 资产图标URL
+}
+
+message ListDepositRecordsResp {
+  bool success = 1; // 是否成功
+  int32 total = 2; // 总条数
+  repeated DepositRecordItem items = 3; // 列表项
+}
+
+message GetDepositDetailReq {
+  string id = 1; // 充值记录ID
+}
+
+message GetDepositDetailResp {
+  bool success = 1; // 是否成功
+  string id = 2; // 记录ID
+  string asset = 3; // 资产
+  string amount = 4; // 金额
+  string amount_display = 5; // 显示金额
+  string status = 6; // 状态
+  string status_text = 7; // 状态文案
+  string chain = 8; // 链代码
+  string chain_name = 9; // 链名称
+  string from_address = 10; // 充值地址（来源）
+  string to_address = 11; // 接收地址（目标）
+  string from_label = 12; // 来源地址标签
+  string to_label = 13; // 目标地址标签
+  string tx_hash = 14; // 交易哈希
+  string explorer_url = 15; // 区块浏览器链接
+  string fee = 16; // 手续费
+  string fee_asset = 17; // 手续费资产
+  int32 confirmations = 18; // 已确认数
+  int32 required_confirmations = 19; // 所需确认数
+  string created_at = 20; // 创建时间
+  string confirmed_at = 21; // 确认时间
+  string type = 22; // 类型代码（deposit）
+  string type_text = 23; // 类型文案（充值）
+  string method = 24; // 方式代码（on_chain）
+  string method_text = 25; // 方式文案（链上充值）
+  string icon_url = 26; // 资产图标URL
+}
+
+message GetWithdrawAuditStatusReq {
+  string withdraw_id = 1; // 提现ID
+}
+
+message AuditTimelineItem {
+  string status = 1; // 状态
+  string time = 2; // 时间
+  string description = 3; // 描述
+}
+
+message GetWithdrawAuditStatusResp {
+  bool success = 1; // 是否成功
+  string withdraw_id = 2; // 提现ID
+  string status = 3; // 审核状态
+  string status_text = 4; // 状态文案
+  string submitted_at = 5; // 提交时间
+  string audit_started_at = 6; // 审核开始时间
+  string audit_type = 7; // 审核类型
+  string audit_reason = 8; // 审核原因
+  string expected_completion = 9; // 预计完成时间
+  repeated AuditTimelineItem timeline = 10; // 时间线
+}
+
+message GetWithdrawDetailReq {
+  string id = 1; // 提现记录ID
+}
+
+message GetWithdrawDetailResp {
+  bool success = 1; // 是否成功
+  string id = 2; // 记录ID
+  string asset = 3; // 资产
+  string amount = 4; // 金额
+  string amount_display = 5; // 显示金额
+  string status = 6; // 状态
+  string status_text = 7; // 状态文案
+  string chain = 8; // 链代码
+  string chain_name = 9; // 链名称
+  string from_address = 10; // 付款地址（来源）
+  string to_address = 11; // 提现地址（目标）
+  string from_label = 12; // 来源地址标签
+  string to_label = 13; // 目标地址标签
+  string tx_hash = 14; // 交易哈希
+  string explorer_url = 15; // 区块浏览器链接
+  string fee = 16; // 手续费
+  string fee_asset = 17; // 手续费资产
+  int32 confirmations = 18; // 已确认数
+  int32 required_confirmations = 19; // 所需确认数
+  string created_at = 20; // 创建时间
+  string submitted_at = 21; // 提交时间
+  string processed_at = 22; // 处理完成时间
+  string rejected_reason = 23; // 驳回原因（失败时）
+  string type = 24; // 类型代码（withdraw）
+  string type_text = 25; // 类型文案（提现）
+  string method = 26; // 方式代码（on_chain）
+  string method_text = 27; // 方式文案（链上提现）
+  string icon_url = 28; // 资产图标URL
+}
+
+message ListWithdrawRecordsReq {
+  int32 page = 1; // 页码
+  int32 page_size = 2; // 每页数量
+  string asset = 3; // 资产筛选
+  string chain = 4; // 链筛选
+  string status = 5; // 状态筛选
+  int64 start_time = 6; // 开始时间戳
+  int64 end_time = 7; // 结束时间戳
+}
+
+message WithdrawRecordItem {
+  string id = 1; // 记录ID
+  string asset = 2; // 资产
+  string chain = 3; // 链代码
+  string chain_name = 4; // 链名称
+  string amount = 5; // 金额
+  string amount_display = 6; // 显示金额
+  string from_address = 7; // 来源地址
+  string to_address = 8; // 目标地址
+  string tx_hash = 9; // 交易哈希
+  string explorer_url = 10; // 区块浏览器链接
+  string status = 11; // 状态
+  string status_text = 12; // 状态文案
+  string fee = 13; // 手续费
+  string fee_asset = 14; // 手续费资产
+  int32 confirmations = 15; // 已确认数
+  int32 required_confirmations = 16; // 所需确认数
+  string created_at = 17; // 创建时间
+  string processed_at = 18; // 处理完成时间
+  string icon_url = 19; // 资产图标URL
+}
+
+message ListWithdrawRecordsResp {
+  bool success = 1; // 是否成功
+  int32 total = 2; // 总条数
+  repeated WithdrawRecordItem items = 3; // 列表项
+}
+
+message WalletProviderItem {
+  string id = 1; // 提供方ID
+  string name = 2; // 提供方名称
+  string icon_url = 3; // 提供方图标URL
+  string type = 4; // web2/web3/exchange
+}
+
+message ListWalletProvidersReq {}
+
+message ListWalletProvidersResp {
+  bool success = 1; // 是否成功
+  repeated WalletProviderItem providers = 2; // 提供方列表
+}
+
+message ProviderAccountItem {
+  string provider_id = 1; // 提供方ID
+  string account_id = 2; // 账户ID
+  string account_name = 3; // 账户名称
+  string avatar_url = 4; // 账户头像URL
+  string balance = 5; // 账户余额
+  string currency = 6; // 余额币种
+}
+
+message ListProviderAccountsReq {
+  string provider_id = 1; // 提供方ID
+}
+
+message ListProviderAccountsResp {
+  bool success = 1; // 是否成功
+  repeated ProviderAccountItem accounts = 2; // 账户列表
+}
+
+message LinkWalletAccountReq {
+  string provider_id = 1; // 提供方ID
+  string account_id = 2; // 账户ID
+}
+
+message LinkWalletAccountResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+  string binding_id = 3; // 绑定关系ID
+}
+
+message UnlinkWalletAccountReq {
+  string binding_id = 1; // 绑定关系ID
+}
+
+message UnlinkWalletAccountResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message SetPrimaryLinkedWalletReq {
+  string binding_id = 1; // 绑定关系ID
+}
+
+message SetPrimaryLinkedWalletResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message LinkedWalletAccountItem {
+  string binding_id = 1; // 绑定关系ID
+  string provider_id = 2; // 提供方ID
+  string provider_name = 3; // 提供方名称
+  string account_id = 4; // 账户ID
+  string account_name = 5; // 账户名称
+  string avatar_url = 6; // 账户头像URL
+  string balance = 7; // 账户余额
+  string currency = 8; // 余额币种
+  bool is_primary = 9; // 是否主账户
+  string bound_at = 10; // 绑定时间
+}
+
+message GetLinkedWalletAccountsReq {}
+
+message GetLinkedWalletAccountsResp {
+  bool success = 1; // 是否成功
+  repeated LinkedWalletAccountItem accounts = 2; // 已绑定账户列表
+}
+
+message ListWalletAddressesReq {
+  string asset = 1; // 资产筛选
+  string chain = 2; // 链筛选
+  bool include_whitelist = 3; // 是否包含白名单信息（默认 false）
+}
+
+message ListWalletAddressesResp {
+  bool success = 1; // 是否成功
+  repeated WalletAddressItem items = 2; // 地址列表
+  WhitelistAddressItem whitelist_address = 3; // 当前链的关联钱包地址（白名单，最近更新的）
+}
+
+message AddWalletAddressReq {
+  string chain = 1; // 链代码（网络）
+  string address = 2; // 地址
+  string label = 3; // 标签
+  bool set_default = 4; // 是否设为默认
+  string memo_tag = 5; // Memo/Tag（可选）
+}
+
+message AddWalletAddressResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message UpdateWalletAddressReq {
+  string id = 1; // 地址ID
+  string label = 2; // 地址标签
+  bool set_default = 3; // 是否设为默认
+  string memo_tag = 4; // Memo/Tag（如需）
+}
+
+message UpdateWalletAddressResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message DeleteWalletAddressReq {
+  string id = 1; // 地址ID
+}
+
+message DeleteWalletAddressResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message SetDefaultWalletAddressReq {
+  string id = 1; // 地址ID
+}
+
+message SetDefaultWalletAddressResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message ValidateWalletAddressReq {
+  string asset = 1; // 资产代码
+  string chain = 2; // 链网络代码
+  string address = 3; // 待验证地址
+}
+
+message ValidateWalletAddressResp {
+  bool success = 1; // 是否成功
+  bool valid = 2; // 地址是否合法
+  bool is_internal = 3; // 是否平台内部地址
+  bool need_memo_tag = 4; // 是否需要Memo/Tag
+  string message = 5; // 返回消息
+}
+
+// ==================== 内部地址（通过 UID/邮箱添加平台内用户） ====================
+
+// 内部地址列表项
+message InternalWalletAddressItem {
+  string id = 1;                   // 地址ID
+  string target_user_id = 2;       // 目标用户ID
+  string target_user_display = 3;  // 目标用户显示标识（邮箱掩码或UID备注）
+  string label = 4;                // 用户设置的标签/备注名
+  string remark = 5;               // UID备注
+  bool is_default = 6;             // 是否默认
+  int64 created_at = 7;            // 创建时间
+  int64 last_used_at = 8;          // 最后使用时间戳
+  int32 transfer_count = 9;        // 转账使用次数
+  string lookup_type = 10;         // 查找类型：uid / email（用于编辑时回显）
+}
+
+// 列表请求
+message ListInternalWalletAddressesReq {
+  // 暂无筛选条件
+}
+
+// 列表响应
+message ListInternalWalletAddressesResp {
+  bool success = 1;
+  repeated InternalWalletAddressItem items = 2;
+}
+
+// 添加内部地址请求
+message AddInternalWalletAddressReq {
+  string lookup_type = 1;  // 查找类型：uid / email
+  string lookup_value = 2; // 查找值：UID 或 邮箱
+  string label = 3;        // 标签/备注名（必填）
+  string remark = 4;       // UID备注（可选）
+  bool set_default = 5;    // 是否设为默认
+}
+
+// 添加内部地址响应
+message AddInternalWalletAddressResp {
+  bool success = 1;
+  string message = 2;
+  InternalWalletAddressItem item = 3; // 创建的地址项
+}
+
+// 更新内部地址请求
+message UpdateInternalWalletAddressReq {
+  string id = 1;           // 内部地址ID
+  string label = 2;        // 标签/备注名（地址名称）
+  string lookup_type = 3;  // 查找类型：uid / email（必填，用于更新目标用户）
+  string lookup_value = 4; // 查找值：UID 或 邮箱（必填，用于更新目标用户）
+  string remark = 5;       // UID备注
+  bool set_default = 6;    // 是否设为默认
+}
+
+// 更新内部地址响应
+message UpdateInternalWalletAddressResp {
+  bool success = 1;
+  string message = 2;
+}
+
+// 删除内部地址请求
+message DeleteInternalWalletAddressReq {
+  string id = 1; // 地址ID
+}
+
+// 删除内部地址响应
+message DeleteInternalWalletAddressResp {
+  bool success = 1;
+  string message = 2;
+}
+
+// 查找内部用户请求（用于添加前预览）
+message LookupInternalUserReq {
+  string lookup_type = 1;  // 查找类型：uid / email
+  string lookup_value = 2; // 查找值
+}
+
+// 查找内部用户响应
+message LookupInternalUserResp {
+  bool success = 1;
+  bool found = 2;           // 是否找到用户
+  string user_id = 3;       // 用户ID
+  string display_name = 4;  // 显示名称
+  string message = 5;       // 消息（未找到时的提示）
+}
+
+// ==================== 内部转账（用户之间的资产转移） ====================
+
+// 提交内部转账请求
+message SubmitInternalTransferReq {
+  string to_user_id = 1;       // 目标用户ID（从内部地址簿选择或直接输入）
+  string asset_code = 2;       // 资产代码（如 USDT、BTC）
+  string amount = 3;           // 转账数量（字符串，支持高精度）
+  string note = 4;             // 转账备注（可选，最多200字符）
+  string security_code = 5;    // 安全验证码（短信/邮箱/2FA，可选配置）
+  string trade_password = 6;   // 资金密码（可选配置）
+}
+
+// 提交内部转账响应
+message SubmitInternalTransferResp {
+  bool success = 1;
+  string message = 2;
+  string order_id = 3;         // 转账订单ID
+  string status = 4;           // 状态：pending/processing/completed/failed
+  bool needs_audit = 5;        // 是否需要人工审核
+  string strategy = 6;         // 审核策略：auto/manual_auto
+}
+
+// 校验内部转账目标用户请求
+message ValidateInternalTransferTargetReq {
+  string to_user_id = 1; // 目标用户标识符（支持 UID 或邮箱）
+}
+
+// 校验内部转账目标用户响应
+message ValidateInternalTransferTargetResp {
+  bool success = 1;
+  string message = 2;
+  bool exists = 3;        // 用户是否存在
+  string user_id = 4;     // 用户UID（如果存在）
+  string display_name = 5; // 显示名称（用于前端展示，如脱敏的邮箱或昵称）
+  string email = 6;       // 目标用户邮箱（脱敏，如 a***b@example.com）
+}
+
+// 取消内部转账请求（仅限待审核状态）
+message CancelInternalTransferReq {
+  string order_id = 1;         // 订单ID
+}
+
+// 取消内部转账响应
+message CancelInternalTransferResp {
+  bool success = 1;
+  string message = 2;
+}
+
+// ==================== 提现免审白名单（用户自绑定） ====================
+
+message WithdrawAuditWhitelistBindingItem {
+  string asset_code = 1; // 资产代码
+  string chain_code = 2; // 链代码
+  string address = 3; // 免审地址
+  bool enabled = 4; // 是否启用
+  string updated_at = 5; // 更新时间
+  string source = 6; // admin/user
+  string wallet_name = 7; // 钱包名称（用户自定义）
+  string wallet_icon = 8; // 钱包图标（Base64 data URI，可选）
+}
+
+// 提现免审白名单-绑定状态（仅链+地址维度；不包含代币字段）
+message WithdrawAuditWhitelistBindingStatusItem {
+  string chain_code = 1; // 链代码
+  string address = 2; // 免审地址
+  bool enabled = 3; // 是否启用
+  string updated_at = 4; // 更新时间
+  string source = 5; // admin/user
+  string wallet_name = 6; // 钱包名称（用户自定义）
+  string wallet_icon = 7; // 钱包图标（Base64 data URI，可选）
+}
+
+message ListWithdrawAuditWhitelistBindableNetworksReq {
+  reserved 1; // asset_code (deprecated)
+  reserved "asset_code";
+}
+
+message ListWithdrawAuditWhitelistBindableNetworksResp {
+  bool success = 1;
+  repeated ActionNetworkItem items = 2;
+}
+
+message SetMyWithdrawAuditWhitelistBindingReqItem {
+  string chain_code = 1; // 链代码
+  string address = 2; // 免审地址（enabled=false 时可为空）
+  bool enabled = 3; // true=绑定/更新；false=解绑
+  string wallet_name = 4; // 钱包名称（enabled=true 时必填）
+  string wallet_icon = 5; // 钱包图标（Base64 data URI，可选）
+}
+
+message SetMyWithdrawAuditWhitelistBindingReq {
+  reserved 1; // asset_code (deprecated)
+  reserved 2; // chain_code (deprecated)
+  reserved 3; // address (deprecated)
+  reserved 4; // enabled (deprecated)
+  reserved 5; // wallet_name (deprecated)
+  reserved 6; // wallet_icon (deprecated)
+  repeated SetMyWithdrawAuditWhitelistBindingReqItem items = 7;
+  string trade_password = 8;      // 交易密码（与 biometric 二选一）
+  BiometricProof biometric = 9;   // 生物识别签名（与 trade_password 二选一）
+}
+
+message SetMyWithdrawAuditWhitelistBindingResp {
+  bool success = 1;
+  string message = 2;
+  repeated WithdrawAuditWhitelistBindingItem items = 3; // 绑定结果列表
+}
+
+message GetMyWithdrawAuditWhitelistBindingStatusReq {
+  // empty
+}
+
+message GetMyWithdrawAuditWhitelistBindingStatusResp {
+  bool success = 1;
+  string message = 2;
+  repeated WithdrawAuditWhitelistBindingStatusItem items = 3;
+}
+
+message UnbindMyWithdrawAuditWhitelistBindingsReq {
+  string trade_password = 1;      // 交易密码（与 biometric 二选一）
+  BiometricProof biometric = 2;   // 生物识别签名（与 trade_password 二选一）
+}
+
+message UnbindMyWithdrawAuditWhitelistBindingsResp {
+  bool success = 1;
+  string message = 2;
+}
+
+message SetTradePasswordReq {
+  string password = 1;             // 登录密码（用于校验身份）
+  string trade_password = 2;       // 资金密码（建议仅数字，6位）
+}
+
+message SetTradePasswordResp {
+  bool success = 1;
+  string message = 2;
+}
+
+message ResetTradePasswordReq {
+  LoginMethod method = 1;          // 验证方式：EMAIL/SMS
+  string phone = 2;                // 手机号（二选一）
+  string country_code = 3;         // 国际区号（手机号时必填）
+  string email = 4;                // 邮箱（二选一）
+  string code = 5;                 // 验证码
+  string code_id = 6;              // 验证码ID
+  string new_trade_password = 7;   // 新资金密码
+  BiometricProof biometric = 8;    // 生物识别签名（与 email/sms code 三选一）
+}
+
+message ResetTradePasswordResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message VerifyTradePasswordReq {
+  string trade_password = 1;  // 交易密码
+}
+
+message VerifyTradePasswordResp {
+  bool success = 1;
+  string message = 2;
+  bool is_valid = 3;  // 密码是否正确
+  int32 remaining_attempts = 4;  // 剩余尝试次数
+  bool account_locked = 5;  // 账户是否已锁定
+}
+
+// Web3 交易密码（独立于Web2用户，基于device_id）
+message SetWeb3TradePasswordReq {
+  string device_id = 1;              // Web3设备ID（必填）
+  string trade_password = 2;         // 交易密码（建议6位数字）
+}
+
+message SetWeb3TradePasswordResp {
+  bool success = 1;
+  string message = 2;
+}
+
+message VerifyWeb3TradePasswordReq {
+  string device_id = 1;              // Web3设备ID（必填）
+  string trade_password = 2;         // 交易密码
+}
+
+message VerifyWeb3TradePasswordResp {
+  bool success = 1;
+  string message = 2;
+  bool is_valid = 3;                 // 密码是否正确
+}
+
+message UpdateWeb3TradePasswordReq {
+  string device_id = 1;              // Web3设备ID（必填）
+  string old_trade_password = 2;     // 旧交易密码（必填）
+  string new_trade_password = 3;     // 新交易密码（必填，建议6位数字）
+}
+
+message UpdateWeb3TradePasswordResp {
+  bool success = 1;
+  string message = 2;
+}
+
+message SetAntiPhishingCodeReq {
+  string code = 1;  // 4-20字符
+}
+
+message SetAntiPhishingCodeResp {
+  bool success = 1;
+  string message = 2;
+}
+
+message BindEmailReq {
+  string email = 1; // 邮箱地址
+  string code = 2; // 验证码
+}
+
+message BindEmailResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+message ChangeEmailReq {
+  string new_email = 1;       // 新邮箱地址
+  string code1 = 2;     // 验证码1
+  string code2 = 3;     // 验证码2
+}
+
+message ChangeEmailResp {
+  bool success = 1;
+  string message = 2;
+}
+
+message BindPhoneReq {
+  string phone = 1; // 手机号
+  string country_code = 2; // 国际区号
+  string code = 3; // 验证码
+}
+
+message BindPhoneResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+// 换绑手机号
+message ChangePhoneReq {
+  string new_phone = 1;          // 新手机号
+  string new_country_code = 2;   // 新手机号国际区号
+  string code1 = 3;        // 手机号验证码1
+  string code2 = 4;        // 手机号验证码2
+}
+
+message ChangePhoneResp {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetUserInfoReq {}
+
+message GetUserInfoResp {
+  bool success = 1; // 是否成功
+  string real_name = 2; // 真实姓名
+  string id_number = 3; // 身份证号
+  string birthday = 4; // 生日
+  Gender gender = 5; // 性别
+  string address = 6; // 地址
+  string nickname = 7; // 昵称
+  string email = 8; // 邮箱
+  string phone = 9; // 手机
+  string avatar_url = 10; // 头像URL
+}
+
+message UpdateUserInfoReq {
+  string real_name = 1; // 真实姓名
+  string id_number = 2; // 身份证号
+  string birthday = 3; // 生日
+  Gender gender = 4; // 性别
+  string address = 5; // 地址
+  string nickname = 6; // 昵称
+  string avatar_url = 7; // 头像URL
+}
+
+message UpdateUserInfoResp {
+  bool success = 1; // 是否成功
+  string message = 2; // 返回消息
+}
+
+// ==================== Web3 User ====================
+// 创建 Web3 用户请求
+message CreateWeb3UserReq {
+  string device_id = 1;         // 设备ID（客户端生成）
+  string platform = 2;          // 平台：ios/android/web
+  string os_version = 3;        // 操作系统版本
+  string app_version = 4;       // 应用版本
+  string device_model = 5;      // 设备型号
+  string device_name = 6;       // 设备名称
+  string push_token = 7;        // 推送令牌（可选）
+  string locale = 8;            // 语言区域（可选）
+}
+
+message CreateWeb3UserResp {
+  bool success = 1;             // 是否成功
+  string message = 2;           // 返回消息
+  string device_id = 3;         // 设备ID
+  int64 user_id = 4;            // Web3 用户ID
+}
+
+// 添加 Web3 用户地址
+message AddWeb3UserAddressReq {
+  string device_id = 1;         // 设备ID（用于查找 Web3 用户）
+  string network = 2;           // 网络名称（Ethereum/BSC/Polygon/Tron）
+  int64 chain_id = 3;           // 链ID
+  string address = 4;           // 钱包地址
+  bool is_primary = 5;          // 是否设为主地址（默认 false）
+}
+
+message AddWeb3UserAddressResp {
+  bool success = 1;             // 是否成功
+  string message = 2;           // 返回消息
+  int64 address_id = 3;         // 地址ID
+  string address = 4;          // 钱包地址
+}
+
+// 批量添加 Web3 用户地址请求
+message BatchAddWeb3UserAddressReq {
+  string device_id = 1;         // 设备ID（用于查找 Web3 用户）
+  repeated Web3AddressItem addresses = 2; // 地址列表
+}
+
+// Web3 地址项
+message Web3AddressItem {
+  string network = 1;          // 网络名称（Ethereum/BSC/Polygon/Tron）
+  int64 chain_id = 2;          // 链ID
+  string address = 3;          // 钱包地址
+  bool is_primary = 4;         // 是否设为主地址（默认 false）
+}
+
+// 批量添加 Web3 用户地址响应
+message BatchAddWeb3UserAddressResp {
+  bool success = 1;             // 是否成功（全部成功才为 true）
+  string message = 2;           // 返回消息
+  int32 total_count = 3;        // 总数量
+  int32 success_count = 4;     // 成功数量
+  int32 failed_count = 5;      // 失败数量
+  repeated BatchAddressResult results = 6; // 每个地址的处理结果
+}
+
+// 批量地址处理结果
+message BatchAddressResult {
+  string network = 1;          // 网络名称
+  int64 chain_id = 2;          // 链ID
+  string address = 3;          // 钱包地址
+  bool success = 4;            // 是否成功
+  string message = 5;          // 错误消息（失败时）
+  int64 address_id = 6;        // 地址ID（成功时）
+}
+
+// 查询 Web3 可用链列表
+message ListWeb3ChainsReq {}
+
+message ListWeb3ChainsResp {
+  bool success = 1;                      // 是否成功
+  string message = 2;                    // 返回消息
+  repeated Web3ChainItem chains = 3;     // 链列表
+}
+
+// 链信息
+message Web3ChainItem {
+  string name = 1;                       // 链名称（如 ETH/BSC/TRON）
+  string network = 2;                    // 网络名称
+  int32 chain_id = 3;                    // 链ID
+  string explorer_url = 4;               // 区块浏览器 URL
+  string icon_url = 5;                   // 图标 URL
+}
+
+// 获取 Web3 用户信息
+message GetWeb3UserByDeviceIdReq {
+  string device_id = 1;         // 设备ID
+}
+
+message Web3UserInfo {
+  int64 user_id = 1;             // Web3 用户ID
+  string device_id = 2;          // 设备ID
+  string platform = 3;           // 平台
+  string os_version = 4;         // OS 版本
+  string app_version = 5;        // 应用版本
+  string device_model = 6;       // 设备型号
+  string device_name = 7;        // 设备名称
+  string push_token = 8;         // 推送 token
+  string locale = 9;             // 语言区域
+  bool two_factor_enabled = 10;  // 是否开启二次验证
+  bool biometric_enabled = 11;   // 是否开启生物识别
+  bool has_trade_password = 12;  // 是否已设置交易密码
+  string last_security_update = 13; // 安全设置最后更新时间（RFC3339，可为空）
+  string last_active_at = 14;       // 最后活跃时间（RFC3339，可为空）
+  string created_at = 15;           // 创建时间（RFC3339）
+  string updated_at = 16;           // 更新时间（RFC3339）
+}
+
+message GetWeb3UserByDeviceIdResp {
+  bool success = 1;               // 是否成功
+  string message = 2;             // 返回消息
+  Web3UserInfo user = 3;          // 用户信息
+}
+
+// 获取 Web3 用户资产概览请求
+message GetWeb3AssetOverviewReq {
+  string address = 1;           // 钱包地址（必填，查询该地址的资产）
+  string network = 2;           // 网络（可选，如 Ethereum/BSC/TRON，用于过滤特定链的资产）
+}
+
+// Web3 资产项
+message Web3AssetItem {
+  string asset = 1;             // 资产代码（如 BTC/ETH/USDT）
+  string network = 2;           // 网络（如 Bitcoin/Ethereum/Tron）
+  int64 chain_id = 3;           // 链ID
+  string address = 4;           // 钱包地址
+  string balance = 5;           // 余额（最小单位，按 decimals 精度计算）
+  string balance_usd = 6;       // 余额折合 USD
+  string icon_url = 7;          // 图标 URL
+  string price_change_24h = 8;  // 24小时涨跌幅（%）
+  string price_usd = 9;         // 当前 USD 价格
+  repeated string sparkline = 10; // 简易K线价格数组（24h）
+  bool is_primary = 11;         // 是否主地址
+  int32 decimals = 12;          // 展示精度（用于界面显示，如 USDT=6），balance字段按此精度
+  int32 contract_decimals = 13; // 链上合约精度（用于构造交易，如 BSC USDT=18）
+  string amount = 14;           // 链上精度的 raw 值，客户端直接用于构造交易
+}
+
+message GetWeb3AssetOverviewResp {
+  bool success = 1;             // 是否成功
+  string message = 2;           // 返回消息
+  string address = 3;           // 钱包地址
+  string total_balance_usd = 4; // 总资产（USD估值）
+  repeated Web3AssetItem items = 5; // 资产列表
+  int32 token_count = 6;        // 代币种类数量
+}
+
+// ==================== Web3 交易记录 ====================
+// 获取 Web3 交易记录列表请求（公开查询，无需认证）
+message ListWeb3TransactionsReq {
+  string address = 1;           // 钱包地址（必填）
+  string asset_code = 2;        // 筛选资产（可选，如 ETH/USDT）
+  string tx_type = 3;           // 筛选类型（可选：receive/send/swap/contract_call/approve）
+  int64 start_time = 4;         // 开始时间戳（可选）
+  int64 end_time = 5;           // 结束时间戳（可选）
+  int32 page = 6;               // 页码（从1开始）
+  int32 page_size = 7;          // 每页数量
+  string chain_code = 8;        // 筛选链（可选，如 ETH/BSC/TRON）
+}
+
+// Web3 交易记录项
+message Web3TransactionItem {
+  string tx_hash = 1;           // 交易哈希
+  string tx_type = 2;           // 交易类型（receive/send/swap/contract_call/approve）
+  string tx_type_text = 3;      // 交易类型文案（已接收/已发送/代币兑换）
+  string direction = 4;         // 方向（in/out）
+  string asset_code = 5;        // 资产代码
+  string amount = 6;            // 金额
+  string amount_display = 7;    // 显示金额（如 +9.1223 USDT）
+  string amount_usd = 8;        // USD 估值
+  string from_address = 9;      // 发送方地址
+  string to_address = 10;       // 接收方地址
+  string status = 11;           // 状态（pending/confirmed/failed）
+  string status_text = 12;      // 状态文案（交易中/已完成/失败）
+  int64 block_time = 13;        // 区块时间戳
+  string network = 14;          // 网络名称（Ethereum/Bitcoin）
+  string icon_url = 15;         // 资产图标
+  int64 created_at = 16;        // 交易创建时间戳（Unix秒）
+  int64 id = 17;                // 对应 web3_balance_changes.id（用于详情去歧义）
+  int32 event_index = 18;        // 事件索引（同一 tx_hash 下的事件序号；广播占位为 -1）
+  string fee = 19;              // 手续费金额
+  string fee_asset = 20;        // 手续费币种
+}
+
+message ListWeb3TransactionsResp {
+  bool success = 1;             // 是否成功
+  string message = 2;           // 返回消息
+  repeated Web3TransactionItem items = 3; // 交易记录列表
+  int64 total = 4;              // 总数
+}
+
+// 获取 Web3 交易详情请求（公开查询，无需认证）
+message GetWeb3TransactionDetailReq {
+  int64 id = 1;                 // web3_balance_changes.id（必填，用于唯一定位某个地址视角的记录）
+}
+
+// Web3 交易详情
+message GetWeb3TransactionDetailResp {
+  bool success = 1;             // 是否成功
+  string message = 2;           // 返回消息
+
+  // 基本信息
+  string tx_hash = 3;           // 交易哈希
+  string tx_type = 4;           // 交易类型
+  string tx_type_text = 5;      // 交易类型文案
+  string direction = 6;         // 方向
+
+  // 金额信息
+  string asset_code = 7;        // 资产代码
+  string amount = 8;            // 金额
+  string amount_display = 9;    // 显示金额
+  string amount_usd = 10;       // USD 估值
+
+  // 地址信息
+  string from_address = 11;     // 发送方地址
+  string from_label = 12;       // 发送方标签
+  string to_address = 13;       // 接收方地址
+  string to_label = 14;         // 接收方标签
+
+  // 状态信息
+  string status = 15;           // 状态
+  string status_text = 16;      // 状态文案
+  int32 confirmations = 17;     // 当前确认数
+  int32 required_confirmations = 18; // 需要的确认数
+
+  // 网络信息
+  string network = 19;          // 网络名称
+  int64 chain_id = 20;          // 链ID
+  int64 block_number = 21;      // 区块高度
+  int64 block_time = 22;        // 区块时间戳
+
+  // 手续费
+  string fee = 23;              // 手续费金额
+  string fee_asset = 24;        // 手续费币种
+
+  // 其他
+  string icon_url = 25;         // 资产图标
+  string explorer_url = 26;     // 区块浏览器链接
+}
+
+// Web3 交易结果查询请求（公开查询，无需认证）
+message GetWeb3TransactionResultReq {
+  string tx_hash = 1;           // 交易哈希（必填）
+  string network = 2;           // 网络名称（可选，如 Ethereum/BSC/TRON，用于实时查询链上状态）
+}
+
+// Web3 交易结果响应
+message GetWeb3TransactionResultResp {
+  bool success = 1;             // 是否成功
+  string message = 2;           // 返回消息
+
+  // 基本信息
+  string tx_hash = 3;           // 交易哈希
+  string network = 4;           // 网络名称
+  int64 chain_id = 5;           // 链ID
+
+  // 状态信息
+  string status = 6;            // 状态（pending/confirmed/failed）
+  string status_text = 7;       // 状态文案（交易中/已完成/失败）
+  bool is_success = 8;          // 是否成功（confirmed 且未失败）
+  int32 confirmations = 9;      // 当前确认数
+  int32 required_confirmations = 10; // 需要的确认数
+
+  // 区块信息
+  int64 block_number = 11;      // 区块高度（0 表示未确认）
+  int64 block_time = 12;        // 区块时间戳（0 表示未确认）
+
+  // 数据来源
+  string data_source = 13;      // 数据来源（database/chain，表示从数据库还是链上实时查询）
+}
+
+// ==================== Web3 支持的资产列表 ====================
+// 获取 Web3 支持的资产列表请求（根据链查询）
+message ListWeb3SupportedAssetsReq {
+  string chain_code = 1;        // 链代码（如 ETH/BSC/TRON，必填）
+  int32 precision = 2;           // 精度过滤（可选，0表示不过滤，只返回指定精度的资产）
+}
+
+// Web3 支持的资产项
+message Web3SupportedAssetItem {
+  string asset_code = 1;        // 资产代码（如 USDT/ETH/BTC）
+  string asset_name = 2;        // 资产名称
+  string chain_code = 3;        // 链代码
+  string chain_name = 4;        // 链名称
+  string chain_id = 12;         // 链ID
+  string contract_address = 5;  // 合约地址（主币为空）
+  string icon_url = 6;          // 资产图标 URL
+  bool deposit_enabled = 7;     // 是否支持充值
+  bool withdraw_enabled = 8;    // 是否支持提现
+  string min_deposit_amount = 9;  // 最小充值金额（按 precision 精度）
+  string min_withdraw_amount = 10; // 最小提现金额（按 precision 精度）
+  int32 precision = 11;         // 展示精度（用于界面显示金额，如 USDT=6）
+  int32 contract_decimals = 13; // 链上合约精度（用于构造交易，如 BSC USDT=18, ETH USDT=6）
+}
+
+message ListWeb3SupportedAssetsResp {
+  bool success = 1;             // 是否成功
+  string message = 2;           // 返回消息
+  string chain_code = 3;        // 链代码
+  repeated Web3SupportedAssetItem items = 4; // 资产列表
+}
+
+// ==================== Web3 交易广播 ====================
+// 广播 Web3 交易请求
+message BroadcastWeb3TransactionReq {
+  string device_id = 1;                  // 设备ID（Web3用户标识，必填）
+  string signed_transaction = 2;         // 已签名交易（hex编码，必填）
+  string network = 3;                    // 网络名称（Ethereum/BSC/TRON，必填）
+  string from_address = 4;               // 发送方地址（必填，用于验证地址归属）
+  string to_address = 5;                 // 接收方地址（可选）
+  string asset_code = 6;                 // 资产代码（可选，如 ETH/USDT）
+  string amount = 7;                     // 金额（可选，用于记录）
+  string tx_type = 8;                    // 交易类型（可选：send/receive/swap/contract_call，默认 send）
+  bool wait_for_receipt = 9;             // 是否等待交易收据（可选，默认 false）
+  int32 timeout_seconds = 10;            // 超时时间（可选，默认 30秒）
+  // Swap 专用字段：用于在广播后补齐 swap_svc_transactions（不影响普通转账广播）
+  string swap_id = 11;                   // ExecuteSwap 返回的 swap_id（可选；tx_type=swap 时建议传）
+}
+
+// 广播 Web3 交易响应
+message BroadcastWeb3TransactionResp {
+  bool success = 1;                      // 是否成功
+  string message = 2;                    // 返回消息
+  string tx_hash = 3;                    // 交易哈希
+  string status = 4;                     // 交易状态（pending/confirmed/failed）
+  int64 broadcasted_at = 5;              // 广播时间戳
+  string block_number = 6;               // 区块号（如果 wait_for_receipt=true）
+  optional bool swap_record_ok = 7;      // Swap 场景：是否成功补齐 swap_svc_transactions（失败不影响广播成功）
+}
+
+// ==================== 获取 Web3 Nonce ====================
+message GetWeb3NonceReq {
+  string device_id = 1;                  // 设备ID（用于验证 Web3 用户身份）
+  string address = 2;                    // 地址
+  string network = 3;                    // 网络名称（ETH/BSC/TRON）
+  bool pending = 4;                      // 是否查询pending状态的nonce（默认true，包含待确认交易）
+}
+
+message GetWeb3NonceResp {
+  bool success = 1;                      // 是否成功
+  string message = 2;                    // 返回消息
+  string nonce = 3;                      // 已确认的 nonce（不包含待确认交易）
+  string pending_nonce = 4;              // pending nonce（包含待确认交易，推荐用于构建交易）
+}
+
+// ==================== 构建 TRON 交易 ====================
+message BuildTronTransactionReq {
+  string device_id = 1;                  // 设备ID（用于验证 Web3 用户身份）
+  string from_address = 2;               // 发送方地址（必填）
+  string to_address = 3;                 // 接收方地址（必填）
+  string amount = 4;                     // 转账金额（必填，单位：SUN（TRX）或代币最小单位（TRC20））
+  string contract_address = 5;           // 代币合约地址（可选，为空则为 TRX 转账，有值则为 TRC20 代币转账）
+}
+
+message BuildTronTransactionResp {
+  bool success = 1;                      // 是否成功
+  string message = 2;                    // 返回消息
+  string raw_data = 3;                   // 未签名的交易 rawData（hex编码的protobuf序列化数据，供客户端签名）
+}
+
+// ==================== Web3 代币详细信息 ====================
+// 获取 Web3 代币详细信息请求（公开查询，无需认证）
+message GetWeb3TokenDetailReq {
+  string asset_code = 1;                // 资产代码（如 TRX/USDT/ETH，必填）
+  string network = 2;                    // 网络名称（如 TRON/Ethereum/BSC，必填）
+  string contract_address = 3;          // 合约地址（可选，系统会根据 asset_code 和 network 自动查找）
+}
+
+// Web3 代币详细信息响应
+message GetWeb3TokenDetailResp {
+  bool success = 1;                      // 是否成功
+  string message = 2;                    // 返回消息
+
+  // 价格信息
+  string price_usd = 3;                 // 当前 USD 价格
+  string price_change_24h = 4;          // 24小时涨跌幅（%，如 "+0.05"）
+
+  // 基本信息
+  string contract_address = 5;         // 合约地址（主币为空或 "~"）
+  string network = 6;                    // 网络名称（如 "波场"/"Ethereum"）
+  string mint_time = 7;                 // 铸造时间（可选，如 "~" 表示未知）
+  string issuer_address = 8;           // 发行地址（可选，如 "~" 表示未知）
+
+  // 概览信息
+  string total_supply = 9;               // 总供应量
+  string circulating_supply = 10;       // 流通供应量
+  string total_market_cap = 11;         // 总市值（USD）
+  string circulating_market_cap = 12;   // 流通市值（USD）
+  string holders = 13;                  // 持有者数量（可选，如 "~" 表示未知）
+
+  // 其他信息
+  string symbol = 14;                    // 代币符号
+  string name = 15;                     // 代币名称
+  uint32 decimals = 16;                  // 精度
+  string icon_url = 17;                 // 图标 URL
+  int64 chain_id = 18;                  // 链ID
+}

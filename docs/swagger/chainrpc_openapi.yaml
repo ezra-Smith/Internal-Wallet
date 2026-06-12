@@ -1,0 +1,30 @@
+openapiOptions:
+  method:
+    - method: chainrpc.ChainRPC.GetGasPrice
+      option:
+        tags:
+          - ChainGas
+        summary: "获取分级 Gas 价格"
+        description: "获取不同速度级别的 Gas 价格（慢/标准/快/极速），包含预估确认时间和 Gwei 价格。适用于 Swap 交易设置等场景（ETH/BSC）"
+
+    - method: chainrpc.ChainRPC.EstimateGas
+      option:
+        tags:
+          - ChainGas
+        summary: "估算交易 Gas Limit"
+        description: "估算单笔交易的 Gas Limit 和当前费用（适用于后台系统和精确计算场景，不推荐移动端使用）"
+
+    - method: chainrpc.ChainRPC.EstimateTronFee
+      option:
+        tags:
+          - ChainGas
+        summary: "估算 TRON 手续费"
+        description: "Estimate TRON transaction fee (bandwidth + energy + activation)"
+
+    - method: chainrpc.ChainRPC.GetTronAccountResources
+      option:
+        tags:
+          - ChainQuery
+        summary: "查询 TRON 地址资源"
+        description: "Query TRON address resources (bandwidth, energy, balance)"
+

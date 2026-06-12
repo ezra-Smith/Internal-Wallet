@@ -1,0 +1,870 @@
+syntax = "proto3";
+
+package chainrpc;
+
+option go_package = "./pb";
+
+// ============================================================================
+// 链操作服务定义 - 区块链交互服务
+// ============================================================================
+
+// 链RPC服务 - 地址生成、转账交易、链上查询
+service ChainRPC {
+  // ==================== 地址管理 ====================
+//  // 生成充值地址（HD钱包派生）
+//  rpc GenerateAddress(GenerateAddressReq) returns (GenerateAddressResp);
+//
+//  // 批量生成地址
+//  rpc GenerateAddressBatch(GenerateAddressBatchReq) returns (GenerateAddressBatchResp);
+//
+//  // 验证地址有效性
+//  rpc ValidateAddress(ValidateAddressReq) returns (ValidateAddressResp);
+//
+//  // 从公钥生成地址
+//  rpc GetAddressFromPubkey(GetAddressFromPubkeyReq) returns (GetAddressFromPubkeyResp);
+
+  // ==================== 转账交易 ====================
+  // 主币转账交易
+  rpc NativeTransfer(NativeTransferReq) returns (TransactionResp);
+
+  // 代币转账交易
+  rpc TokenTransfer(TokenTransferReq) returns (TransactionResp);
+  // 批量转账交易（归集用）
+  rpc BatchTransfer(BatchTransferReq) returns (BatchTransferResp);
+
+  // 估算Gas费用
+  rpc EstimateGas(EstimateGasReq) returns (EstimateGasResp);
+
+  // 获取推荐Gas价格
+  rpc GetGasPrice(GetGasPriceReq) returns (GetGasPriceResp);
+
+  // ==================== TRON 资源/手续费 ====================
+  // 估算 TRON 手续费（Bandwidth + Energy + 激活费）
+  rpc EstimateTronFee(EstimateTronFeeReq) returns (EstimateTronFeeResp);
+
+  // 查询 TRON 地址资源（Bandwidth/Energy/余额）
+  rpc GetTronAccountResources(GetTronAccountResourcesReq) returns (GetTronAccountResourcesResp);
+
+  // ==================== 交易广播 ====================
+  // 广播已签名交易
+  rpc BroadcastTransaction(BroadcastTransactionReq) returns (BroadcastTransactionResp);
+
+  // 批量广播交易
+  //  rpc BroadcastBatch(BroadcastBatchReq) returns (BroadcastBatchResp);
+
+  // 加速交易（Replace-By-Fee）
+  rpc SpeedUpTransaction(SpeedUpTransactionReq) returns (SpeedUpTransactionResp);
+
+  // 取消交易
+  rpc CancelTransaction(CancelTransactionReq) returns (CancelTransactionResp);
+
+  // ==================== 链上查询 ====================
+  // 查询地址余额（主币）
+  rpc GetBalance(GetBalanceReq) returns (GetBalanceResp);
+
+  // 查询代币余额
+  rpc GetTokenBalance(GetTokenBalanceReq) returns (GetTokenBalanceResp);
+
+  // 查询多地址余额
+  rpc GetMultiBalance(GetMultiBalanceReq) returns (GetMultiBalanceResp);
+
+  // 查询交易详情
+  rpc GetTransaction(GetTransactionReq) returns (GetTransactionResp);
+
+  // 查询交易状态
+  rpc GetTransactionStatus(GetTransactionStatusReq) returns (GetTransactionStatusResp);
+
+  // 查询交易收据
+  rpc GetTransactionReceipt(GetTransactionReceiptReq) returns (GetTransactionReceiptResp);
+
+  // 查询区块高度
+  rpc GetBlockHeight(GetBlockHeightReq) returns (GetBlockHeightResp);
+
+  // 查询区块信息
+  rpc GetBlock(GetBlockReq) returns (GetBlockResp);
+
+  // 查询Nonce
+  rpc GetNonce(GetNonceReq) returns (GetNonceResp);
+
+  // 构建 EVM 交易（ETH/BSC，返回未签名 rawTx，供 Signer 签名）
+  rpc BuildTransaction(BuildTransactionReq) returns (BuildTransactionResp);
+
+  // 构建 TRON 交易（返回未签名的 rawData，供客户端签名）
+  rpc BuildTronTransaction(ChainRpcBuildTronTransactionReq) returns (ChainRpcBuildTronTransactionResp);
+
+  // ==================== 代币信息 ====================
+  // 查询代币信息（symbol, decimals, totalSupply）
+  rpc GetTokenInfo(GetTokenInfoReq) returns (GetTokenInfoResp);
+
+  // 批量查询代币信息
+  rpc GetTokenInfoBatch(GetTokenInfoBatchReq) returns (GetTokenInfoBatchResp);
+
+  // ==================== 节点管理 ====================
+  // 节点健康检查
+  rpc HealthCheck(HealthCheckReq) returns (HealthCheckResp);
+
+  // 获取节点状态
+  rpc GetNodeStatus(GetNodeStatusReq) returns (GetNodeStatusResp);
+
+  // 切换节点
+  rpc SwitchNode(SwitchNodeReq) returns (SwitchNodeResp);
+
+  // 测试节点连接
+  rpc TestNode(TestNodeReq) returns (TestNodeResp);
+}
+
+// ============================================================================
+// 枚举定义
+// ============================================================================
+
+// 区块链类型
+enum ChainRpcType {
+  CHAIN_TYPE_UNSPECIFIED = 0;
+  CHAIN_TYPE_TRON = 1;      // TRON (TRX/TRC20)
+  CHAIN_TYPE_BSC = 2;       // Binance Smart Chain (BNB/BEP20)
+  CHAIN_TYPE_ETHEREUM = 3;  // Ethereum (ETH/ERC20)
+  CHAIN_TYPE_POLYGON = 4;   // Polygon (MATIC/ERC20)
+}
+
+// 交易状态
+enum TxStatus {
+  TX_STATUS_UNSPECIFIED = 0;
+  TX_STATUS_PENDING = 1;     // 待确认
+  TX_STATUS_CONFIRMED = 2;   // 已确认
+  TX_STATUS_FAILED = 3;      // 失败
+  TX_STATUS_DROPPED = 4;     // 被丢弃
+  TX_STATUS_REPLACED = 5;    // 被替换
+}
+
+// Gas速度级别
+enum GasSpeed {
+  GAS_SPEED_UNSPECIFIED = 0;
+  GAS_SPEED_SLOW = 1;        // 慢（省钱）
+  GAS_SPEED_STANDARD = 2;    // 标准
+  GAS_SPEED_FAST = 3;        // 快速
+  GAS_SPEED_INSTANT = 4;     // 极速
+}
+
+// 节点类型
+enum NodeType {
+  NODE_TYPE_UNSPECIFIED = 0;
+  NODE_TYPE_QUICKNODE = 1;
+  NODE_TYPE_INFURA = 2;
+  NODE_TYPE_ALCHEMY = 3;
+  NODE_TYPE_ANKR = 4;
+  NODE_TYPE_CUSTOM = 5;      // 自建节点
+}
+
+// 地址类型
+enum AddressType {
+  ADDRESS_TYPE_UNSPECIFIED = 0;
+  ADDRESS_TYPE_EOA = 1;      // 外部账户
+  ADDRESS_TYPE_CONTRACT = 2; // 合约地址
+}
+
+// ============================================================================
+// 地址管理 - 消息定义
+// ============================================================================
+
+// ==================== 生成地址 ====================
+//message GenerateAddressReq {
+//  ChainRpcType chain = 1;                // 链类型
+//  string derivation_path = 2;         // 派生路径（如 m/44'/60'/0'/0/0）
+//  string public_key = 3;              // 公钥（hex编码）
+//  string compressed_pubkey = 4;       // 压缩公钥（可选）
+//}
+//
+//message GenerateAddressResp {
+//  bool success = 1;
+//  string message = 2;
+//  string address = 3;                 // 生成的地址
+//  ChainRpcType chain = 4;
+//  string derivation_path = 5;
+//  AddressType address_type = 6;
+//}
+//
+//// ==================== 批量生成地址 ====================
+//message GenerateAddressBatchReq {
+//  ChainRpcType chain = 1;
+//  int32 start_index = 2;              // 起始索引
+//  int32 count = 3;                    // 生成数量
+//  string master_public_key = 4;       // 主公钥
+//  int32 account = 5;                  // BIP44 account
+//  int32 change = 6;                   // BIP44 change (0=external, 1=internal)
+//}
+//
+//message AddressInfo {
+//  int32 index = 1;
+//  string derivation_path = 2;
+//  string address = 3;
+//  string public_key = 4;
+//}
+//
+//message GenerateAddressBatchResp {
+//  bool success = 1;
+//  string message = 2;
+//  ChainRpcType chain = 3;
+//  repeated AddressInfo addresses = 4;
+//  int32 total = 5;
+//}
+//
+//// ==================== 验证地址 ====================
+//message ValidateAddressReq {
+//  ChainRpcType chain = 1;
+//  string address = 2;
+//}
+//
+//message ValidateAddressResp {
+//  bool success = 1;
+//  string message = 2;
+//  bool valid = 3;
+//  AddressType address_type = 4;
+//  bool checksum_valid = 5;            // 校验和是否正确
+//}
+//
+//// ==================== 从公钥生成地址 ====================
+//message GetAddressFromPubkeyReq {
+//  ChainRpcType chain = 1;
+//  string public_key = 2;              // hex编码的公钥
+//  bool compressed = 3;                // 是否为压缩公钥
+//}
+//
+//message GetAddressFromPubkeyResp {
+//  bool success = 1;
+//  string message = 2;
+//  string address = 3;
+//}
+
+// ============================================================================
+// 转账交易 - 消息定义
+// ============================================================================
+
+// ==================== 主币转账 ====================
+message NativeTransferReq {
+  ChainRpcType chain = 1;
+  string from_address = 2;
+  string to_address = 3;
+  string amount = 4;                  // 金额（最小单位，如wei）
+  uint64 gas_price = 5;               // Gas价格（可选，空则自动获取）
+  uint64 gas_limit = 6;               // Gas限制（可选，空则自动估算）
+  uint64 nonce = 7;                   // Nonce（可选，空则自动获取）
+  GasSpeed gas_speed = 8;             // Gas速度（可选）
+  string memo = 9;                    // 备注（TRON支持）
+  int64 uid = 10;                    // 用户ID
+  bool wait_for_receipt = 11;         // 是否等待交易收据
+}
+
+// ==================== 代币转账 ====================
+message TokenTransferReq {
+  ChainRpcType chain = 1;
+  string from_address = 2;
+  string to_address = 3;
+  string token_contract = 4;          // 代币合约地址
+  string amount = 5;                  // 金额（最小单位）
+  uint64 gas_price = 6;               // Gas价格（可选）
+  uint64 gas_limit = 7;               // Gas限制（可选）
+  uint64 nonce = 8;                   // Nonce（可选）
+  GasSpeed gas_speed = 9;
+  int64 uid = 10;                    // 用户ID
+  bool wait_for_receipt = 11;         // 是否等待交易收据
+}
+
+// ==================== 交易响应 ====================
+message TransactionResp {
+//  bool success = 1;
+//  string message = 2;
+//  string tx_hash = 3;
+//  string raw_transaction = 4;         // 未签名交易（hex编码）
+//  string tx_hash_preview = 5;         // 预计的交易hash
+//  string gas_price = 6;               // 实际使用的Gas价格
+//  uint64 gas_limit = 7;               // 实际使用的Gas限制
+//  string estimated_fee = 8;           // 预估手续费
+//  uint64 nonce = 9;                   // 实际使用的Nonce
+//  map<string, string> extra_data = 10; // 额外数据（链特定）
+//  int64 uid = 11;                    // 用户ID
+
+    bool success = 1;
+    string message = 2;
+    string tx_hash = 3;                 // 交易hash
+    uint64 nonce = 4;
+    TxStatus status = 5;
+    int64 broadcasted_at = 6;
+    string block_number = 7;            // 如果wait_for_receipt=true
+    uint64 gas_used = 8;                // 如果wait_for_receipt=true
+}
+
+// ==================== 批量交易 ====================
+message BatchTransferReq {
+  ChainRpcType chain = 1;
+  string from_address = 2;
+  repeated TransferItem transfers = 3;
+  string gas_price = 4;               // 统一Gas价格
+  GasSpeed gas_speed = 5;
+}
+
+message TransferItem {
+  string to_address = 1;
+  string amount = 2;
+  string token_contract = 3;          // 空表示主币
+}
+
+message BatchTransferResp {
+  bool success = 1;
+  string message = 2;
+  repeated TransactionResp transactions = 3;
+  int32 total = 4;
+  string total_estimated_fee = 5;
+}
+
+// ==================== Gas估算 ====================
+message EstimateGasReq {
+  ChainRpcType chain = 1;
+  string from_address = 2;
+  string to_address = 3;
+  string value = 4;                   // 金额
+  string data = 5;                    // 交易数据（可选）
+  string token_contract = 6;          // 代币合约（可选）
+}
+
+message EstimateGasResp {
+  bool success = 1;
+  string message = 2;
+  uint64 gas_limit = 3;               // 估算的Gas限制
+  string gas_price = 4;               // 当前Gas价格
+  string estimated_fee = 5;           // 预估费用
+  string estimated_fee_usd = 6;       // 预估费用（USD）
+}
+
+// ==================== Gas价格 ====================
+message GetGasPriceReq {
+  ChainRpcType chain = 1;
+  GasSpeed speed = 2;                 // 速度级别
+  string transaction_type = 3;        // 交易类型（可选）：native_transfer, token_transfer, swap, approve 等，用于估算 gas_limit
+  string token_address = 4;           // 代币地址（可选，token_transfer 或 swap 时需要）
+}
+
+message GasPriceInfo {
+  GasSpeed speed = 1;
+  string gas_price = 2;               // Wei
+  string gas_price_gwei = 3;          // Gwei
+  int32 estimated_time_seconds = 4;   // 预估确认时间
+  uint64 gas_limit = 5;               // 预估 Gas Limit（根据 transaction_type 返回典型值）
+  string max_fee_wei = 6;             // 最大费用（Wei）= gas_price * gas_limit
+  string max_fee_gwei = 7;            // 最大费用（Gwei）
+}
+
+message GetGasPriceResp {
+  bool success = 1;
+  string message = 2;
+  repeated GasPriceInfo prices = 3;   // 不同速度的价格
+  string current_block = 4;
+  int64 timestamp = 5;
+}
+
+// ==================== TRON 手续费估算 ====================
+message EstimateTronFeeReq {
+  string from_address = 1;      // Sender's TRON address (Base58 format)
+  string to_address = 2;        // Recipient's TRON address (Base58 format)
+  string amount = 3;            // Amount in smallest unit (SUN for TRX, token decimals for TRC20)
+  string contract_address = 4;  // Optional: TRC20 contract address (empty = native TRX transfer)
+}
+
+message EstimateTronFeeResp {
+  bool success = 1;
+  string message = 2;
+
+  uint64 bandwidth_required = 3;      // Estimated bandwidth consumption
+  uint64 energy_required = 4;         // Estimated energy consumption (0 for TRX)
+  string estimated_fee_sun = 5;       // Total fee in SUN (smallest unit)
+  string estimated_fee_trx = 6;       // Total fee in TRX (for display)
+  string estimated_fee_usd = 7;       // USD equivalent
+
+  bool to_address_activated = 8;      // Whether recipient is activated
+  string activation_fee_sun = 9;      // Activation fee if needed (0 if activated)
+
+  // Resource breakdown (optional, for debugging)
+  uint64 from_bandwidth_available = 10;
+  uint64 from_energy_available = 11;
+}
+
+// ==================== TRON 地址资源查询 ====================
+message GetTronAccountResourcesReq {
+  string address = 1;  // TRON address to query (Base58 format)
+}
+
+message GetTronAccountResourcesResp {
+  bool success = 1;
+  string message = 2;
+
+  // Bandwidth resources
+  uint64 bandwidth_total = 3;       // Total bandwidth limit
+  uint64 bandwidth_used = 4;        // Bandwidth consumed
+  uint64 bandwidth_available = 5;   // Remaining bandwidth
+
+  // Energy resources
+  uint64 energy_total = 6;          // Total energy limit
+  uint64 energy_used = 7;           // Energy consumed
+  uint64 energy_available = 8;      // Remaining energy
+
+  // Account info
+  string trx_balance_sun = 9;       // TRX balance in SUN
+  string trx_balance_trx = 10;      // TRX balance in TRX (for display)
+  bool is_activated = 11;           // Whether address has been activated
+}
+
+// ============================================================================
+// 交易广播 - 消息定义
+// ============================================================================
+
+// ==================== 广播交易 ====================
+message BroadcastTransactionReq {
+  ChainRpcType chain = 1;
+  string signed_transaction = 2;      // 已签名交易（hex编码，ETH/BSC为RLP编码，TRON为protobuf编码）
+  string request_id = 3;              // 请求ID（幂等性，可选）
+  bool wait_for_receipt = 4;          // 是否等待交易收据（默认false）
+  int32 timeout_seconds = 5;          // 超时时间（秒，默认30）
+}
+
+message BroadcastTransactionResp {
+  bool success = 1;
+  string message = 2;
+  string tx_hash = 3;                 // 交易hash
+  uint64 nonce = 4;                   // Nonce（ETH/BSC）
+  TxStatus status = 5;                // 交易状态
+  int64 broadcasted_at = 6;           // 广播时间戳
+  string block_number = 7;            // 区块号（如果wait_for_receipt=true且已确认）
+  uint64 gas_used = 8;                // Gas使用量（如果wait_for_receipt=true）
+}
+
+// ==================== 批量广播 ====================
+//message BroadcastBatchReq {
+//  ChainRpcType chain = 1;
+//  repeated string signed_transactions = 2;
+//  string batch_id = 3;
+//  bool sequential = 4;                // 是否顺序广播（nonce连续）
+//}
+
+//message BroadcastResult {
+//  int32 index = 1;
+//  bool success = 2;
+//  string tx_hash = 3;
+//  string error_message = 4;
+//}
+//
+//message BroadcastBatchResp {
+//  bool success = 1;
+//  string message = 2;
+//  string batch_id = 3;
+//  int32 total = 4;
+//  int32 success_count = 5;
+//  int32 failed_count = 6;
+//  repeated BroadcastResult results = 7;
+//}
+
+// ==================== 加速交易 ====================
+message SpeedUpTransactionReq {
+  ChainRpcType chain = 1;
+  string original_tx_hash = 2;
+  string new_gas_price = 3;           // 新的Gas价格（必须更高）
+  GasSpeed gas_speed = 4;
+}
+
+message SpeedUpTransactionResp {
+  bool success = 1;
+  string message = 2;
+  string new_tx_hash = 3;
+  string old_tx_hash = 4;
+  string new_gas_price = 5;
+  string old_gas_price = 6;
+}
+
+// ==================== 取消交易 ====================
+message CancelTransactionReq {
+  ChainRpcType chain = 1;
+  string tx_hash = 2;
+  string from_address = 3;
+  string nonce = 4;
+  string gas_price = 5;               // 必须比原交易高
+}
+
+message CancelTransactionResp {
+  bool success = 1;
+  string message = 2;
+  string cancel_tx_hash = 3;
+  string original_tx_hash = 4;
+}
+
+// ============================================================================
+// 链上查询 - 消息定义
+// ============================================================================
+
+// ==================== 查询余额 ====================
+message GetBalanceReq {
+  ChainRpcType chain = 1;
+  string address = 2;
+  uint64 block_number = 3;            // 可选：查询指定区块的余额
+}
+
+message GetBalanceResp {
+  bool success = 1;
+  string message = 2;
+  string balance = 3;                 // 余额（最小单位）
+  string balance_formatted = 4;       // 格式化余额（如 1.5 ETH）
+  double balance_usd = 5;             // USD价值
+  uint64 block_number = 6;
+}
+
+// ==================== 查询代币余额 ====================
+message GetTokenBalanceReq {
+  ChainRpcType chain = 1;
+  string address = 2;
+  string token_contract = 3;
+  string block_number = 4;            // 可选
+}
+
+message GetTokenBalanceResp {
+  bool success = 1;
+  string message = 2;
+  string balance = 3;                 // 余额（最小单位）
+  string balance_formatted = 4;       // 格式化余额
+  double balance_usd = 5;
+  string token_symbol = 6;
+  uint32 token_decimals = 7;
+}
+
+// ==================== 查询多地址余额 ====================
+message GetMultiBalanceReq {
+  ChainRpcType chain = 1;
+  repeated string addresses = 2;
+  repeated string token_contracts = 3; // 空数组则只查主币
+}
+
+message BalanceInfo {
+  string address = 1;
+  string native_balance = 2;
+  repeated TokenBalanceInfo tokens = 3;
+  double total_usd = 4;
+}
+
+message TokenBalanceInfo {
+  string token_contract = 1;
+  string token_symbol = 2;
+  uint32 decimals = 3;
+  string balance = 4;
+  string balance_formatted = 5;
+  double balance_usd = 6;
+}
+
+message GetMultiBalanceResp {
+  bool success = 1;
+  string message = 2;
+  repeated BalanceInfo balances = 3;
+  double total_usd = 4;
+}
+
+// ==================== 查询交易详情 ====================
+message GetTransactionReq {
+  ChainRpcType chain = 1;
+  string tx_hash = 2;
+  bool include_logs = 3;              // 是否包含事件日志
+}
+
+message TransactionDetail {
+  string tx_hash = 1;
+  ChainRpcType chain = 2;
+  string block_number = 3;
+  string block_hash = 4;
+  int64 block_timestamp = 5;
+  uint64 transaction_index = 6;
+  string from_address = 7;
+  string to_address = 8;
+  string value = 9;                   // 金额
+  string gas_price = 10;
+  uint64 gas_limit = 11;
+  uint64 gas_used = 12;
+  string gas_fee = 13;                // 实际手续费
+  TxStatus status = 14;
+  string nonce = 15;
+  bytes input_data = 16;
+  uint64 confirmations = 17;
+  string contract_address = 18;       // 合约地址（代币转账时）
+  repeated EventLog logs = 19;
+  string error_message = 20;
+}
+
+message EventLog {
+  string log_index = 1;
+  string address = 2;                 // 合约地址
+  repeated string topics = 3;
+  bytes data = 4;
+  string decoded_event = 5;           // 解码后的事件名称
+  map<string, string> decoded_params = 6;
+}
+
+message GetTransactionResp {
+  bool success = 1;
+  string message = 2;
+  TransactionDetail transaction = 3;
+}
+
+// ==================== 查询交易状态 ====================
+message GetTransactionStatusReq {
+  ChainRpcType chain = 1;
+  string tx_hash = 2;
+}
+
+message GetTransactionStatusResp {
+  bool success = 1;
+  string message = 2;
+  TxStatus status = 3;
+  uint64 confirmations = 4;
+  uint64 required_confirmations = 5;  // 要求的确认数
+  bool is_confirmed = 6;
+  string block_number = 7;
+}
+
+// ==================== 查询交易收据 ====================
+message GetTransactionReceiptReq {
+  ChainRpcType chain = 1;
+  string tx_hash = 2;
+}
+
+message TransactionReceipt {
+  string tx_hash = 1;
+  string block_number = 2;
+  string block_hash = 3;
+  uint64 transaction_index = 4;
+  string from_address = 5;
+  string to_address = 6;
+  uint64 gas_used = 7;
+  string gas_fee = 8;
+  TxStatus status = 9;
+  repeated EventLog logs = 10;
+  string contract_address = 11;       // 合约创建时的地址
+}
+
+message GetTransactionReceiptResp {
+  bool success = 1;
+  string message = 2;
+  TransactionReceipt receipt = 3;
+}
+
+// ==================== 查询区块高度 ====================
+message GetBlockHeightReq {
+  ChainRpcType chain = 1;
+}
+
+message GetBlockHeightResp {
+  bool success = 1;
+  string message = 2;
+  uint64 block_height = 3;
+  string block_hash = 4;
+  int64 timestamp = 5;
+}
+
+// ==================== 查询区块信息 ====================
+message GetBlockReq {
+  ChainRpcType chain = 1;
+  string block_number = 2;            // 区块号
+  string block_hash = 3;              // 区块hash（二选一）
+  bool include_transactions = 4;      // 是否包含交易详情
+}
+
+message BlockInfo {
+  string block_number = 1;
+  string block_hash = 2;
+  string parent_hash = 3;
+  int64 timestamp = 4;
+  uint64 transaction_count = 5;
+  string miner = 6;
+  string difficulty = 7;
+  uint64 gas_limit = 8;
+  uint64 gas_used = 9;
+  string size = 10;
+  repeated string transaction_hashes = 11;
+  repeated TransactionDetail transactions = 12; // 如果include_transactions=true
+}
+
+message GetBlockResp {
+  bool success = 1;
+  string message = 2;
+  BlockInfo block = 3;
+}
+
+// ==================== 查询Nonce ====================
+message GetNonceReq {
+  ChainRpcType chain = 1;
+  string address = 2;
+  bool pending = 3;                   // 是否查询pending状态的nonce
+}
+
+message GetNonceResp {
+  bool success = 1;
+  string message = 2;
+  string nonce = 3;
+  string pending_nonce = 4;           // pending状态的nonce
+}
+
+// ==================== 构建 EVM 交易（ETH/BSC） ====================
+message BuildTransactionReq {
+  ChainRpcType chain = 1;             // ETH/BSC
+  string from_address = 2;            // 发送方地址（必填）
+  string to_address = 3;              // 接收方地址（必填）
+  string amount = 4;                  // 转账金额（必填，单位：wei/代币最小单位）
+  string token_contract = 5;          // 代币合约地址（可选，为空则为主币转账）
+  string gas_price = 6;               // GasPrice（可选，单位：wei）
+  uint64 gas_limit = 7;               // GasLimit（可选，为0则自动估算）
+  string nonce = 8;                   // Nonce（可选，十进制字符串）
+}
+
+message BuildTransactionResp {
+  bool success = 1;
+  string message = 2;
+  string raw_transaction = 3;         // 未签名交易（hex编码，0x前缀，RLP编码）
+  uint64 nonce = 4;
+  uint64 gas_limit = 5;
+  string gas_price = 6;
+  string estimated_fee = 7;           // 预估手续费（wei）
+}
+
+// ==================== 构建 TRON 交易 ====================
+message ChainRpcBuildTronTransactionReq {
+  string from_address = 1;            // 发送方地址（必填）
+  string to_address = 2;              // 接收方地址（必填）
+  string amount = 3;                  // 转账金额（必填，单位：SUN（TRX）或代币最小单位（TRC20））
+  string contract_address = 4;       // 代币合约地址（可选，为空则为 TRX 转账，有值则为 TRC20 代币转账）
+}
+
+message ChainRpcBuildTronTransactionResp {
+  bool success = 1;
+  string message = 2;
+  string raw_data = 3;                // 未签名的交易 rawData（hex编码的protobuf序列化数据）
+}
+
+// ============================================================================
+// 代币信息 - 消息定义
+// ============================================================================
+
+// ==================== 查询代币信息 ====================
+message GetTokenInfoReq {
+  ChainRpcType chain = 1;
+  string token_contract = 2;
+}
+
+message TokenInfo {
+  string contract_address = 1;
+  string name = 2;
+  string symbol = 3;
+  uint32 decimals = 4;
+  string total_supply = 5;
+  string total_supply_formatted = 6;
+  string owner = 7;                   // 合约所有者
+  bool verified = 8;                  // 是否验证
+  double price_usd = 9;               // USD价格
+}
+
+message GetTokenInfoResp {
+  bool success = 1;
+  string message = 2;
+  TokenInfo token_info = 3;
+}
+
+// ==================== 批量查询代币信息 ====================
+message GetTokenInfoBatchReq {
+  ChainRpcType chain = 1;
+  repeated string token_contracts = 2;
+}
+
+message GetTokenInfoBatchResp {
+  bool success = 1;
+  string message = 2;
+  repeated TokenInfo tokens = 3;
+  int32 total = 4;
+}
+
+// ============================================================================
+// 节点管理 - 消息定义
+// ============================================================================
+
+// ==================== 健康检查 ====================
+message HealthCheckReq {
+  ChainRpcType chain = 1;                // 可选，空则检查所有链
+}
+
+message ChainHealth {
+  ChainRpcType chain = 1;
+  bool healthy = 2;
+  string current_node = 3;
+  int64 response_time_ms = 4;
+  uint64 block_height = 5;
+  int64 last_block_time = 6;
+  string error_message = 7;
+}
+
+message HealthCheckResp {
+  bool success = 1;
+  string message = 2;
+  repeated ChainHealth chains = 3;
+  int32 healthy_count = 4;
+  int32 total_count = 5;
+}
+
+// ==================== 节点状态 ====================
+message GetNodeStatusReq {
+  ChainRpcType chain = 1;
+}
+
+message NodeInfo {
+  string node_id = 1;
+  NodeType node_type = 2;
+  string endpoint = 3;
+  bool healthy = 4;
+  int64 response_time_ms = 5;
+  int32 success_rate = 6;             // 成功率（百分比）
+  int64 total_requests = 7;
+  int64 failed_requests = 8;
+  int64 last_success_time = 9;
+  string last_error = 10;
+  bool is_primary = 11;               // 是否为主节点
+  double weight = 12;                 // 权重
+}
+
+message GetNodeStatusResp {
+  bool success = 1;
+  string message = 2;
+  repeated NodeInfo nodes = 3;
+  string active_node = 4;
+}
+
+// ==================== 切换节点 ====================
+message SwitchNodeReq {
+  ChainRpcType chain = 1;
+  string node_id = 2;                 // 目标节点ID
+  bool force = 3;                     // 强制切换
+}
+
+message SwitchNodeResp {
+  bool success = 1;
+  string message = 2;
+  string old_node = 3;
+  string new_node = 4;
+  int64 switched_at = 5;
+}
+
+// ==================== 测试节点 ====================
+message TestNodeReq {
+  ChainRpcType chain = 1;
+  string endpoint = 2;                // 节点RPC端点
+  map<string, string> headers = 3;    // 请求头（如API Key）
+  int32 timeout_seconds = 4;
+}
+
+message TestNodeResp {
+  bool success = 1;
+  string message = 2;
+  bool healthy = 3;
+  int64 response_time_ms = 4;
+  uint64 block_height = 5;
+  string chain_id = 6;
+  map<string, string> node_info = 7;
+}

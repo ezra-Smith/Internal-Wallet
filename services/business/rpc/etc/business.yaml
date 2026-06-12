@@ -1,0 +1,217 @@
+Name: business.rpc
+ListenOn: 0.0.0.0:8081
+Timeout: 30000  # RPC 服务端请求超时（毫秒），默认 2000ms 太短，链上查询需要更长时间
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: business.rpc
+
+# 雪花ID配置（必须配置，范围0-1023，每个服务唯一）
+# 服务NodeID分配：bussiness=1, chainrpc=2 chainsync=3 signer=4
+NodeID: 1
+
+# 日志配置
+Log:
+  ServiceName: business.rpc
+  Mode: console                    # console/file/volume
+  Path: logs/business           # 日志路径
+  Level: info                   # debug/info/error/severe
+  Compress: true                # 是否压缩
+  KeepDays: 7                   # 保留天数
+  StackCooldownMillis: 100      # 堆栈日志冷却时间
+
+DataSource: crypto:crypto123456@tcp(localhost:3306)/crypto_wallet?charset=utf8mb4&parseTime=true&loc=Local
+
+# GORM MySQL 配置
+# 密码从环境变量/AWS Secrets Manager注入
+MySQL:
+  Host: localhost
+  Port: 3306
+  Username: crypto
+  Password: ""  # 占位符，实际值从 secrets 包注入（见 business.go）
+  Database: crypto_wallet
+  MaxIdleConns: 10              # 最大空闲连接数
+  MaxOpenConns: 100             # 最大打开连接数
+  ConnMaxLifetime: 3600         # 连接最大生命周期（秒）
+  LogLevel: 4                   # 1=Silent 2=Error 3=Warn 4=Info（开发环境用4，生产环境用2）
+  SlowThreshold: 200            # 慢查询阈值（毫秒）
+
+CacheRedis:
+  - Host: localhost:6379
+    Pass: ""  # 占位符，实际值从 secrets 包注入（见 business.go）
+    Type: node
+
+# RPC客户端配置
+SignerRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: signer.rpc
+  Timeout: 5000                 # 超时时间（毫秒）
+  NonBlock: true                # 非阻塞模式（推荐）
+
+ChainRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: chainrpc.rpc
+  Timeout: 25000                # 增加到25秒，确保内层有足够时间完成（HTTP:30s > Logic:20s > Client:25s）
+  NonBlock: true
+
+# Web3 广播占位记录（web3_balance_changes event_index=-1, status=pending）定时对账刷新
+Web3PlaceholderReconcile:
+  Enabled: true
+  IntervalSeconds: 5
+  BatchSize: 50
+  Concurrency: 5
+  MinRecheckSeconds: 15
+  LookbackHours: 48
+  FailAfterHours: 24
+  ChainTimeoutSeconds: 5
+
+# ChainSync 扫链服务（services/chainsync/rpc）客户端配置
+ChainSyncRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: chainsync.rpc
+  Timeout: 5000
+  NonBlock: true
+
+# Swap 微服务（services/swap/rpc）客户端配置
+SwapRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: swap.rpc
+  Timeout: 5000
+  NonBlock: true
+
+# Swap 微服务配置（已移除 API key 认证，仅内部调用）
+# Admin 微服务（services/admin/rpc）客户端配置
+AdminRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: admin.rpc
+  Timeout: 30000                # 钱包初始化可能需要较长时间
+  NonBlock: true
+
+# Accounting 微服务（services/accounting/rpc）客户端配置
+AccountingRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: accounting.rpc
+  Timeout: 5000
+  NonBlock: true
+# 签名服务默认参数（用于创建新用户充值地址）
+Signer:
+  SeedId: "hot_seed_main"
+  Chains: ["TRN", "BSC", "ETH"]
+  Requester: "business.rpc"
+
+Telemetry:
+  Name: business.rpc
+  Endpoint: http://localhost:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger
+
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9091
+  Path: /metrics
+
+GoogleOauth:
+  ClientId: "xxx-xxxxx.apps.googleusercontent.com"
+  ClientSecret: "xxxx--xxxxxxx"
+  RedirectUrl: "https://client-dev.xxxxx.com/oauth/google"
+  Scopes: ["https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
+  State: "dev_state"
+
+# JWT 配置
+# JWT 密钥从环境变量/AWS Secrets Manager注入（见 business.go）
+JWT:
+  AccessSecret: ""  # 占位符，实际值从 secrets 包注入
+  AccessExpire: 2592000   # 30天（秒，30 * 24 * 3600）
+  RefreshSecret: ""  # 占位符，实际值从 secrets 包注入
+  RefreshExpire: 5184000  # 60天（秒，60 * 24 * 3600）
+
+# Kafka 消费者配置（用于消费 chainsync 的交易确认和余额变动消息）
+KafkaConsumer:
+  Brokers:
+    - "localhost:9092"
+  GroupID: "business-service-consumer"
+  Username: ""                 # 如果需要SASL认证
+  Password: ""                 # 如果需要SASL认证
+  Security: "PLAINTEXT"        # 安全协议: PLAINTEXT, SASL_PLAINTEXT, SASL_SSL, SSL
+  SASLMech: "PLAIN"           # SASL机制: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512
+  Topics:
+    TransactionDeposit: "wallet.transactions.confirm.deposit" # deposit（Web2 充值地址）
+    TransactionWeb3: "wallet.transactions.confirm.web3"       # web3（用户导入地址）
+    TransactionVault: "wallet.transactions.confirm.vault"     # vault/company（公司/金库地址）
+    TransactionManual: "wallet.transactions.confirm.manual"   # manual monitors（chainsync 手动监控）
+    TransactionUnknown: "wallet.transactions.confirm.unknown" # fallback/legacy
+    BalanceChange: "wallet.balance.changes"                  # 余额变动通知主题
+  MaxRetries: 3               # 最大重试次数
+  SessionTimeout: 30          # 会话超时（秒）
+  RebalanceTimeout: 60        # 重平衡超时（秒）
+  MaxProcessingTime: 300      # 最大处理时间（秒）
+  Workers: 5                  # 并发处理 worker 数量
+
+# Kafka producer (optional) - address monitor events for chainsync incremental updates
+KafkaProducer:
+  Brokers:
+    - "localhost:9092"
+  Username: ""
+  Password: ""
+  Security: "PLAINTEXT"
+  SASLMech: "PLAIN"
+  ClientID: "business-producer"
+  Compression: "gzip"
+  MaxRetries: 3
+  Timeout: 30
+  UseAsync: false
+  Topics:
+    AddressMonitorEvent: "wallet.address.monitor.events"
+
+Code:
+  Length: 6
+  ExpireSeconds: 300  # 验证码有效期（秒）  当前是5分钟
+  BypassCode: "123456"  # 直通验证码（用于开发/测试）
+
+Geetest:
+  Enabled: false                      # 是否启用极验验证（生产需开启）
+  FailOpen: true                      # 发生故障时是否放行
+  CaptchaID: "${GEETEST_CAPTCHA_ID}"  # 从环境变量/Secrets注入
+  CaptchaKey: "${GEETEST_CAPTCHA_KEY}" # 从环境变量/Secrets注入
+  APIServer: "http://gcaptcha4.geetest.com"
+  Timeout: 5000                       # 毫秒
+
+CountryCodes:
+  Supported: ["+1", "+44", "+86","+852"]
+
+# 邮件 SMTP 配置（Gmail）
+Email:
+  SMTPHost: "smtp.gmail.com"              # Gmail SMTP 服务器地址
+  SMTPPort: "587"                         # Gmail SMTP 端口（587=TLS, 465=SSL）
+  FromAddress: "zinkfinance@gmail.com"     # 发件人 Gmail 地址（请填入您的 Gmail 地址）
+  FromPassword: ""                        # Gmail 应用专用密码（必须从 .env 的 EMAIL_FROM_PASSWORD 加载）
+  FromName: "Zink Wallet"                # 发件人名称
+  InsecureSkipVerify: false               # 是否跳过 TLS 证书验证（生产环境建议 false）
+
+  # 邮件模板配置（可选）
+  FreezeAccountURL: ""                   # 冻结账号页面 URL
+  SupportEmail: "support@zink.com"       # 客服邮箱
+  CompanyName: "Zink"                     # 公司名称
+
+  # S3 图片资源 URL（可选，用于邮件模板中的图片）
+  LogoURL: ""                             # Zink Logo URL
+  SocialXURL: ""                          # X (Twitter) 图标 URL
+  SocialTelegramURL: ""                   # Telegram 图标 URL
+  SocialTikTokURL: ""                      # TikTok 图标 URL
+  SocialLinkedInURL: ""                   # LinkedIn 图标 URL
+  SocialFacebookURL: ""                    # Facebook 图标 URL
+  SocialRedditURL: ""                     # Reddit 图标 URL
+  AppGooglePlayURL: ""                     # Google Play 按钮 URL
+  AppAppStoreURL: ""                      # App Store 按钮 URL

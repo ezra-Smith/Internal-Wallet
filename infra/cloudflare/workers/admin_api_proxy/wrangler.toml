@@ -1,0 +1,7 @@
+name = "admin-api-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-02-03"
+
+# Bind route in Cloudflare dashboard:
+#   admin.zinkapi.com/api/*
+

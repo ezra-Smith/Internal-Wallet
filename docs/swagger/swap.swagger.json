@@ -1,0 +1,1821 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "swap.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Swap",
+      "description": "Web3 Swap（API Key 接口）"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/swap/my/configs": {
+      "get": {
+        "summary": "查询我的Swap配置",
+        "description": "业务端查询自己项目的生效Swap配置（从API Key自动获取项目名称）",
+        "operationId": "Swap_GetMySwapConfigs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GatewayUnifiedResponse_swapSwapGetMySwapConfigsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "provider",
+            "description": "不需要 project_name，从 API Key context 自动获取\n\n服务商代码（可选过滤，例如 \"1inch\", \"okx\"）",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "chain_id",
+            "description": "链ID（可选过滤）",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "description": "每页条数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "Swap"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "swapBroadcastSwapData": {
+      "type": "object",
+      "properties": {
+        "swap_id": {
+          "type": "string",
+          "title": "兑换ID"
+        },
+        "tx_hash": {
+          "type": "string",
+          "title": "广播后的交易哈希"
+        },
+        "status": {
+          "$ref": "#/definitions/swapSwapTxStatus",
+          "title": "交易状态（PENDING）"
+        },
+        "broadcasted_at": {
+          "type": "string",
+          "format": "int64",
+          "title": "广播时间戳（Unix秒）"
+        }
+      },
+      "title": "BroadcastSwapData 广播兑换交易数据"
+    },
+    "swapBroadcastSwapResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "data": {
+          "$ref": "#/definitions/swapBroadcastSwapData",
+          "title": "广播数据"
+        }
+      },
+      "title": "BroadcastSwapResponse 广播兑换交易响应"
+    },
+    "swapChainInfo": {
+      "type": "object",
+      "properties": {
+        "chain_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "链ID"
+        },
+        "name": {
+          "type": "string",
+          "title": "链名称"
+        },
+        "enabled": {
+          "type": "boolean",
+          "title": "是否启用"
+        },
+        "required_confirmations": {
+          "type": "string",
+          "format": "uint64",
+          "title": "所需确认数"
+        }
+      },
+      "title": "ChainInfo 链信息"
+    },
+    "swapChainSwapHistoryItem": {
+      "type": "object",
+      "properties": {
+        "chain_index": {
+          "type": "string",
+          "title": "链ID（例如：\"1\" 表示以太坊）"
+        },
+        "tx_hash": {
+          "type": "string",
+          "title": "交易哈希"
+        },
+        "block_height": {
+          "type": "string",
+          "title": "区块高度"
+        },
+        "tx_time": {
+          "type": "string",
+          "format": "int64",
+          "title": "交易时间（Unix毫秒时间戳）"
+        },
+        "status": {
+          "$ref": "#/definitions/swapChainSwapStatus",
+          "title": "交易状态"
+        },
+        "tx_type": {
+          "type": "string",
+          "title": "交易类型（Approve/Wrap/Unwrap/Swap）"
+        },
+        "from_address": {
+          "type": "string",
+          "title": "发送地址"
+        },
+        "dex_router": {
+          "type": "string",
+          "title": "DEX路由合约地址"
+        },
+        "to_address": {
+          "type": "string",
+          "title": "接收地址"
+        },
+        "from_tokens": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapTokenDetail"
+          },
+          "title": "源代币详情"
+        },
+        "to_tokens": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapTokenDetail"
+          },
+          "title": "目标代币详情"
+        },
+        "referral_amount": {
+          "type": "string",
+          "title": "推荐奖励金额"
+        },
+        "error_msg": {
+          "type": "string",
+          "title": "错误信息（失败时）"
+        },
+        "gas_limit": {
+          "type": "string",
+          "title": "Gas 上限"
+        },
+        "gas_used": {
+          "type": "string",
+          "title": "实际使用 Gas"
+        },
+        "gas_price": {
+          "type": "string",
+          "title": "Gas 价格"
+        },
+        "tx_fee": {
+          "type": "string",
+          "title": "交易手续费"
+        }
+      },
+      "title": "ChainSwapHistoryItem 链上交易历史记录"
+    },
+    "swapChainSwapStatus": {
+      "type": "string",
+      "enum": [
+        "CHAIN_SWAP_STATUS_UNSPECIFIED",
+        "CHAIN_SWAP_STATUS_PENDING",
+        "CHAIN_SWAP_STATUS_SUCCESS",
+        "CHAIN_SWAP_STATUS_FAILED"
+      ],
+      "default": "CHAIN_SWAP_STATUS_UNSPECIFIED",
+      "description": "- CHAIN_SWAP_STATUS_UNSPECIFIED: 未指定\n - CHAIN_SWAP_STATUS_PENDING: 待确认\n - CHAIN_SWAP_STATUS_SUCCESS: 成功\n - CHAIN_SWAP_STATUS_FAILED: 失败",
+      "title": "ChainSwapStatus 链上交易状态"
+    },
+    "swapCreateSwapApiKeyResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "api_key": {
+          "type": "string",
+          "title": "API密钥（仅返回一次，不以明文存储）"
+        },
+        "item": {
+          "$ref": "#/definitions/swapSwapApiKeyItem",
+          "title": "密钥项详情"
+        }
+      },
+      "title": "CreateSwapApiKeyResponse 创建Swap API密钥响应"
+    },
+    "swapExecuteSwapData": {
+      "type": "object",
+      "properties": {
+        "swap_id": {
+          "type": "string",
+          "title": "内部跟踪ID"
+        },
+        "provider": {
+          "type": "string",
+          "title": "服务提供商（例如 \"1inch\"）"
+        },
+        "quote": {
+          "$ref": "#/definitions/swapQuoteData",
+          "title": "使用的报价快照（尽力而为）"
+        },
+        "approve_tx": {
+          "$ref": "#/definitions/swapUnsignedTransaction",
+          "title": "授权交易（可选，ERC20授权）"
+        },
+        "swap_tx": {
+          "$ref": "#/definitions/swapUnsignedTransaction",
+          "title": "兑换交易"
+        }
+      },
+      "title": "ExecuteSwapData 执行兑换数据"
+    },
+    "swapExecuteSwapResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "data": {
+          "$ref": "#/definitions/swapExecuteSwapData",
+          "title": "兑换数据"
+        }
+      },
+      "title": "ExecuteSwapResponse 执行兑换响应"
+    },
+    "swapGetApprovalTransactionResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "tx": {
+          "$ref": "#/definitions/swapUnsignedTransaction",
+          "title": "未签名的授权交易"
+        }
+      },
+      "title": "GetApprovalTransactionResponse 获取授权交易响应"
+    },
+    "swapGetExternalSwapStatusResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "data": {
+          "$ref": "#/definitions/swapChainSwapHistoryItem",
+          "title": "链上交易历史数据"
+        }
+      },
+      "title": "GetExternalSwapStatusResponse 获取外部兑换状态响应"
+    },
+    "swapGetLiquiditySourcesResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "liquidity_sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapLiquiditySource"
+          },
+          "title": "流动性来源列表"
+        }
+      },
+      "title": "GetLiquiditySourcesResponse 获取流动性来源响应"
+    },
+    "swapGetQuoteResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "data": {
+          "$ref": "#/definitions/swapQuoteData",
+          "title": "报价数据"
+        }
+      },
+      "title": "GetQuoteResponse 获取报价响应"
+    },
+    "swapGetSupportedChainsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "chains": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapChainInfo"
+          },
+          "title": "链列表"
+        }
+      },
+      "title": "GetSupportedChainsResponse 获取支持的链列表响应"
+    },
+    "swapGetSupportedTokensResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "chain_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "链ID"
+        },
+        "tokens": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapSwapTokenInfo"
+          },
+          "title": "代币列表"
+        }
+      },
+      "title": "GetSupportedTokensResponse 获取支持的代币列表响应"
+    },
+    "swapGetSwapDetailResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/swapSwapDetailData"
+        }
+      },
+      "title": "GetSwapDetailResponse 获取交易详情响应"
+    },
+    "swapGetSwapHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapSwapHistoryItem"
+          },
+          "title": "历史记录列表"
+        },
+        "pagination": {
+          "$ref": "#/definitions/swapSwapPagination",
+          "title": "分页信息"
+        }
+      },
+      "title": "GetSwapHistoryResponse 获取兑换历史响应"
+    },
+    "swapGetSwapStatusResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "data": {
+          "$ref": "#/definitions/swapSwapStatusData",
+          "title": "状态数据"
+        }
+      },
+      "title": "GetSwapStatusResponse 获取兑换状态响应"
+    },
+    "swapLiquiditySource": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "DEX ID（例如：\"34\" 表示 Uniswap V2）"
+        },
+        "name": {
+          "type": "string",
+          "title": "DEX 名称（例如：\"Uniswap V2\"）"
+        },
+        "logo": {
+          "type": "string",
+          "title": "DEX 图标URL"
+        }
+      },
+      "title": "LiquiditySource 流动性来源（DEX交易所）"
+    },
+    "swapListSwapApiKeysResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapSwapApiKeyItem"
+          },
+          "title": "密钥列表"
+        },
+        "pagination": {
+          "$ref": "#/definitions/swapSwapPagination",
+          "title": "分页信息"
+        }
+      },
+      "title": "ListSwapApiKeysResponse 列出Swap API密钥响应"
+    },
+    "swapProjectSwapConfigItem": {
+      "type": "object",
+      "properties": {
+        "enabled_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "启用记录ID"
+        },
+        "project_name": {
+          "type": "string",
+          "title": "项目名称"
+        },
+        "config_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "配置ID"
+        },
+        "project_enabled": {
+          "type": "boolean",
+          "title": "项目是否启用"
+        },
+        "provider_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "服务商ID",
+          "title": "关联的全局配置信息"
+        },
+        "provider": {
+          "type": "string",
+          "title": "服务商代码"
+        },
+        "provider_name": {
+          "type": "string",
+          "title": "服务商名称"
+        },
+        "chain_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "链ID"
+        },
+        "chain_name": {
+          "type": "string",
+          "title": "链名称"
+        },
+        "chain_symbol": {
+          "type": "string",
+          "title": "链符号"
+        },
+        "token_symbol": {
+          "type": "string",
+          "title": "代币符号"
+        },
+        "token_name": {
+          "type": "string",
+          "title": "代币名称"
+        },
+        "contract_address": {
+          "type": "string",
+          "title": "合约地址"
+        },
+        "decimals": {
+          "type": "integer",
+          "format": "int32",
+          "title": "代币精度"
+        },
+        "icon_url": {
+          "type": "string",
+          "title": "图标URL"
+        },
+        "global_enabled": {
+          "type": "boolean",
+          "title": "全局是否启用"
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32",
+          "title": "优先级"
+        },
+        "router_address": {
+          "type": "string",
+          "title": "路由合约地址"
+        },
+        "min_swap_amount_usd": {
+          "type": "string",
+          "title": "最小兑换金额（USD）"
+        },
+        "max_swap_amount_usd": {
+          "type": "string",
+          "title": "最大兑换金额（USD）"
+        },
+        "default_slippage": {
+          "type": "string",
+          "title": "默认滑点"
+        },
+        "max_slippage": {
+          "type": "string",
+          "title": "最大滑点"
+        },
+        "fee_rate": {
+          "type": "string",
+          "title": "手续费率"
+        },
+        "created_at": {
+          "type": "string",
+          "title": "创建时间"
+        },
+        "updated_at": {
+          "type": "string",
+          "title": "更新时间"
+        }
+      },
+      "title": "==================== 项目配置管理 ====================\nProjectSwapConfigItem 项目Swap配置项"
+    },
+    "swapQuoteData": {
+      "type": "object",
+      "properties": {
+        "chain_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "链ID"
+        },
+        "from_token": {
+          "$ref": "#/definitions/swapSwapTokenInfo",
+          "title": "源代币信息"
+        },
+        "to_token": {
+          "$ref": "#/definitions/swapSwapTokenInfo",
+          "title": "目标代币信息"
+        },
+        "from_amount": {
+          "type": "string",
+          "title": "源代币数量（wei，十进制字符串）"
+        },
+        "to_amount": {
+          "type": "string",
+          "title": "目标代币数量（wei，十进制字符串）"
+        },
+        "estimated_gas": {
+          "type": "string",
+          "format": "uint64",
+          "title": "预估 Gas"
+        },
+        "provider": {
+          "type": "string",
+          "title": "服务提供商（例如 \"1inch\"）"
+        },
+        "trade_fee": {
+          "type": "string",
+          "title": "DEX 交易手续费（USD 计价，例如 \"0.5\"）"
+        },
+        "price_impact": {
+          "type": "string",
+          "title": "价格冲击百分比（例如 \"0.5\" 表示 0.5%）"
+        }
+      },
+      "title": "QuoteData 报价数据"
+    },
+    "swapResetApprovalData": {
+      "type": "object",
+      "properties": {
+        "tx_hash": {
+          "type": "string",
+          "title": "交易哈希"
+        },
+        "broadcasted_at": {
+          "type": "string",
+          "format": "int64",
+          "title": "广播时间戳（Unix秒）"
+        }
+      },
+      "title": "ResetApprovalData 重置授权数据（广播结果）"
+    },
+    "swapResetApprovalResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "data": {
+          "$ref": "#/definitions/swapResetApprovalData",
+          "title": "重置授权数据"
+        }
+      },
+      "title": "ResetApprovalResponse 重置授权响应"
+    },
+    "swapRevokeSwapApiKeyResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        }
+      },
+      "title": "RevokeSwapApiKeyResponse 撤销Swap API密钥响应"
+    },
+    "swapSwapApiKeyItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "密钥ID"
+        },
+        "project_name": {
+          "type": "string",
+          "title": "项目名称"
+        },
+        "key_name": {
+          "type": "string",
+          "title": "密钥名称（项目内唯一，如 \"production\"、\"dev\"）"
+        },
+        "rate_limit_tier": {
+          "type": "string",
+          "title": "限流等级"
+        },
+        "is_active": {
+          "type": "boolean",
+          "title": "是否激活"
+        },
+        "created_at_unix": {
+          "type": "string",
+          "format": "int64",
+          "title": "创建时间（Unix秒时间戳）"
+        },
+        "expires_at_unix": {
+          "type": "string",
+          "format": "int64",
+          "title": "过期时间（Unix秒时间戳，0表示永不过期）"
+        },
+        "token_display": {
+          "type": "string",
+          "title": "完整密钥（用于显示和引用）"
+        }
+      },
+      "title": "SwapApiKeyItem Swap API密钥项"
+    },
+    "swapSwapConfigItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "配置ID"
+        },
+        "provider_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "服务商ID（关联swap_provider.id）"
+        },
+        "provider": {
+          "type": "string",
+          "title": "服务商代码（冗余字段）"
+        },
+        "provider_name": {
+          "type": "string",
+          "title": "服务商名称（冗余字段）"
+        },
+        "chain_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "链ID"
+        },
+        "chain_name": {
+          "type": "string",
+          "title": "链名称"
+        },
+        "chain_symbol": {
+          "type": "string",
+          "title": "链符号"
+        },
+        "token_symbol": {
+          "type": "string",
+          "title": "代币符号"
+        },
+        "token_name": {
+          "type": "string",
+          "title": "代币名称"
+        },
+        "contract_address": {
+          "type": "string",
+          "title": "合约地址"
+        },
+        "decimals": {
+          "type": "integer",
+          "format": "int32",
+          "title": "代币精度"
+        },
+        "icon_url": {
+          "type": "string",
+          "title": "图标URL"
+        },
+        "is_enabled": {
+          "type": "boolean",
+          "title": "是否启用"
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32",
+          "title": "优先级"
+        },
+        "router_address": {
+          "type": "string",
+          "title": "路由合约地址"
+        },
+        "min_swap_amount_usd": {
+          "type": "string",
+          "title": "最小兑换金额（USD）"
+        },
+        "max_swap_amount_usd": {
+          "type": "string",
+          "title": "最大兑换金额（USD）"
+        },
+        "default_slippage": {
+          "type": "string",
+          "title": "默认滑点"
+        },
+        "max_slippage": {
+          "type": "string",
+          "title": "最大滑点"
+        },
+        "fee_rate": {
+          "type": "string",
+          "title": "手续费率"
+        },
+        "config_json": {
+          "type": "string",
+          "title": "配置JSON"
+        },
+        "created_at": {
+          "type": "string",
+          "title": "创建时间"
+        },
+        "updated_at": {
+          "type": "string",
+          "title": "更新时间"
+        }
+      },
+      "title": "==================== 全局配置 CRUD ====================\nSwapConfigItem Swap配置项"
+    },
+    "swapSwapCreateProviderResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "服务商ID"
+        }
+      },
+      "title": "SwapCreateProviderResponse 创建Swap服务商响应"
+    },
+    "swapSwapCreateSwapConfigResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "配置ID"
+        }
+      },
+      "title": "SwapCreateSwapConfigResponse 创建Swap配置响应"
+    },
+    "swapSwapDeleteProviderResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        }
+      },
+      "title": "SwapDeleteProviderResponse 删除Swap服务商响应"
+    },
+    "swapSwapDeleteSwapConfigResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        }
+      },
+      "title": "SwapDeleteSwapConfigResponse 删除Swap配置响应"
+    },
+    "swapSwapDetailData": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "记录ID（雪花ID）"
+        },
+        "api_key_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "API Key ID（内部）"
+        },
+        "project_name": {
+          "type": "string",
+          "title": "项目名称"
+        },
+        "wallet_address": {
+          "type": "string",
+          "title": "钱包地址"
+        },
+        "chain_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "链ID"
+        },
+        "provider": {
+          "type": "string",
+          "title": "服务商（例如 \"okx\" / \"1inch\"）"
+        },
+        "from_token": {
+          "type": "string",
+          "title": "Swap pair + amount snapshot"
+        },
+        "to_token": {
+          "type": "string"
+        },
+        "from_amount": {
+          "type": "string"
+        },
+        "to_amount": {
+          "type": "string"
+        },
+        "tx_from": {
+          "type": "string",
+          "title": "Unsigned tx snapshot (from ExecuteSwap)"
+        },
+        "tx_to": {
+          "type": "string"
+        },
+        "tx_data": {
+          "type": "string"
+        },
+        "tx_value": {
+          "type": "string"
+        },
+        "tx_gas": {
+          "type": "string"
+        },
+        "tx_gas_price": {
+          "type": "string"
+        },
+        "tx_nonce": {
+          "type": "string"
+        },
+        "tx_signature_data": {
+          "type": "string"
+        },
+        "tx_hash": {
+          "type": "string",
+          "title": "Result"
+        },
+        "status": {
+          "type": "string"
+        },
+        "error_code": {
+          "type": "string"
+        },
+        "error_message": {
+          "type": "string"
+        },
+        "broadcasted_at": {
+          "type": "string",
+          "title": "RFC3339; empty if null"
+        },
+        "created_at": {
+          "type": "string",
+          "title": "RFC3339"
+        },
+        "updated_at": {
+          "type": "string",
+          "title": "RFC3339"
+        },
+        "from_token_name": {
+          "type": "string",
+          "description": "源代币名称",
+          "title": "Token names from swap_configs"
+        },
+        "to_token_name": {
+          "type": "string",
+          "title": "目标代币名称"
+        }
+      },
+      "title": "SwapDetailData 交易详情（DB 记录）"
+    },
+    "swapSwapDisableProviderResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        }
+      },
+      "title": "SwapDisableProviderResponse 禁用Swap服务商响应"
+    },
+    "swapSwapDisableSwapConfigForProjectResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        }
+      },
+      "title": "SwapDisableSwapConfigForProjectResponse 为项目禁用Swap配置响应"
+    },
+    "swapSwapEnableProviderResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        }
+      },
+      "title": "SwapEnableProviderResponse 启用Swap服务商响应"
+    },
+    "swapSwapEnableSwapConfigForProjectResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "启用记录ID"
+        }
+      },
+      "title": "SwapEnableSwapConfigForProjectResponse 为项目启用Swap配置响应"
+    },
+    "swapSwapGetMySwapConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapProjectSwapConfigItem"
+          },
+          "title": "配置列表（复用已有的配置结构）"
+        },
+        "pagination": {
+          "$ref": "#/definitions/swapSwapPagination",
+          "title": "分页信息"
+        }
+      },
+      "title": "SwapGetMySwapConfigsResponse 获取我的Swap配置响应"
+    },
+    "swapSwapGetProviderDetailResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "provider": {
+          "$ref": "#/definitions/swapSwapProviderItem",
+          "title": "服务商详情"
+        }
+      },
+      "title": "SwapGetProviderDetailResponse 获取Swap服务商详情响应"
+    },
+    "swapSwapGetSwapConfigDetailResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "config": {
+          "$ref": "#/definitions/swapSwapConfigItem",
+          "title": "配置详情"
+        }
+      },
+      "title": "SwapGetSwapConfigDetailResponse 获取Swap配置详情响应"
+    },
+    "swapSwapHistoryItem": {
+      "type": "object",
+      "properties": {
+        "swap_id": {
+          "type": "string",
+          "title": "兑换ID"
+        },
+        "chain_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "链ID"
+        },
+        "provider": {
+          "type": "string",
+          "title": "服务提供商"
+        },
+        "wallet_address": {
+          "type": "string",
+          "title": "钱包地址"
+        },
+        "from_token_address": {
+          "type": "string",
+          "title": "源代币合约地址"
+        },
+        "to_token_address": {
+          "type": "string",
+          "title": "目标代币合约地址"
+        },
+        "from_amount": {
+          "type": "string",
+          "title": "源代币数量"
+        },
+        "to_amount": {
+          "type": "string",
+          "title": "目标代币数量"
+        },
+        "tx_hash": {
+          "type": "string",
+          "title": "交易哈希"
+        },
+        "status": {
+          "$ref": "#/definitions/swapSwapTxStatus",
+          "title": "交易状态"
+        },
+        "created_at": {
+          "type": "string",
+          "title": "创建时间（RFC3339格式）"
+        },
+        "updated_at": {
+          "type": "string",
+          "title": "更新时间（RFC3339格式）"
+        }
+      },
+      "title": "SwapHistoryItem 兑换历史记录"
+    },
+    "swapSwapListProjectSwapConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapProjectSwapConfigItem"
+          },
+          "title": "配置列表"
+        },
+        "pagination": {
+          "$ref": "#/definitions/swapSwapPagination",
+          "title": "分页信息"
+        }
+      },
+      "title": "SwapListProjectSwapConfigsResponse 列出项目Swap配置响应"
+    },
+    "swapSwapListProvidersForDropdownResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "providers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapSwapProviderDropdownItem"
+          },
+          "title": "服务商下拉列表"
+        }
+      },
+      "title": "SwapListProvidersForDropdownResponse 列出Swap服务商下拉列表响应"
+    },
+    "swapSwapListProvidersResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "providers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapSwapProviderItem"
+          },
+          "title": "服务商列表"
+        },
+        "pagination": {
+          "$ref": "#/definitions/swapSwapPagination",
+          "title": "分页信息"
+        }
+      },
+      "title": "SwapListProvidersResponse 列出Swap服务商响应"
+    },
+    "swapSwapListSwapConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapSwapConfigItem"
+          },
+          "title": "配置列表"
+        },
+        "pagination": {
+          "$ref": "#/definitions/swapSwapPagination",
+          "title": "分页信息"
+        }
+      },
+      "title": "SwapListSwapConfigsResponse 列出Swap配置响应"
+    },
+    "swapSwapListSwapTransactionsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapSwapTransactionItem"
+          },
+          "title": "交易列表"
+        },
+        "pagination": {
+          "$ref": "#/definitions/swapSwapPagination",
+          "title": "分页信息"
+        }
+      },
+      "title": "SwapListSwapTransactionsResponse 列出Swap交易响应"
+    },
+    "swapSwapPagination": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int32",
+          "title": "当前页码"
+        },
+        "page_size": {
+          "type": "integer",
+          "format": "int32",
+          "title": "每页条数"
+        },
+        "total": {
+          "type": "string",
+          "format": "int64",
+          "title": "总记录数"
+        },
+        "total_pages": {
+          "type": "integer",
+          "format": "int32",
+          "title": "总页数"
+        },
+        "has_next": {
+          "type": "boolean",
+          "title": "是否有下一页"
+        },
+        "has_prev": {
+          "type": "boolean",
+          "title": "是否有上一页"
+        }
+      },
+      "title": "SwapPagination 分页信息"
+    },
+    "swapSwapProviderDropdownItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "服务商ID"
+        },
+        "provider_name": {
+          "type": "string",
+          "title": "服务商名称"
+        }
+      },
+      "title": "==================== Provider简化���表（用于下拉框） ====================\nSwapProviderDropdownItem Swap服务商下拉项"
+    },
+    "swapSwapProviderItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "服务商ID"
+        },
+        "provider_code": {
+          "type": "string",
+          "title": "服务商代码"
+        },
+        "provider_name": {
+          "type": "string",
+          "title": "服务商名称"
+        },
+        "description": {
+          "type": "string",
+          "title": "描述"
+        },
+        "logo_url": {
+          "type": "string",
+          "title": "图标URL"
+        },
+        "is_enabled": {
+          "type": "boolean",
+          "title": "是否启用"
+        },
+        "min_swap_amount_usd": {
+          "type": "string",
+          "title": "最小兑换金额（USD）"
+        },
+        "max_swap_amount_usd": {
+          "type": "string",
+          "title": "最大兑换金额（USD）"
+        },
+        "default_slippage": {
+          "type": "string",
+          "title": "默认滑点"
+        },
+        "max_slippage": {
+          "type": "string",
+          "title": "最大滑点"
+        },
+        "fee_rate": {
+          "type": "string",
+          "title": "手续费率"
+        },
+        "config_json": {
+          "type": "string",
+          "title": "配置JSON"
+        },
+        "created_at": {
+          "type": "string",
+          "title": "创建时间"
+        },
+        "updated_at": {
+          "type": "string",
+          "title": "更新时间"
+        }
+      },
+      "title": "SwapProviderItem Swap服务商项"
+    },
+    "swapSwapStatusData": {
+      "type": "object",
+      "properties": {
+        "swap_id": {
+          "type": "string",
+          "title": "兑换ID"
+        },
+        "chain_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "链ID"
+        },
+        "tx_hash": {
+          "type": "string",
+          "title": "交易哈希"
+        },
+        "status": {
+          "$ref": "#/definitions/swapSwapTxStatus",
+          "title": "交易状态"
+        },
+        "confirmations": {
+          "type": "string",
+          "format": "uint64",
+          "title": "当前确认数"
+        },
+        "required_confirmations": {
+          "type": "string",
+          "format": "uint64",
+          "title": "所需确认数"
+        },
+        "is_confirmed": {
+          "type": "boolean",
+          "title": "是否已确认"
+        },
+        "block_number": {
+          "type": "string",
+          "title": "区块号"
+        },
+        "provider": {
+          "type": "string",
+          "title": "服务提供商"
+        }
+      },
+      "title": "SwapStatusData 兑换状态数据"
+    },
+    "swapSwapTokenInfo": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "title": "代币合约地址"
+        },
+        "symbol": {
+          "type": "string",
+          "title": "代币符号"
+        },
+        "name": {
+          "type": "string",
+          "title": "代币名称"
+        },
+        "decimals": {
+          "type": "integer",
+          "format": "int64",
+          "title": "代币精度"
+        },
+        "logo_uri": {
+          "type": "string",
+          "title": "代币图标URI"
+        },
+        "min_swap_amount_usd": {
+          "type": "string",
+          "title": "最小兑换金额（USD）"
+        },
+        "max_swap_amount_usd": {
+          "type": "string",
+          "title": "最大兑换金额（USD）"
+        }
+      },
+      "title": "SwapTokenInfo 代币信息"
+    },
+    "swapSwapTransactionItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "交易ID"
+        },
+        "project_name": {
+          "type": "string",
+          "title": "项目名称"
+        },
+        "wallet_address": {
+          "type": "string",
+          "title": "钱包地址"
+        },
+        "chain_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "链ID"
+        },
+        "chain_name": {
+          "type": "string",
+          "title": "链名称"
+        },
+        "provider": {
+          "type": "string",
+          "title": "服务商代码"
+        },
+        "from_token_symbol": {
+          "type": "string",
+          "title": "源代币符号"
+        },
+        "from_token_address": {
+          "type": "string",
+          "title": "源代币合约地址"
+        },
+        "from_token_decimals": {
+          "type": "integer",
+          "format": "int32",
+          "title": "源代币精度"
+        },
+        "to_token_symbol": {
+          "type": "string",
+          "title": "目标代币符号"
+        },
+        "to_token_address": {
+          "type": "string",
+          "title": "目标代币合约地址"
+        },
+        "to_token_decimals": {
+          "type": "integer",
+          "format": "int32",
+          "title": "目标代币精度"
+        },
+        "from_amount": {
+          "type": "string",
+          "title": "源代币数量"
+        },
+        "to_amount": {
+          "type": "string",
+          "title": "目标代币数量"
+        },
+        "tx_hash": {
+          "type": "string",
+          "title": "交易哈希"
+        },
+        "status": {
+          "type": "string",
+          "title": "交易状态"
+        },
+        "fee_usd": {
+          "type": "string",
+          "title": "手续费（USD）"
+        },
+        "gas": {
+          "type": "string",
+          "title": "Gas消耗"
+        },
+        "created_at": {
+          "type": "string",
+          "title": "创建时间"
+        },
+        "broadcasted_at": {
+          "type": "string",
+          "title": "广播时间"
+        }
+      },
+      "title": "==================== 交易列表查询 ====================\nSwapTransactionItem Swap交易项"
+    },
+    "swapSwapTxStatus": {
+      "type": "string",
+      "enum": [
+        "SWAP_TX_STATUS_UNSPECIFIED",
+        "SWAP_TX_STATUS_CREATED",
+        "SWAP_TX_STATUS_PENDING",
+        "SWAP_TX_STATUS_SUCCESS",
+        "SWAP_TX_STATUS_FAILED"
+      ],
+      "default": "SWAP_TX_STATUS_UNSPECIFIED",
+      "description": "- SWAP_TX_STATUS_UNSPECIFIED: 未指定\n - SWAP_TX_STATUS_CREATED: 已创建（未签名交易）\n - SWAP_TX_STATUS_PENDING: 待确认\n - SWAP_TX_STATUS_SUCCESS: 成功\n - SWAP_TX_STATUS_FAILED: 失败",
+      "title": "SwapTxStatus 交易状态"
+    },
+    "swapSwapUpdateProviderResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        }
+      },
+      "title": "SwapUpdateProviderResponse 更新Swap服务商响应"
+    },
+    "swapSwapUpdateSwapConfigDetailResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "title": "是否成功"
+        },
+        "message": {
+          "type": "string",
+          "title": "响应消息"
+        }
+      },
+      "title": "SwapUpdateSwapConfigDetailResponse 更新Swap配置详情响应"
+    },
+    "swapTokenDetail": {
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "title": "代币符号"
+        },
+        "amount": {
+          "type": "string",
+          "title": "代币数量（最小单位，如 wei）"
+        },
+        "token_address": {
+          "type": "string",
+          "title": "代币合约地址"
+        }
+      },
+      "title": "TokenDetail 代币详情"
+    },
+    "swapUnsignedTransaction": {
+      "type": "object",
+      "properties": {
+        "chain_id": {
+          "type": "string",
+          "format": "int64",
+          "title": "链ID"
+        },
+        "from": {
+          "type": "string",
+          "title": "发送地址"
+        },
+        "to": {
+          "type": "string",
+          "title": "接收地址"
+        },
+        "data": {
+          "type": "string",
+          "title": "交易数据（十六进制字符串，0x...）"
+        },
+        "value": {
+          "type": "string",
+          "title": "转账金额（wei，十进制字符串）"
+        },
+        "gas": {
+          "type": "string",
+          "title": "Gas 限制（wei，十进制字符串，可选）"
+        },
+        "gas_price": {
+          "type": "string",
+          "title": "Gas 价格（wei，十进制字符串，可选）"
+        }
+      },
+      "title": "UnsignedTransaction 未签名交易"
+    },
+    "swapUpdateSwapBroadcastResultResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "GatewayPayload_swapSwapGetMySwapConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/swapProjectSwapConfigItem"
+          },
+          "title": "配置列表（复用已有的配置结构）"
+        },
+        "pagination": {
+          "$ref": "#/definitions/swapSwapPagination",
+          "title": "分页信息"
+        }
+      }
+    },
+    "GatewayUnifiedResponse_swapSwapGetMySwapConfigsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/GatewayPayload_swapSwapGetMySwapConfigsResponse"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "details": {
+          "type": "object"
+        }
+      }
+    }
+  },
+  "schemes": [
+    "http",
+    "https"
+  ]
+}

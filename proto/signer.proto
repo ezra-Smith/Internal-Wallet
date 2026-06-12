@@ -1,0 +1,583 @@
+syntax = "proto3";
+
+package signer;
+
+option go_package = "./pb";
+
+
+service SignerService {
+  // ========== Seed管理 ==========
+  // 查询Seed列表
+  rpc ListSeeds(ListSeedsRequest) returns (ListSeedsResponse);
+  // 更新Seed状态
+  rpc UpdateSeedStatus(UpdateSeedStatusRequest) returns (UpdateSeedStatusResponse);
+  // 获取助记词验证挑战（3-word challenge）
+  rpc GetMnemonicChallenge(GetMnemonicChallengeRequest) returns (GetMnemonicChallengeResponse);
+  // 验证助记词挑战
+  rpc VerifyMnemonicChallenge(VerifyMnemonicChallengeRequest) returns (VerifyMnemonicChallengeResponse);
+
+	// ========== HD钱包地址管理 ==========
+	// 为用户生成充值地址（基于HD派生，支持多条链）
+	rpc GenerateUserDepositAddresses(GenerateUserDepositAddressesRequest) returns (GenerateUserDepositAddressesResponse);
+	// 为用户生成单个充值地址（支持 change_index，用于同链多地址）
+	rpc GenerateUserDepositAddress(GenerateUserDepositAddressRequest) returns (GenerateUserDepositAddressResponse);
+	// 根据派生路径获取地址
+	rpc GetAddressFromPath(GetAddressFromPathRequest) returns (GetAddressFromPathResponse);
+	// 批量生成地址
+	rpc GenerateAddressBatch(GenerateAddressBatchRequest) returns (GenerateAddressBatchResponse);
+
+  // ========== 公司钱包管理 ==========
+  // 查询公司钱包地址（根据链和地址类型）
+  rpc GetCompanyWallet(GetCompanyWalletRequest) returns (GetCompanyWalletResponse);
+  // 查询所有公司钱包地址
+  rpc ListCompanyWallets(ListCompanyWalletsRequest) returns (ListCompanyWalletsResponse);
+  // 根据地址查询公司钱包信息
+  rpc GetCompanyWalletByAddress(GetCompanyWalletByAddressRequest) returns (GetCompanyWalletResponse);
+
+  // ========== 公钥导出 ==========
+  // 导出单个公钥
+  rpc ExportPublicKey(ExportPublicKeyRequest) returns (ExportPublicKeyResponse);
+  // 批量导出公钥
+  rpc ExportPublicKeyBatch(ExportPublicKeyBatchRequest) returns (ExportPublicKeyBatchResponse);
+
+  // ========== 签名服务 ==========
+  // 交易签名
+  rpc SignTransaction(SignTransactionRequest) returns (SignTransactionResponse);
+  // 批量签名
+  rpc SignBatch(SignBatchRequest) returns (SignBatchResponse);
+  // 消息签名
+  rpc SignMessage(SignMessageRequest) returns (SignMessageResponse);
+
+  // ========== 日志查询 ==========
+  // 查询签名日志
+  rpc QuerySignatureLogs(QuerySignatureLogsRequest) returns (QuerySignatureLogsResponse);
+
+  // ========== 健康检查 ==========
+  // 健康检查
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+
+  // ========== 热钱包初始化 / signer 解锁门禁 ==========
+  // 查询 signer 运行态与热钱包初始化状态
+  rpc GetRuntimeStatus(GetRuntimeStatusRequest) returns (GetRuntimeStatusResponse);
+  // 开始热钱包初始化（生成24词助记词并进入分页展示会话）
+  rpc StartHotWalletInit(StartHotWalletInitRequest) returns (StartHotWalletInitResponse);
+  // 分页获取助记词（每页4个词）
+  rpc GetHotWalletMnemonicPage(GetHotWalletMnemonicPageRequest) returns (GetHotWalletMnemonicPageResponse);
+  // 获取四词校验挑战
+  rpc GetHotWalletMnemonicChallenge(GetHotWalletMnemonicChallengeRequest) returns (GetHotWalletMnemonicChallengeResponse);
+  // 验证四词校验挑战
+  rpc VerifyHotWalletMnemonicChallenge(VerifyHotWalletMnemonicChallengeRequest) returns (VerifyHotWalletMnemonicChallengeResponse);
+  // 解锁热钱包（每次 signer 重启后需要重新解锁）
+  rpc UnlockHotWallet(UnlockHotWalletRequest) returns (UnlockHotWalletResponse);
+  // 手动锁定（可选）
+  rpc LockHotWallet(LockHotWalletRequest) returns (LockHotWalletResponse);
+}
+
+message ListSeedsRequest {
+  int32 status = 1;  // 可选：筛选状态
+}
+
+message SeedInfo {
+  string seed_id = 1;
+  string seed_name = 2;
+  repeated string supported_chains = 3;
+  int32 temperature = 4;
+  int32 status = 5;
+  int64 total_signatures = 6;
+  string last_signature_at = 7;
+  string created_at = 8;
+}
+
+message ListSeedsResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated SeedInfo seeds = 3;
+}
+
+message UpdateSeedStatusRequest {
+  string seed_id = 1;
+  int32 status = 2;  // 1=激活, 2=停用, 3=废弃
+  string reason = 3;
+}
+
+message UpdateSeedStatusResponse {
+  int32 code = 1;
+  string message = 2;
+  string seed_id = 3;
+  int32 status = 4;
+  string updated_at = 5;
+}
+
+// ========== 助记词验证挑战相关消息 ==========
+
+// 获取助记词验证挑战
+message GetMnemonicChallengeRequest {
+  int64 user_id = 1;                      // 用户ID
+  string purpose = 2;                     // 挑战目的：verify_backup/recovery/security_check
+}
+
+message GetMnemonicChallengeResponse {
+  int32 code = 1;
+  string message = 2;
+  string session_id = 3;                  // 挑战会话ID
+  repeated int32 challenge_indices = 4;   // 需要验证的助记词位置 (0-11 for 12词, 0-23 for 24词)
+  string expires_at = 5;                  // 过期时间（5分钟有效期）
+}
+
+// 验证助记词挑战
+message VerifyMnemonicChallengeRequest {
+  string session_id = 1;                  // 挑战会话ID
+  repeated MnemonicAnswer answers = 2;    // 用户提交的答案
+}
+
+message MnemonicAnswer {
+  int32 index = 1;                        // 助记词位置
+  string word = 2;                        // 用户输入的单词
+}
+
+message VerifyMnemonicChallengeResponse {
+  int32 code = 1;
+  string message = 2;
+  bool verified = 3;                      // 验证是否通过
+  bool backup_confirmed = 4;              // 是否已确认备份
+  string verified_at = 5;                 // 验证时间
+  repeated int32 incorrect_indices = 6;   // 错误的位置（验证失败时返回）
+  int32 remaining_attempts = 7;           // 剩余尝试次数
+}
+
+// ========== 公钥导出相关消息 ==========
+
+message ExportPublicKeyRequest {
+  string seed_id = 1;
+  string chain = 2;
+  string derivation_path = 3;
+  string requester = 4;
+}
+
+message ExportPublicKeyResponse {
+  int32 code = 1;
+  string message = 2;
+  string seed_id = 3;
+  string chain = 4;
+  string derivation_path = 5;
+  string public_key = 6;  // hex编码
+  string compressed_pubkey = 7;  // hex编码
+}
+
+message ExportPublicKeyBatchRequest {
+  string seed_id = 1;
+  string chain = 2;
+  int32 start_index = 3;
+  int32 count = 4;
+  int32 account = 5;  // BIP44 account
+  int32 change = 6;   // BIP44 change
+  string requester = 7;
+}
+
+message PubkeyInfo {
+  int32 index = 1;
+  string derivation_path = 2;
+  string public_key = 3;
+  string compressed_pubkey = 4;
+}
+
+message ExportPublicKeyBatchResponse {
+  int32 code = 1;
+  string message = 2;
+  string seed_id = 3;
+  string chain = 4;
+  int32 start_index = 5;
+  int32 count = 6;
+  repeated PubkeyInfo public_keys = 7;
+}
+
+// ========== 签名相关消息 ==========
+
+message SignTransactionRequest {
+  string request_id = 1; // 当前签名任务唯一 ID，用于幂等和日志
+  string chain = 2;   // 链类型（ETH/BSC/TRON）- 必填
+  string from_address = 3;  // 源地址 - 可选，不填则使用该链的默认热钱包，填则根据地址查询对应的seed和派生路径
+  string raw_transaction = 4;  // hex编码的未签名交易（由chainrpc服务构建） 必填
+  int32 operation_type = 5;  // 1=充值, 2=提币, 3=归集, 4=冷转, 5=消息签名, 6=其他 必填
+  string amount = 6;  // 可选：金额（仅用于日志审计）
+  string to_address = 7;  // 可选：目标地址（仅用于日志审计）
+  string asset_symbol = 8;  // 可选：资产符号（如ETH/USDT，仅用于日志审计）
+  string token_contract = 9;  // 可选：代币合约地址（仅用于日志审计）
+  string requester = 10;  // 可选：请求者标识
+
+  // 移除字段说明：
+  // - seed_id: 安全改进，不再暴露给外部服务，signer内部根据from_address查询
+  // - derivation_path: 安全改进，不再暴露给外部服务，signer内部根据from_address查询
+}
+
+message SignTransactionResponse {
+  int32 code = 1;
+  string message = 2;
+  string request_id = 3;
+  string chain = 4;
+  string signature = 5;
+  string tx_hash = 6;
+  string signed_at = 7;
+}
+
+message SignBatchRequest {
+  string batch_id = 1;
+  string seed_id = 2;
+  string chain = 3;
+  int32 operation_type = 4;
+  repeated TransactionItem transactions = 5;
+}
+
+message TransactionItem {
+  string request_id = 1;
+  string derivation_path = 2;
+  string raw_transaction = 3;  // hex编码的未签名交易
+  string amount = 4;
+  string to_address = 5;
+  string from_address = 6;
+  string asset_symbol = 7;  // 可选：资产符号
+  string token_contract = 8;  // 可选：代币合约地址
+}
+
+message SignBatchResponse {
+  int32 code = 1;
+  string message = 2;
+  string batch_id = 3;
+  int32 total = 4;
+  int32 success = 5;
+  int32 failed = 6;
+  repeated SignResultItem results = 7;
+}
+
+message SignResultItem {
+  string request_id = 1;
+  string signature = 2;
+  string tx_hash = 3;
+  int32 status = 4;
+  string error_msg = 5;
+}
+
+message SignMessageRequest {
+  string request_id = 1;
+  string seed_id = 2;
+  string chain = 3;
+  string derivation_path = 4;
+  string message = 5;
+  string requester = 6;
+}
+
+message SignMessageResponse {
+  int32 code = 1;
+  string message = 2;
+  string request_id = 3;
+  string signature = 4;
+  string signed_at = 5;
+}
+
+// ========== 日志查询相关消息 ==========
+
+message QuerySignatureLogsRequest {
+  string seed_id = 1;
+  string chain = 2;
+  int32 operation_type = 3;
+  int32 status = 4;
+  string start_date = 5;
+  string end_date = 6;
+  int32 page = 7;
+  int32 page_size = 8;
+}
+
+message SignatureLogInfo {
+  string request_id = 1;
+  string seed_id = 2;
+  string chain = 3;
+  string derivation_path = 4;
+  int32 operation_type = 5;
+  string amount = 6;
+  int32 status = 7;
+  string created_at = 8;
+}
+
+message QuerySignatureLogsResponse {
+  int32 code = 1;
+  string message = 2;
+  int64 total = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+  repeated SignatureLogInfo records = 6;
+}
+
+// ========== 健康检查相关消息 ==========
+
+message HealthCheckRequest {
+}
+
+message HealthCheckResponse {
+  int32 code = 1;
+  string message = 2;
+  string status = 3;
+  string version = 4;
+  string timestamp = 5;
+  SeedsHealth seeds = 6;
+  DatabaseHealth database = 7;
+  string wallet_state = 8;     // uninitialized/pending_backup/locked/unlocked
+  string locked_reason = 9;    // 可选：锁定原因（不包含敏感信息）
+  string unlocked_at = 10;     // 可选：解锁时间
+}
+
+message SeedsHealth {
+  int32 total = 1;
+  int32 active = 2;
+}
+
+message DatabaseHealth {
+  bool connected = 1;
+  int32 ping_ms = 2;
+}
+
+// ========== 热钱包初始化 / signer 解锁门禁 ==========
+
+message GetRuntimeStatusRequest {
+  string seed_id = 1; // 可选；为空则使用默认 hot_wallet_main
+}
+
+message GetRuntimeStatusResponse {
+  int32 code = 1;
+  string message = 2;
+  string seed_id = 3;
+  string wallet_state = 4;       // uninitialized/pending_backup/locked/unlocked
+  bool backup_confirmed = 5;     // 是否已完成备份确认
+  string unlocked_at = 6;        // 解锁时间（如已解锁）
+}
+
+message StartHotWalletInitRequest {
+  string seed_id = 1;
+  string seed_name = 2;
+  repeated string supported_chains = 3;
+  string unlock_password = 4;      // 管理员设置的解锁密码（Extension Word）
+  int64 admin_id = 5;              // 可选：审计
+}
+
+message StartHotWalletInitResponse {
+  int32 code = 1;
+  string message = 2;
+  string seed_id = 3;
+  string init_session_id = 4;
+  int32 word_count = 5;            // 默认24
+  int32 page_size = 6;             // 固定4
+  int32 total_pages = 7;           // word_count/page_size
+  string expires_at = 8;           // 会话过期时间
+}
+
+message GetHotWalletMnemonicPageRequest {
+  string init_session_id = 1;
+  int32 page_index = 2;            // 0-based
+}
+
+message GetHotWalletMnemonicPageResponse {
+  int32 code = 1;
+  string message = 2;
+  int32 page_index = 3;
+  int32 page_size = 4;
+  int32 total_pages = 5;
+  repeated string words = 6;       // 4个词
+  bool has_prev = 7;
+  bool has_next = 8;
+}
+
+message GetHotWalletMnemonicChallengeRequest {
+  string init_session_id = 1;
+}
+
+message GetHotWalletMnemonicChallengeResponse {
+  int32 code = 1;
+  string message = 2;
+  string challenge_session_id = 3;
+  repeated int32 challenge_indices = 4; // 0-23
+  string expires_at = 5;
+  int32 remaining_attempts = 6;
+}
+
+message VerifyHotWalletMnemonicChallengeRequest {
+  string challenge_session_id = 1;
+  repeated MnemonicAnswer answers = 2; // 需要验证的4个词
+}
+
+message VerifyHotWalletMnemonicChallengeResponse {
+  int32 code = 1;
+  string message = 2;
+  bool verified = 3;
+  repeated int32 incorrect_indices = 4;
+  int32 remaining_attempts = 5;
+  bool backup_confirmed = 6;
+  string verified_at = 7;
+}
+
+message UnlockHotWalletRequest {
+  string seed_id = 1;
+  string unlock_password = 2;
+  int64 admin_id = 3; // 可选：审计
+}
+
+message UnlockHotWalletResponse {
+  int32 code = 1;
+  string message = 2;
+  string seed_id = 3;
+  bool unlocked = 4;
+  string unlocked_at = 5;
+}
+
+message LockHotWalletRequest {
+  string seed_id = 1;
+}
+
+message LockHotWalletResponse {
+  int32 code = 1;
+  string message = 2;
+  string seed_id = 3;
+  bool locked = 4;
+}
+
+// ========== HD钱包地址管理相关消息 ==========
+
+// 为用户生成充值地址（三条链）
+message GenerateUserDepositAddressesRequest {
+  string seed_id = 1;                     // Seed ID（通常使用热钱包seed_id）
+  int64 user_id = 2;                      // 用户ID（作为address_index）
+  repeated string chains = 3;              // 要生成的链列表，如 ["TRN", "BSC", "ETH"]
+  string requester = 4;                    // 请求者标识
+}
+
+message UserDepositAddress {
+  string chain = 1;                       // 链类型：TRON/BSC/ETH
+  string address = 2;                     // 生成的地址
+  string derivation_path = 3;             // 派生路径
+  string public_key = 4;                  // 公钥（hex编码）
+  string compressed_pubkey = 5;           // 压缩公钥（hex编码）
+}
+
+message GenerateUserDepositAddressesResponse {
+	int32 code = 1;
+	string message = 2;
+	int64 user_id = 3;
+	repeated UserDepositAddress addresses = 4;
+	string created_at = 5;
+}
+
+// 为用户生成单个充值地址（用于同链多地址）
+message GenerateUserDepositAddressRequest {
+	string seed_id = 1;                      // Seed ID（通常使用热钱包seed_id）
+	int64 user_id = 2;                       // 用户ID（作为 address_index）
+	string chain = 3;                        // 链类型：TRON/BSC/ETH
+	int32 change_index = 4;                  // BIP44 change (subIndex), >=0
+	string requester = 5;                    // 请求者标识
+}
+
+message GenerateUserDepositAddressResponse {
+	int32 code = 1;
+	string message = 2;
+	int64 user_id = 3;
+	string chain = 4;
+	string address = 5;
+	string derivation_path = 6;
+	string public_key = 7;
+	string compressed_pubkey = 8;
+	string created_at = 9;
+}
+
+// 根据派生路径获取地址
+message GetAddressFromPathRequest {
+  string seed_id = 1;
+  string chain = 2;                       // 链类型
+  string derivation_path = 3;             // 派生路径
+}
+
+message GetAddressFromPathResponse {
+  int32 code = 1;
+  string message = 2;
+  string chain = 3;
+  string address = 4;
+  string derivation_path = 5;
+  string public_key = 6;
+  string compressed_pubkey = 7;
+}
+
+// 批量生成地址
+message GenerateAddressBatchRequest {
+  string seed_id = 1;
+  string chain = 2;
+  int32 start_index = 3;                  // 起始索引
+  int32 count = 4;                        // 生成数量
+  int32 account = 5;                      // BIP44 account
+  int32 change = 6;                       // BIP44 change (0=external, 1=internal)
+}
+
+message AddressBatchItem {
+  int32 index = 1;
+  string derivation_path = 2;
+  string address = 3;
+  string public_key = 4;
+  string compressed_pubkey = 5;
+}
+
+message GenerateAddressBatchResponse {
+  int32 code = 1;
+  string message = 2;
+  string seed_id = 3;
+  string chain = 4;
+  int32 start_index = 5;
+  int32 count = 6;
+  repeated AddressBatchItem addresses = 7;
+}
+
+// ========== 公司钱包管理相关消息 ==========
+
+// 查询公司钱包地址（根据链和地址类型）
+message GetCompanyWalletRequest {
+  string chain = 1;                       // 链类型：TRON/BSC/ETH
+  string address_type = 2;                // 地址类型：hot_primary/cold_primary/hot_backup/cold_backup/collection
+  int32 temperature = 3;                  // 可选：温度筛选，1=热钱包, 2=冷钱包, 0=不限
+}
+
+message CompanyWalletInfo {
+  int64 id = 1;                           // 钱包ID
+  int32 address_index = 2;                // 地址索引 (1-100)
+  string address_type = 3;                // 地址类型
+  string chain = 4;                       // 链类型
+  string address = 5;                     // 钱包地址
+  string derivation_path = 6;             // HD派生路径
+  string seed_id = 7;                     // Seed ID
+  int32 temperature = 8;                  // 1=热钱包, 2=冷钱包
+  int32 status = 9;                       // 1=启用, 0=禁用
+  double balance_threshold = 10;          // 余额阈值
+  string remark = 11;                     // 备注
+  string created_at = 12;               // 创建时间
+  string updated_at = 13;               // 更新时间
+}
+
+message GetCompanyWalletResponse {
+  int32 code = 1;
+  string message = 2;
+  CompanyWalletInfo wallet = 3;
+}
+
+// 查询所有公司钱包地址
+message ListCompanyWalletsRequest {
+  string chain = 1;                       // 可选：筛选链类型
+  int32 temperature = 2;                  // 可选：筛选温度，1=热钱包, 2=冷钱包, 0=所有
+  int32 status = 3;                       // 可选：筛选状态，1=启用, 0=禁用, -1=所有
+  string address_type = 4;                // 可选：筛选地址类型
+}
+
+message ListCompanyWalletsResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated CompanyWalletInfo wallets = 3;
+  int32 total = 4;
+}
+
+// 根据地址查询公司钱包信息
+message GetCompanyWalletByAddressRequest {
+  string address = 1;                     // 钱包地址
+  string chain = 2;                       // 可选：链类型（用于加速查询）
+}

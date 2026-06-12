@@ -1,0 +1,20 @@
+type: google.api.Service
+config_version: 3
+name: chainrpc
+http:
+  rules:
+    - selector: chainrpc.ChainRPC.GetGasPrice
+      post: /api/v1/chain/gas/price
+      body: "*"
+
+    - selector: chainrpc.ChainRPC.EstimateGas
+      post: /api/v1/chain/gas/estimate
+      body: "*"
+
+    - selector: chainrpc.ChainRPC.EstimateTronFee
+      post: /api/v1/chain/tron/estimate-fee
+      body: "*"
+
+    - selector: chainrpc.ChainRPC.GetTronAccountResources
+      get: /api/v1/chain/tron/account-resources/{address}
+

@@ -1,0 +1,508 @@
+type: google.api.Service
+config_version: 3
+name: business
+http:
+  rules:
+    - selector: business.Business.GetCountryCodes
+      post: /api/v1/business/get_country_codes
+      body: "*"
+
+    - selector: business.Business.SendSMSCode
+      post: /api/v1/business/send_sms_code
+      body: "*"
+
+    - selector: business.Business.SendEmailCode
+      post: /api/v1/business/send_email_code
+      body: "*"
+
+    - selector: business.Business.LoginByEmailCode
+      post: /api/v1/business/login_by_email_code
+      body: "*"
+
+    - selector: business.Business.LoginByPhoneCode
+      post: /api/v1/business/login_by_phone_code
+      body: "*"
+
+    - selector: business.Business.LoginByGoogle
+      post: /api/v1/business/login_by_google
+      body: "*"
+
+    - selector: business.Business.RefreshToken
+      post: /api/v1/business/refresh_token
+      body: "*"
+
+    - selector: business.Business.ForgotPasswordByEmail
+      post: /api/v1/business/forgot_password_by_email
+      body: "*"
+
+    - selector: business.Business.ForgotPasswordByPhone
+      post: /api/v1/business/forgot_password_by_phone
+      body: "*"
+
+    - selector: business.Business.ValidateGeetest
+      post: /api/v1/business/geetest/validate
+      body: "*"
+
+    - selector: business.Business.Logout
+      post: /api/v1/business/logout
+      body: "*"
+
+    - selector: business.Business.GetMyOverview
+      post: /api/v1/business/get_my_overview
+      body: "*"
+
+    - selector: business.Business.GetAssetOverview
+      post: /api/v1/business/get_asset_overview
+      body: "*"
+
+    - selector: business.Business.GetAssetDetail
+      post: /api/v1/business/get_asset_detail
+      body: "*"
+
+    - selector: business.Business.GetAssetConfig
+      post: /api/v1/business/get_asset_config
+      body: "*"
+
+    - selector: business.Business.ListTransactionRecords
+      post: /api/v1/business/list_transaction_records
+      body: "*"
+
+    - selector: business.Business.GetTransactionRecordDetail
+      post: /api/v1/business/get_transaction_record_detail
+      body: "*"
+
+    - selector: business.Business.GetDepositInfo
+      post: /api/v1/business/get_deposit_info
+      body: "*"
+
+    - selector: business.Business.CreateDeposit
+      post: /api/v1/business/create_deposit
+      body: "*"
+
+    - selector: business.Business.ListDepositRecords
+      post: /api/v1/business/list_deposit_records
+      body: "*"
+
+    - selector: business.Business.GetDepositDetail
+      post: /api/v1/business/get_deposit_detail
+      body: "*"
+
+    - selector: business.Business.ListDepositAddressBook
+      post: /api/v1/business/list_deposit_address_book
+      body: "*"
+
+    - selector: business.Business.CreateDepositAddressBook
+      post: /api/v1/business/create_deposit_address_book
+      body: "*"
+
+    - selector: business.Business.GetDepositAddressBookDetail
+      post: /api/v1/business/get_deposit_address_book_detail
+      body: "*"
+
+    - selector: business.Business.UpdateDepositAddressBook
+      post: /api/v1/business/update_deposit_address_book
+      body: "*"
+
+    - selector: business.Business.DeleteDepositAddressBook
+      post: /api/v1/business/delete_deposit_address_book
+      body: "*"
+
+    - selector: business.Business.SetDefaultDepositAddressBook
+      post: /api/v1/business/set_default_deposit_address_book
+      body: "*"
+
+    - selector: business.Business.ListDepositAddressBookDeposits
+      post: /api/v1/business/list_deposit_address_book_deposits
+      body: "*"
+
+    - selector: business.Business.ListWithdrawRecords
+      post: /api/v1/business/list_withdraw_records
+      body: "*"
+
+    - selector: business.Business.ListActionAssets
+      post: /api/v1/business/list_action_assets
+      body: "*"
+
+    - selector: business.Business.ListActionNetworks
+      post: /api/v1/business/list_action_networks
+      body: "*"
+
+    - selector: business.Business.GetAssetWithdrawFeeConfig
+      post: /api/v1/business/get_asset_withdraw_fee_config
+      body: "*"
+
+    - selector: business.Business.GetExchangeRate
+      post: /api/v1/business/get_exchange_rate
+      body: "*"
+
+    - selector: business.Business.ListFiatRates
+      post: /api/v1/business/list_fiat_rates
+      body: "*"
+
+    - selector: business.Business.GetWithdrawInfo
+      post: /api/v1/business/get_withdraw_info
+      body: "*"
+
+    - selector: business.Business.EstimateWithdrawFee
+      post: /api/v1/business/estimate_withdraw_fee
+      body: "*"
+
+    - selector: business.Business.CalcWithdrawFee
+      post: /api/v1/business/calc_withdraw_fee
+      body: "*"
+
+    - selector: business.Business.CreateWithdraw
+      post: /api/v1/business/create_withdraw
+      body: "*"
+
+    - selector: business.Business.GetWithdrawAuditStatus
+      post: /api/v1/business/get_withdraw_audit_status
+      body: "*"
+
+    - selector: business.Business.GetWithdrawDetail
+      post: /api/v1/business/get_withdraw_detail
+      body: "*"
+
+    - selector: business.Business.ListNotifications
+      post: /api/v1/business/list_notifications
+      body: "*"
+
+    - selector: business.Business.MarkNotificationRead
+      post: /api/v1/business/mark_notification_read
+      body: "*"
+
+    - selector: business.Business.MarkAllNotificationsRead
+      post: /api/v1/business/mark_all_notifications_read
+      body: "*"
+
+    - selector: business.Business.DeleteNotification
+      post: /api/v1/business/delete_notification
+      body: "*"
+
+    - selector: business.Business.ClearAllNotifications
+      post: /api/v1/business/clear_all_notifications
+      body: "*"
+
+    - selector: business.Business.RegisterDevice
+      post: /api/v1/business/register_device
+      body: "*"
+
+    - selector: business.Business.SendPushNotificationByAlias
+      post: /api/v1/business/send_push_notification_by_alias
+      body: "*"
+
+    - selector: business.Business.SendPushNotificationByDeviceToken
+      post: /api/v1/business/send_push_notification_by_device_token
+      body: "*"
+
+    - selector: business.Business.GetUserInfo
+      post: /api/v1/business/get_user_info
+      body: "*"
+
+    - selector: business.Business.UpdateUserInfo
+      post: /api/v1/business/update_user_info
+      body: "*"
+
+    - selector: business.Business.BindEmail
+      post: /api/v1/business/bind_email
+      body: "*"
+
+    - selector: business.Business.ChangeEmail
+      post: /api/v1/business/change_email
+      body: "*"
+
+    - selector: business.Business.BindPhone
+      post: /api/v1/business/bind_phone
+      body: "*"
+
+    - selector: business.Business.ChangePhone
+      post: /api/v1/business/change_phone
+      body: "*"
+
+    - selector: business.Business.ListWalletProviders
+      post: /api/v1/business/list_wallet_providers
+      body: "*"
+
+    - selector: business.Business.ListProviderAccounts
+      post: /api/v1/business/list_provider_accounts
+      body: "*"
+
+    - selector: business.Business.LinkWalletAccount
+      post: /api/v1/business/link_wallet_account
+      body: "*"
+
+    - selector: business.Business.UnlinkWalletAccount
+      post: /api/v1/business/unlink_wallet_account
+      body: "*"
+
+    - selector: business.Business.SetPrimaryLinkedWallet
+      post: /api/v1/business/set_primary_linked_wallet
+      body: "*"
+
+    - selector: business.Business.GetLinkedWalletAccounts
+      post: /api/v1/business/get_linked_wallet_accounts
+      body: "*"
+
+    - selector: business.Business.ChangePassword
+      post: /api/v1/business/change_password
+      body: "*"
+
+    - selector: business.Business.SetTradePassword
+      post: /api/v1/business/set_trade_password
+      body: "*"
+
+    - selector: business.Business.ResetTradePassword
+      post: /api/v1/business/reset_trade_password
+      body: "*"
+
+    - selector: business.Business.VerifyTradePassword
+      post: /api/v1/business/verify_trade_password
+      body: "*"
+
+    - selector: business.Business.SetWeb3TradePassword
+      post: /api/v1/business/set_web3_trade_password
+      body: "*"
+
+    - selector: business.Business.VerifyWeb3TradePassword
+      post: /api/v1/business/verify_web3_trade_password
+      body: "*"
+
+    - selector: business.Business.UpdateWeb3TradePassword
+      post: /api/v1/business/update_web3_trade_password
+      body: "*"
+
+    - selector: business.Business.RegisterBiometricKey
+      post: /api/v1/business/register_biometric_key
+      body: "*"
+
+    - selector: business.Business.CreateWithdrawBiometricChallenge
+      post: /api/v1/business/create_withdraw_biometric_challenge
+      body: "*"
+
+    - selector: business.Business.CreateWithdrawAuditWhitelistBindingBiometricChallenge
+      post: /api/v1/business/create_withdraw_audit_whitelist_binding_biometric_challenge
+      body: "*"
+
+    - selector: business.Business.CreateResetTradePasswordBiometricChallenge
+      post: /api/v1/business/create_reset_trade_password_biometric_challenge
+      body: "*"
+
+    - selector: business.Business.UnbindBiometric
+      post: /api/v1/business/unbind_biometric
+      body: "*"
+
+    - selector: business.Business.GetGoogleAuthSetup
+      post: /api/v1/business/get_google_auth_setup
+      body: "*"
+
+    - selector: business.Business.BindGoogleAuth
+      post: /api/v1/business/bind_google_auth
+      body: "*"
+
+    - selector: business.Business.UnbindGoogleAuth
+      post: /api/v1/business/unbind_google_auth
+      body: "*"
+
+    - selector: business.Business.DisableGoogleAuth2FA
+      post: /api/v1/business/disable_google_auth_2fa
+      body: "*"
+
+    - selector: business.Business.EnableGoogleAuth2FA
+      post: /api/v1/business/enable_google_auth_2fa
+      body: "*"
+
+    - selector: business.Business.DisableGoogleAuth2FAWithCode
+      post: /api/v1/business/disable_google_auth_2fa_with_code
+      body: "*"
+
+    - selector: business.Business.VerifyGoogleAuthCode
+      post: /api/v1/business/verify_google_auth_code
+      body: "*"
+
+    - selector: business.Business.ListLoginRecords
+      post: /api/v1/business/list_login_records
+      body: "*"
+
+    - selector: business.Business.ListWalletAddresses
+      post: /api/v1/business/list_wallet_addresses
+      body: "*"
+
+    - selector: business.Business.AddWalletAddress
+      post: /api/v1/business/add_wallet_address
+      body: "*"
+
+    - selector: business.Business.UpdateWalletAddress
+      post: /api/v1/business/update_wallet_address
+      body: "*"
+
+    - selector: business.Business.DeleteWalletAddress
+      post: /api/v1/business/delete_wallet_address
+      body: "*"
+
+    - selector: business.Business.SetDefaultWalletAddress
+      post: /api/v1/business/set_default_wallet_address
+      body: "*"
+
+    - selector: business.Business.ValidateWalletAddress
+      post: /api/v1/business/validate_wallet_address
+      body: "*"
+
+    - selector: business.Business.ListInternalWalletAddresses
+      post: /api/v1/business/list_internal_wallet_addresses
+      body: "*"
+
+    - selector: business.Business.AddInternalWalletAddress
+      post: /api/v1/business/add_internal_wallet_address
+      body: "*"
+
+    - selector: business.Business.UpdateInternalWalletAddress
+      post: /api/v1/business/update_internal_wallet_address
+      body: "*"
+
+    - selector: business.Business.DeleteInternalWalletAddress
+      post: /api/v1/business/delete_internal_wallet_address
+      body: "*"
+
+    - selector: business.Business.LookupInternalUser
+      post: /api/v1/business/lookup_internal_user
+      body: "*"
+
+    - selector: business.Business.ValidateInternalTransferTarget
+      post: /api/v1/business/validate_internal_transfer_target
+      body: "*"
+
+    - selector: business.Business.SubmitInternalTransfer
+      post: /api/v1/business/submit_internal_transfer
+      body: "*"
+
+    - selector: business.Business.CancelInternalTransfer
+      post: /api/v1/business/cancel_internal_transfer
+      body: "*"
+
+    - selector: business.Business.ListWithdrawAuditWhitelistBindableNetworks
+      post: /api/v1/business/list_withdraw_audit_whitelist_bindable_networks
+      body: "*"
+
+    - selector: business.Business.SetMyWithdrawAuditWhitelistBinding
+      post: /api/v1/business/set_my_withdraw_audit_whitelist_binding
+      body: "*"
+
+    - selector: business.Business.GetMyWithdrawAuditWhitelistBindingStatus
+      post: /api/v1/business/get_my_withdraw_audit_whitelist_binding_status
+      body: "*"
+
+    - selector: business.Business.UnbindMyWithdrawAuditWhitelistBindings
+      post: /api/v1/business/unbind_my_withdraw_audit_whitelist_bindings
+      body: "*"
+
+    - selector: business.Business.GetPreferences
+      post: /api/v1/business/get_preferences
+      body: "*"
+
+    - selector: business.Business.SetPreferences
+      post: /api/v1/business/set_preferences
+      body: "*"
+
+    - selector: business.Business.GetClientConfig
+      post: /api/v1/business/get_client_config
+      body: "*"
+
+    - selector: business.Business.ListLanguageOptions
+      post: /api/v1/business/list_language_options
+      body: "*"
+
+    - selector: business.Business.ListPriceUnitOptions
+      post: /api/v1/business/list_price_unit_options
+      body: "*"
+
+    - selector: business.Business.SwapGetQuote
+      post: /api/v1/business/swap/get_quote
+      body: "*"
+
+    - selector: business.Business.SwapExecuteSwap
+      post: /api/v1/business/swap/execute_swap
+      body: "*"
+
+    - selector: business.Business.SwapGetApprovalTransaction
+      post: /api/v1/business/swap/get_approval_transaction
+      body: "*"
+
+    - selector: business.Business.SwapResetApproval
+      post: /api/v1/business/swap/reset_approval
+      body: "*"
+
+    - selector: business.Business.SwapGetSwapStatus
+      post: /api/v1/business/swap/get_status
+      body: "*"
+
+    - selector: business.Business.SwapGetSwapDetail
+      post: /api/v1/business/swap/get_detail
+      body: "*"
+
+    - selector: business.Business.SwapGetSwapHistory
+      post: /api/v1/business/swap/get_history
+      body: "*"
+
+    - selector: business.Business.SwapGetExternalSwapStatus
+      post: /api/v1/business/swap/get_external_status
+      body: "*"
+
+    - selector: business.Business.SwapGetSupportedTokens
+      post: /api/v1/business/swap/get_supported_tokens
+      body: "*"
+
+    - selector: business.Business.SwapGetSupportedChains
+      post: /api/v1/business/swap/get_supported_chains
+      body: "*"
+
+    - selector: business.Business.CreateWeb3User
+      post: /api/v1/business/web3/user/create
+      body: "*"
+
+    - selector: business.Business.BatchAddWeb3UserAddress
+      post: /api/v1/business/web3/user/address/add
+      body: "*"
+
+    - selector: business.Business.ListWeb3Chains
+      get: /api/v1/business/web3/chains
+
+    - selector: business.Business.GetWeb3UserByDeviceId
+      post: /api/v1/business/web3/user/info
+      body: "*"
+
+    - selector: business.Business.GetWeb3AssetOverview
+      post: /api/v1/business/web3/assets/overview
+      body: "*"
+
+    - selector: business.Business.ListWeb3Transactions
+      post: /api/v1/business/web3/transactions/list
+      body: "*"
+
+    - selector: business.Business.GetWeb3TransactionDetail
+      post: /api/v1/business/web3/transactions/detail
+      body: "*"
+
+    - selector: business.Business.GetWeb3TransactionResult
+      post: /api/v1/business/get_web3_transaction_result
+      body: "*"
+
+    - selector: business.Business.ListWeb3SupportedAssets
+      post: /api/v1/business/web3/assets/supported
+      body: "*"
+
+    - selector: business.Business.BroadcastWeb3Transaction
+      post: /api/v1/business/web3/transaction/broadcast
+      body: "*"
+
+    - selector: business.Business.GetWeb3Nonce
+      post: /api/v1/business/web3/nonce
+      body: "*"
+
+    - selector: business.Business.BuildTronTransaction
+      post: /api/v1/business/web3/tron/build-transaction
+      body: "*"
+
+    - selector: business.Business.GetWeb3TokenDetail
+      post: /api/v1/business/web3/token/detail
+      body: "*"
+

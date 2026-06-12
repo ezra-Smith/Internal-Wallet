@@ -1,0 +1,76 @@
+Name: signer.rpc
+ListenOn: 0.0.0.0:9012
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: signer.rpc
+Mode: dev
+
+# 雪花ID配置（必须配置，范围0-1023，每个服务唯一）
+# 服务NodeID分配：bussiness=1, chainrpc=2 chainsync=3 signer=4
+NodeID: 4
+
+# 日志配置
+Log:
+  ServiceName: signer.rpc
+  Mode: console                    # console/file/volume
+  Path: logs/signer           # 日志路径
+  Level: info                   # debug/info/error/severe
+  Compress: true                # 是否压缩
+  KeepDays: 7                   # 保留天数
+  StackCooldownMillis: 100      # 堆栈日志冷却时间
+
+# GORM MySQL 配置（使用common/db统一配置）
+# 密码从环境变量/AWS Secrets Manager注入，不在此配置
+MySQL:
+  Host: localhost
+  Port: 3306
+  Username: crypto
+  Password: ""  # 占位符，实际值从 secrets 包注入（见 signer.go）
+  Database: crypto_wallet
+  MaxIdleConns: 10              # 最大空闲连接数
+  MaxOpenConns: 100             # 最大打开连接数
+  ConnMaxLifetime: 3600         # 连接最大生命周期（秒）
+  LogLevel: 4                   # 1=Silent 2=Error 3=Warn 4=Info（开发环境用4，生产环境用2）
+  SlowThreshold: 200            # 慢查询阈值（毫秒）
+
+CacheRedis:
+  - Host: localhost:6379
+    Pass: ""  # 占位符，实际值从 secrets 包注入（见 signer.go）
+    Type: node
+
+Telemetry:
+  Name: signer.rpc
+  Endpoint: http://localhost:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger
+
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9092
+  Path: /metrics
+
+# 安全配置
+Security:
+  # Seed加密密码从环境变量/AWS Secrets Manager注入（见 signer.go）
+  # 这是最关键的密钥，丢失将导致所有种子永久无法解密！
+  EncryptionPassword: ""  # 占位符，实际值从 secrets 包注入
+  # 密钥存储路径（预留）
+  KeyStorePath: /secure/keystore
+  # TEE配置（预留）
+  EnableTEE: false
+  EnableHSM: false
+  # IP白名单配置
+  EnableIPWhitelist: false  # 开发环境关闭，生产环境建议开启
+  AllowedIPs:
+    - 127.0.0.1            # 本地访问
+    - ::1                  # IPv6本地访问
+  AllowedCIDRs:
+    - 10.0.0.0/8           # 内网网段
+    - 172.16.0.0/12        # 内网网段
+    - 192.168.0.0/16       # 内网网段
+
+# 数据库自动迁移配置（仅开发/测试环境建议启用）
+# 注意：如果表结构已稳定，建议设置为 false 以提升启动速度
+AutoMigrate: false
+

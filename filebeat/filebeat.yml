@@ -1,0 +1,64 @@
+filebeat.inputs:
+  # API 网关日志
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/services/api-gateway/logs/gateway/*.log
+    fields:
+      service: api-gateway
+      environment: production
+    fields_under_root: true
+    json.keys_under_root: true
+    json.add_error_key: true
+    json.message_key: msg
+
+  # 钱包服务日志
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/services/wallet/rpc/logs/wallet/*.log
+    fields:
+      service: wallet-service
+      environment: production
+    fields_under_root: true
+    json.keys_under_root: true
+    json.add_error_key: true
+    json.message_key: msg
+
+
+# 日志处理器
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~
+  - add_kubernetes_metadata: ~
+  - drop_fields:
+      fields: ["agent", "ecs", "host", "input"]
+      ignore_missing: true
+
+# 输出到 Elasticsearch
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  index: "cryptoexchange-logs-%{+yyyy.MM.dd}"
+
+# 索引生命周期管理
+setup.ilm.enabled: false
+setup.template.name: "cryptoexchange"
+setup.template.pattern: "cryptoexchange-*"
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 0
+
+# Kibana 配置
+setup.kibana:
+  host: "kibana:5601"
+
+# 日志级别
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644

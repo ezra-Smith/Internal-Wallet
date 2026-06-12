@@ -1,0 +1,74 @@
+Name: notification.rpc
+ListenOn: 0.0.0.0:8087
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: notification.rpc
+
+# 雪花ID配置（必须配置，范围0-1023，每个服务唯一）
+# 服务NodeID分配：business=1, chainrpc=2, chainsync=3, signer=4, admin=5, accounting=6, notification=7
+NodeID: 7
+
+# 日志配置
+Log:
+  ServiceName: notification.rpc
+  Mode: console                    # console/file/volume
+  Path: logs/notification          # 日志路径
+  Level: info                      # debug/info/error/severe
+  Compress: true                   # 是否压缩
+  KeepDays: 7                      # 保留天数
+  StackCooldownMillis: 100         # 堆栈日志冷却时间
+
+# GORM MySQL 配置
+# 密码从环境变量/AWS Secrets Manager注入
+MySQL:
+  Host: localhost
+  Port: 3306
+  Username: root
+  Password: "123456"  # 占位符，实际值从 secrets 包注入（见 notification.go）
+  Database: crypto_wallet
+  MaxIdleConns: 10                 # 最大空闲连接数
+  MaxOpenConns: 100                # 最大打开连接数
+  ConnMaxLifetime: 3600            # 连接最大生命周期（秒）
+  LogLevel: 4                      # 1=Silent 2=Error 3=Warn 4=Info（开发环境用4，生产环境用2）
+  SlowThreshold: 200               # 慢查询阈值（毫秒）
+
+CacheRedis:
+  - Host: localhost:6379
+    Pass: ""  # 占位符，实际值从 secrets 包注入（见 notification.go）
+    Type: node
+
+# 极光推送配置
+# AppKey 和 MasterSecret 从环境变量/AWS Secrets Manager注入
+JPush:
+  AppKey: "8374232de76d87692547925c"  # 占位符，实际值从 secrets 包注入
+  MasterSecret: "2eb53aedb0240d1f8aaea88f"                 # 占位符，实际值从 secrets 包注入
+  ApnsProduction: false            # iOS推送环境：false=开发环境 true=生产环境
+  Timeout: 5000                    # 超时时间（毫秒）
+  MaxRetries: 3                    # 最大重试次数
+  RetryInterval: 1000              # 重试间隔（毫秒）
+
+# Kafka 配置（用于接收其他服务的推送消息）
+# 例如：交易完成、充值到账、提现成功等事件触发推送
+Kafka:
+  Brokers:
+    - localhost:9092
+  GroupID: notification-consumer
+  Topics:
+    Transaction: "crypto.transaction.events"     # 交易事件主题
+    Security: "crypto.security.events"           # 安全事件主题
+    System: "crypto.system.events"               # 系统事件主题
+    PriceAlert: "crypto.price.alert"             # 价格提醒主题
+  EnableConsumer: true               # 是否启用Kafka消费者（可配置关闭）
+  ConsumerConcurrency: 5             # 消费者并发数
+
+Telemetry:
+  Name: notification.rpc
+  Endpoint: http://localhost:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger
+
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9097
+  Path: /metrics

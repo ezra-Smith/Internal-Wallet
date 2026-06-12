@@ -1,0 +1,102 @@
+{"@timestamp":"2025-11-28T00:00:08.148+08:00","caller":"logx/rotatelogger.go:416","content":"compressing log file: logs/gateway/stat.log-2025-11-27","level":"info"}
+{"@timestamp":"2025-11-28T00:00:08.148+08:00","caller":"logx/rotatelogger.go:416","content":"compressing log file: logs/gateway/access.log-2025-11-27","level":"info"}
+{"@timestamp":"2025-11-28T00:00:08.149+08:00","caller":"logx/rotatelogger.go:420","content":"compressed log file: logs/gateway/stat.log-2025-11-27, took 1.6596ms","level":"info"}
+{"@timestamp":"2025-11-28T00:00:08.151+08:00","caller":"logx/rotatelogger.go:420","content":"compressed log file: logs/gateway/access.log-2025-11-27, took 2.6382ms","level":"info"}
+{"@timestamp":"2025-11-28T13:14:50.147+08:00","caller":"logx/rotatelogger.go:416","content":"compressing log file: logs/gateway/error.log-2025-11-27","level":"info"}
+{"@timestamp":"2025-11-28T13:14:50.148+08:00","caller":"logx/rotatelogger.go:420","content":"compressed log file: logs/gateway/error.log-2025-11-27, took 1.0269ms","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.434+08:00","caller":"api-gateway/gateway.go:35","content":"Starting API Gateway...","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.434+08:00","caller":"api-gateway/gateway.go:50","content":"Loaded 3 services from routes config","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.434+08:00","caller":"handler/router.go:61","content":"Using Redis-based distributed rate limiting","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.434+08:00","caller":"handler/router.go:446","content":"Created Redis client: localhost:6379 (DB: 0)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/auth/register: 10 req/s (type: ip)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/auth/login: 5 req/s (type: ip)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/auth/logout: 10 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/auth/refresh-token: 10 req/s (type: ip)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/transfer/internal: 20 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/transaction/build/native: 50 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/transaction/build/token: 50 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/gas/estimate: 100 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/gas/price: 200 req/s (type: ip)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/transaction/broadcast: 50 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/balance: 100 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/balance/token: 100 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/transaction/status: 200 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/block/height: 100 req/s (type: ip)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/nonce: 100 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/token/info: 100 req/s (type: ip)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/chain/health: 50 req/s (type: ip)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/sync/status: 50 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/sync/start: 10 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/sync/stop: 10 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/sync/monitor/add: 50 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/sync/monitor/remove: 50 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/sync/monitor/list: 50 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/sync/transaction: 100 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/sync/transactions/address: 100 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/sync/balance/address: 100 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/sync/balance/multi: 50 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:126","content":"Registering routes for service: business","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:126","content":"Registering routes for service: chainrpc","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:126","content":"Registering routes for service: chainsync","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.446+08:00","caller":"handler/router.go:141","content":"Route registration completed: 0 registered, 27 skipped","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:87","content":"✓ Connected to Redis for captcha storage","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:109","content":"✓ Registered captcha endpoints (with rate limiting):","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:110","content":"    GET  /api/v1/captcha -\u003e Generate captcha [10 req/sec per IP]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:111","content":"    POST /api/v1/captcha/verify -\u003e Verify captcha [20 req/sec per IP]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:145","content":"API Gateway listening on 0.0.0.0:8080","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:146","content":"Gateway routes:","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:148","content":"  [chainsync]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/sync/status -\u003e ChainSync.GetSyncStatus [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/sync/start -\u003e ChainSync.StartSync [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/sync/stop -\u003e ChainSync.StopSync [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/sync/monitor/add -\u003e ChainSync.AddAddressMonitor [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/sync/monitor/remove -\u003e ChainSync.RemoveAddressMonitor [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/sync/monitor/list -\u003e ChainSync.GetMonitoredAddresses [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/sync/transaction -\u003e ChainSync.GetTransaction [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/sync/transactions/address -\u003e ChainSync.GetAddressTransactions [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/sync/balance/address -\u003e ChainSync.GetAddressBalance [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/sync/balance/multi -\u003e ChainSync.GetMultiAddressBalance [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:148","content":"  [business]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/auth/register -\u003e Business.Register","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/auth/login -\u003e Business.Login","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/auth/logout -\u003e Business.Logout [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/auth/refresh-token -\u003e Business.RefreshToken","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/transfer/internal -\u003e Business.InternalTransfer [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:148","content":"  [chainrpc]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/chain/transaction/build/native -\u003e ChainRPC.BuildNativeTransfer [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/chain/transaction/build/token -\u003e ChainRPC.BuildTokenTransfer [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/chain/gas/estimate -\u003e ChainRPC.EstimateGas [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/chain/gas/price -\u003e ChainRPC.GetGasPrice","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/chain/transaction/broadcast -\u003e ChainRPC.BroadcastTransaction [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/chain/balance -\u003e ChainRPC.GetBalance [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/chain/balance/token -\u003e ChainRPC.GetTokenBalance [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/chain/transaction/status -\u003e ChainRPC.GetTransactionStatus [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/chain/block/height -\u003e ChainRPC.GetBlockHeight","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/chain/nonce -\u003e ChainRPC.GetNonce [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/chain/token/info -\u003e ChainRPC.GetTokenInfo","level":"info"}
+{"@timestamp":"2025-12-10T15:19:18.450+08:00","caller":"api-gateway/gateway.go:154","content":"    GET /api/v1/chain/health -\u003e ChainRPC.HealthCheck","level":"info"}
+{"@timestamp":"2025-12-10T15:26:19.744+08:00","caller":"api-gateway/gateway.go:35","content":"Starting API Gateway...","level":"info"}
+{"@timestamp":"2025-12-10T15:26:19.744+08:00","caller":"api-gateway/gateway.go:50","content":"Loaded 1 services from routes config","level":"info"}
+{"@timestamp":"2025-12-10T15:26:22.746+08:00","caller":"handler/router.go:169","content":"✓ Connected to ChainRPC Service (with metadata interceptor)","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.750+08:00","caller":"handler/router.go:189","content":"✓ Connected to Signer Service (with metadata interceptor)","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.750+08:00","caller":"handler/router.go:61","content":"Using Redis-based distributed rate limiting","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.750+08:00","caller":"handler/router.go:446","content":"Created Redis client: localhost:6379 (DB: 0)","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.762+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/auth/register: 10 req/s (type: ip)","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.762+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/auth/login: 5 req/s (type: ip)","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.762+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/auth/logout: 10 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.762+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/auth/refresh-token: 10 req/s (type: ip)","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.762+08:00","caller":"handler/router.go:88","content":"  ✓ Created Redis rate limiter for /api/v1/transfer/internal: 20 req/s (type: user)","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.762+08:00","caller":"handler/router.go:126","content":"Registering routes for service: business","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.762+08:00","caller":"handler/router.go:141","content":"Route registration completed: 0 registered, 5 skipped","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:87","content":"✓ Connected to Redis for captcha storage","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:109","content":"✓ Registered captcha endpoints (with rate limiting):","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:110","content":"    GET  /api/v1/captcha -\u003e Generate captcha [10 req/sec per IP]","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:111","content":"    POST /api/v1/captcha/verify -\u003e Verify captcha [20 req/sec per IP]","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:145","content":"API Gateway listening on 0.0.0.0:8080","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:146","content":"Gateway routes:","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:148","content":"  [business]","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/auth/register -\u003e Business.Register","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/auth/login -\u003e Business.Login","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/auth/logout -\u003e Business.Logout [Auth Required]","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/auth/refresh-token -\u003e Business.RefreshToken","level":"info"}
+{"@timestamp":"2025-12-10T15:26:25.765+08:00","caller":"api-gateway/gateway.go:154","content":"    POST /api/v1/transfer/internal -\u003e Business.InternalTransfer [Auth Required]","level":"info"}

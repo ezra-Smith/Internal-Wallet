@@ -1,0 +1,26 @@
+# Air - live reloading for api-gateway (dev only).
+#
+# Usage (inside repo root):
+#   cd api-gateway
+#   air -c .air.toml
+#
+# In `deploy/admin/docker-compose.yml`, the container generates `/tmp/gateway.yaml` then runs air.
+
+root = ".."
+tmp_dir = ".air"
+
+[build]
+  cmd = "go build -o .air/api-gateway ./api-gateway"
+  bin = ".air/api-gateway"
+  full_bin = ".air/api-gateway -f /tmp/gateway.yaml -r ./api-gateway/routes.yaml"
+  include_ext = ["go", "yaml", "yml"]
+  include_dir = ["api-gateway", "common", "proto", "docs"]
+  exclude_dir = [".air", ".git", ".cache", ".gocache", ".gomodcache", "web"]
+  delay = 300
+  stop_on_error = false
+
+[log]
+  time = false
+
+[misc]
+  clean_on_exit = true

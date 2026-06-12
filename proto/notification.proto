@@ -1,0 +1,473 @@
+syntax = "proto3";
+
+package notification;
+
+option go_package = "./pb";
+
+import "google/protobuf/struct.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Zink Wallet Notification API"
+    version: "v1"
+    description: "推送通知服务 API 文档"
+  }
+  host: "127.0.0.1:8080"
+  schemes: HTTP
+  security_definitions: {
+    security: {
+      key: "Bearer"
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+        description: "JWT Bearer Token，格式：Bearer {token}"
+      }
+    }
+  }
+  security: {
+    security_requirement: {
+      key: "Bearer"
+      value: {}
+    }
+  }
+};
+
+// ============================================================================
+// Notification Service - 推送通知服务
+// 说明：
+// - 统一管理应用内推送通知
+// - 支持极光推送、APP内消息、邮件等多种渠道
+// - 提供推送历史查询和用户设置管理
+// ============================================================================
+
+service Notification {
+  // ==================== 设备管理 ====================
+  // 注册设备（用户登录后调用，上报 Registration ID）
+  rpc RegisterDevice(RegisterDeviceRequest) returns (RegisterDeviceResponse);
+  
+  // 注销设备（用户登出时调用）
+  rpc UnregisterDevice(UnregisterDeviceRequest) returns (UnregisterDeviceResponse);
+  
+  // 获取用户设备列表
+  rpc GetUserDevices(GetUserDevicesRequest) returns (GetUserDevicesResponse);
+  
+  // ==================== 推送发送 ====================
+  // 发送单用户推送
+  rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
+  
+  // 发送批量推送
+  rpc SendBatchNotification(SendBatchNotificationRequest) returns (SendBatchNotificationResponse);
+  
+  // 发送广播推送（所有用户）
+  rpc SendBroadcast(SendBroadcastRequest) returns (SendBroadcastResponse);
+  
+  // 通过别名发送推送（使用用户ID或设备ID作为别名）
+  rpc SendNotificationByAlias(SendNotificationByAliasRequest) returns (SendNotificationByAliasResponse);
+  
+  // 通过设备ID发送推送（Web3用户专用）
+  rpc SendNotificationByDeviceToken(SendNotificationByDeviceTokenRequest) returns (SendNotificationByDeviceTokenResponse);
+  
+  // ==================== 推送历史 ====================
+  // 获取推送历史列表
+  rpc GetNotificationHistory(GetNotificationHistoryRequest) returns (GetNotificationHistoryResponse);
+  
+  // 获取推送详情
+  rpc GetNotificationDetail(GetNotificationDetailRequest) returns (GetNotificationDetailResponse);
+  
+  // 标记推送为已读
+  rpc MarkNotificationRead(MarkNotificationReadRequest) returns (MarkNotificationReadResponse);
+  
+  // ==================== 用户设置 ====================
+  // 获取用户推送设置
+  rpc GetUserSettings(GetUserSettingsRequest) returns (GetUserSettingsResponse);
+  
+  // 更新用户推送设置
+  rpc UpdateUserSettings(UpdateUserSettingsRequest) returns (UpdateUserSettingsResponse);
+  
+  // ==================== 模板管理（Admin）====================
+  // 获取推送模板列表
+  rpc ListTemplates(ListTemplatesRequest) returns (ListTemplatesResponse);
+  
+  // 创建推送模板
+  rpc CreateTemplate(CreateTemplateRequest) returns (CreateTemplateResponse);
+  
+  // 更新推送模板
+  rpc UpdateTemplate(UpdateTemplateRequest) returns (UpdateTemplateResponse);
+  
+  // ==================== 统计分析 ====================
+  // 获取推送统计数据
+  rpc GetStatistics(GetStatisticsRequest) returns (GetStatisticsResponse);
+}
+
+// ============================================================================
+// 枚举定义
+// ============================================================================
+
+// NotificationType 通知类型
+enum NotificationType {
+  NOTIFICATION_TYPE_UNSPECIFIED = 0;
+  TRANSACTION = 1;    // 交易通知（充值、提现等）
+  SECURITY = 2;       // 安全提醒（登录、密码修改等）
+  SYSTEM = 3;         // 系统公告
+  PRICE_ALERT = 4;    // 价格提醒
+}
+
+// PushStatus 推送状态
+enum PushStatus {
+  PUSH_STATUS_UNSPECIFIED = 0;
+  PENDING = 1;    // 待发送
+  SENT = 2;       // 已发送
+  FAILED = 3;     // 发送失败
+  CLICKED = 4;    // 已点击
+}
+
+// Platform 平台类型
+enum Platform {
+  PLATFORM_UNSPECIFIED = 0;
+  IOS = 1;
+  ANDROID = 2;
+}
+
+// ============================================================================
+// 设备管理相关消息
+// ============================================================================
+
+// RegisterDeviceRequest 注册设备请求
+message RegisterDeviceRequest {
+  int64 user_id = 1;                  // 用户ID
+  string registration_id = 2;         // 极光 Registration ID
+  Platform platform = 3;              // 平台类型
+  string device_model = 4;            // 设备型号
+  string os_version = 5;              // 操作系统版本
+  string app_version = 6;             // 应用版本
+  string device_token = 7;            // 设备唯一标识
+}
+
+message RegisterDeviceResponse {
+  int64 device_id = 1;                // 设备ID
+  bool is_new_device = 2;             // 是否新设备
+  string message = 3;                 // 返回消息
+}
+
+// UnregisterDeviceRequest 注销设备请求
+message UnregisterDeviceRequest {
+  int64 user_id = 1;                  // 用户ID
+  string registration_id = 2;         // Registration ID（可选，不传则注销该用户所有设备）
+}
+
+message UnregisterDeviceResponse {
+  string message = 1;                 // 返回消息
+}
+
+// GetUserDevicesRequest 获取用户设备列表请求
+message GetUserDevicesRequest {
+  int64 user_id = 1;                  // 用户ID
+  bool active_only = 2;               // 仅返回活跃设备
+}
+
+message GetUserDevicesResponse {
+  repeated DeviceInfo devices = 1;    // 设备列表
+  int32 total = 2;                    // 总数
+}
+
+message DeviceInfo {
+  int64 device_id = 1;                // 设备ID
+  string registration_id = 2;         // Registration ID
+  Platform platform = 3;              // 平台
+  string device_model = 4;            // 设备型号
+  string os_version = 5;              // 系统版本
+  string app_version = 6;             // 应用版本
+  bool is_active = 7;                 // 是否活跃
+  string last_active_at = 8;          // 最后活跃时间
+  string created_at = 9;              // 创建时间
+}
+
+// ============================================================================
+// 推送发送相关消息
+// ============================================================================
+
+// SendNotificationRequest 发送单用户推送请求
+message SendNotificationRequest {
+  int64 user_id = 1;                  // 用户ID
+  NotificationType type = 2;          // 通知类型
+  string title = 3;                   // 推送标题
+  string content = 4;                 // 推送内容
+  map<string, string> data = 5;       // 扩展数据（用于跳转等）
+  string template_code = 6;           // 模板代码（可选）
+  map<string, string> template_vars = 7; // 模板变量（可选）
+  bool send_to_all_devices = 8;       // 是否发送到该用户所有设备（默认true）
+}
+
+message SendNotificationResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 返回消息
+  repeated string jpush_msg_ids = 3;  // 极光消息ID列表
+  int32 device_count = 4;             // 推送设备数
+}
+
+// SendBatchNotificationRequest 批量推送请求
+message SendBatchNotificationRequest {
+  repeated int64 user_ids = 1;        // 用户ID列表
+  NotificationType type = 2;          // 通知类型
+  string title = 3;                   // 推送标题
+  string content = 4;                 // 推送内容
+  map<string, string> data = 5;       // 扩展数据
+  string template_code = 6;           // 模板代码（可选）
+  map<string, string> template_vars = 7; // 模板变量（可选）
+}
+
+message SendBatchNotificationResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 返回消息
+  int32 success_count = 3;            // 成功数
+  int32 failed_count = 4;             // 失败数
+  int32 total_device_count = 5;       // 总设备数
+}
+
+// SendBroadcastRequest 广播推送请求
+message SendBroadcastRequest {
+  NotificationType type = 1;          // 通知类型
+  string title = 2;                   // 推送标题
+  string content = 3;                 // 推送内容
+  map<string, string> data = 4;       // 扩展数据
+  repeated string tags = 5;           // 标签过滤（可选）
+}
+
+message SendBroadcastResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 返回消息
+  string jpush_msg_id = 3;            // 极光消息ID
+}
+
+// SendNotificationByAliasRequest 通过别名发送推送请求
+// 说明：客户端在用户注册时会绑定别名
+//      - Web2用户：使用user_id作为别名
+//      - Web3用户：使用设备ID作为别名
+// 限制：
+//      - 最多支持1000个别名
+//      - 每个别名长度限制为40字节（UTF-8编码）
+message SendNotificationByAliasRequest {
+  repeated string aliases = 1;        // 别名列表（user_id 或 设备ID），最多1000个
+  int64 user_id = 2;                  // 用户ID（用于记录和查询Web2用户设置，可选）
+  string device_id = 3;               // 设备ID（用于查询Web3用户设置，可选）
+  NotificationType type = 4;          // 通知类型
+  string title = 5;                   // 推送标题
+  string content = 6;                 // 推送内容
+  map<string, string> data = 7;       // 扩展数据（用于跳转等）
+  string template_code = 8;           // 模板代码（可选）
+  map<string, string> template_vars = 9; // 模板变量（可选）
+}
+
+message SendNotificationByAliasResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 返回消息
+  string jpush_msg_id = 3;            // 极光消息ID
+}
+
+// SendNotificationByDeviceTokenRequest 通过设备ID发送推送请求（Web3用户专用）
+// 说明：通过设备ID（device_token）查询设备的 registration_id，然后发送推送
+message SendNotificationByDeviceTokenRequest {
+  string device_token = 1;            // 设备ID（必填）
+  NotificationType type = 2;          // 通知类型
+  string title = 3;                   // 推送标题
+  string content = 4;                 // 推送内容
+  map<string, string> data = 5;       // 扩展数据（用于跳转等）
+  string template_code = 6;           // 模板代码（可选）
+  map<string, string> template_vars = 7; // 模板变量（可选）
+}
+
+message SendNotificationByDeviceTokenResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 返回消息
+  string jpush_msg_id = 3;            // 极光消息ID
+}
+
+// ============================================================================
+// 推送历史相关消息
+// ============================================================================
+
+// GetNotificationHistoryRequest 获取推送历史请求
+message GetNotificationHistoryRequest {
+  int64 user_id = 1;                  // 用户ID
+  NotificationType type = 2;          // 通知类型（可选，0表示全部）
+  int32 page = 3;                     // 页码
+  int32 page_size = 4;                // 每页数量
+}
+
+message GetNotificationHistoryResponse {
+  repeated NotificationRecord records = 1; // 推送记录列表
+  int32 total = 2;                    // 总数
+  int32 page = 3;                     // 当前页
+  int32 page_size = 4;                // 每页数量
+}
+
+message NotificationRecord {
+  int64 id = 1;                       // 记录ID
+  NotificationType type = 2;          // 通知类型
+  string title = 3;                   // 标题
+  string content = 4;                 // 内容
+  google.protobuf.Struct data = 5;    // 扩展数据
+  PushStatus status = 6;              // 推送状态
+  string sent_at = 7;                 // 发送时间
+  string clicked_at = 8;              // 点击时间
+  string created_at = 9;              // 创建时间
+}
+
+// GetNotificationDetailRequest 获取推送详情请求
+message GetNotificationDetailRequest {
+  int64 user_id = 1;                  // 用户ID
+  int64 notification_id = 2;          // 推送记录ID
+}
+
+message GetNotificationDetailResponse {
+  NotificationRecord record = 1;      // 推送记录
+}
+
+// MarkNotificationReadRequest 标记推送已读请求
+message MarkNotificationReadRequest {
+  int64 user_id = 1;                  // 用户ID
+  int64 notification_id = 2;          // 推送记录ID
+}
+
+message MarkNotificationReadResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 返回消息
+}
+
+// ============================================================================
+// 用户设置相关消息
+// ============================================================================
+
+// GetUserSettingsRequest 获取用户设置请求
+message GetUserSettingsRequest {
+  int64 user_id = 1;                  // 用户ID
+}
+
+message GetUserSettingsResponse {
+  UserSettings settings = 1;          // 用户设置
+}
+
+message UserSettings {
+  int64 user_id = 1;                  // 用户ID
+  bool enable_transaction = 2;        // 启用交易通知
+  bool enable_security = 3;           // 启用安全提醒
+  bool enable_system = 4;             // 启用系统公告
+  bool enable_price_alert = 5;        // 启用价格提醒
+  string quiet_start_time = 6;        // 免打扰开始时间（HH:MM）
+  string quiet_end_time = 7;          // 免打扰结束时间（HH:MM）
+  string language = 8;                // 推送语言偏好
+}
+
+// UpdateUserSettingsRequest 更新用户设置请求
+message UpdateUserSettingsRequest {
+  int64 user_id = 1;                  // 用户ID
+  optional bool enable_transaction = 2;     // 启用交易通知
+  optional bool enable_security = 3;        // 启用安全提醒
+  optional bool enable_system = 4;          // 启用系统公告
+  optional bool enable_price_alert = 5;     // 启用价格提醒
+  optional string quiet_start_time = 6;     // 免打扰开始时间
+  optional string quiet_end_time = 7;       // 免打扰结束时间
+  optional string language = 8;             // 推送语言偏好
+}
+
+message UpdateUserSettingsResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 返回消息
+  UserSettings settings = 3;          // 更新后的设置
+}
+
+// ============================================================================
+// 模板管理相关消息
+// ============================================================================
+
+// ListTemplatesRequest 获取模板列表请求
+message ListTemplatesRequest {
+  NotificationType type = 1;          // 通知类型（可选）
+  string language = 2;                // 语言（可选）
+  int32 page = 3;                     // 页码
+  int32 page_size = 4;                // 每页数量
+}
+
+message ListTemplatesResponse {
+  repeated TemplateInfo templates = 1; // 模板列表
+  int32 total = 2;                    // 总数
+}
+
+message TemplateInfo {
+  int64 id = 1;                       // 模板ID
+  string template_code = 2;           // 模板代码
+  string template_name = 3;           // 模板名称
+  NotificationType type = 4;          // 通知类型
+  string language = 5;                // 语言
+  string title_template = 6;          // 标题模板
+  string content_template = 7;        // 内容模板
+  int32 priority = 8;                 // 优先级
+  bool is_enabled = 9;                // 是否启用
+  string description = 10;            // 描述
+}
+
+// CreateTemplateRequest 创建模板请求
+message CreateTemplateRequest {
+  string template_code = 1;           // 模板代码
+  string template_name = 2;           // 模板名称
+  NotificationType type = 3;          // 通知类型
+  string language = 4;                // 语言
+  string title_template = 5;          // 标题模板
+  string content_template = 6;        // 内容模板
+  int32 priority = 7;                 // 优先级
+  string description = 8;             // 描述
+}
+
+message CreateTemplateResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 返回消息
+  int64 template_id = 3;              // 模板ID
+}
+
+// UpdateTemplateRequest 更新模板请求
+message UpdateTemplateRequest {
+  int64 template_id = 1;              // 模板ID
+  optional string template_name = 2;        // 模板名称
+  optional string title_template = 3;       // 标题模板
+  optional string content_template = 4;     // 内容模板
+  optional int32 priority = 5;              // 优先级
+  optional bool is_enabled = 6;             // 是否启用
+  optional string description = 7;          // 描述
+}
+
+message UpdateTemplateResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 返回消息
+}
+
+// ============================================================================
+// 统计分析相关消息
+// ============================================================================
+
+// GetStatisticsRequest 获取统计数据请求
+message GetStatisticsRequest {
+  string start_date = 1;              // 开始日期 (YYYY-MM-DD)
+  string end_date = 2;                // 结束日期 (YYYY-MM-DD)
+  NotificationType type = 3;          // 通知类型（可选）
+}
+
+message GetStatisticsResponse {
+  int64 total_sent = 1;               // 总发送数
+  int64 total_success = 2;            // 成功数
+  int64 total_failed = 3;             // 失败数
+  int64 total_clicked = 4;            // 点击数
+  double click_rate = 5;              // 点击率
+  repeated DailyStatistics daily_stats = 6; // 每日统计
+}
+
+message DailyStatistics {
+  string date = 1;                    // 日期
+  int64 sent_count = 2;               // 发送数
+  int64 success_count = 3;            // 成功数
+  int64 failed_count = 4;             // 失败数
+  int64 clicked_count = 5;            // 点击数
+  double click_rate = 6;              // 点击率
+}
+

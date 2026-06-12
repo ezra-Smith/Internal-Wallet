@@ -1,0 +1,1653 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "chainrpc.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "ChainGas",
+      "description": "Gas 费用估算与价格查询"
+    },
+    {
+      "name": "ChainQuery",
+      "description": "链上数据查询（余额、交易状态、区块等）"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/chain/gas/estimate": {
+      "post": {
+        "summary": "估算交易 Gas Limit",
+        "description": "估算单笔交易的 Gas Limit 和当前费用（适用于后台系统和精确计算场景，不推荐移动端使用）",
+        "operationId": "ChainRPC_EstimateGas",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GatewayUnifiedResponse_chainrpcEstimateGasResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/chainrpcEstimateGasReq"
+            }
+          }
+        ],
+        "tags": [
+          "ChainGas"
+        ]
+      }
+    },
+    "/api/v1/chain/gas/price": {
+      "post": {
+        "summary": "获取分级 Gas 价格",
+        "description": "获取不同速度级别的 Gas 价格（慢/标准/快/极速），包含预估确认时间和 Gwei 价格。适用于 Swap 交易设置等场景（ETH/BSC）",
+        "operationId": "ChainRPC_GetGasPrice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GatewayUnifiedResponse_chainrpcGetGasPriceResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/chainrpcGetGasPriceReq"
+            }
+          }
+        ],
+        "tags": [
+          "ChainGas"
+        ]
+      }
+    },
+    "/api/v1/chain/tron/account-resources/{address}": {
+      "get": {
+        "summary": "查询 TRON 地址资源",
+        "description": "Query TRON address resources (bandwidth, energy, balance)",
+        "operationId": "ChainRPC_GetTronAccountResources",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GatewayUnifiedResponse_chainrpcGetTronAccountResourcesResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "address",
+            "description": "TRON address to query (Base58 format)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ChainQuery"
+        ]
+      }
+    },
+    "/api/v1/chain/tron/estimate-fee": {
+      "post": {
+        "summary": "估算 TRON 手续费",
+        "description": "Estimate TRON transaction fee (bandwidth + energy + activation)",
+        "operationId": "ChainRPC_EstimateTronFee",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GatewayUnifiedResponse_chainrpcEstimateTronFeeResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/chainrpcEstimateTronFeeReq"
+            }
+          }
+        ],
+        "tags": [
+          "ChainGas"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "chainrpcBalanceInfo": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "native_balance": {
+          "type": "string"
+        },
+        "tokens": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/chainrpcTokenBalanceInfo"
+          }
+        },
+        "total_usd": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "chainrpcBatchTransferResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "transactions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/chainrpcTransactionResp"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "total_estimated_fee": {
+          "type": "string"
+        }
+      }
+    },
+    "chainrpcBlockInfo": {
+      "type": "object",
+      "properties": {
+        "block_number": {
+          "type": "string"
+        },
+        "block_hash": {
+          "type": "string"
+        },
+        "parent_hash": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64"
+        },
+        "transaction_count": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "miner": {
+          "type": "string"
+        },
+        "difficulty": {
+          "type": "string"
+        },
+        "gas_limit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_used": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "size": {
+          "type": "string"
+        },
+        "transaction_hashes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transactions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/chainrpcTransactionDetail"
+          },
+          "title": "如果include_transactions=true"
+        }
+      }
+    },
+    "chainrpcBroadcastTransactionResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "tx_hash": {
+          "type": "string",
+          "title": "交易hash"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Nonce（ETH/BSC）"
+        },
+        "status": {
+          "$ref": "#/definitions/chainrpcTxStatus",
+          "title": "交易状态"
+        },
+        "broadcasted_at": {
+          "type": "string",
+          "format": "int64",
+          "title": "广播时间戳"
+        },
+        "block_number": {
+          "type": "string",
+          "title": "区块号（如果wait_for_receipt=true且已确认）"
+        },
+        "gas_used": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Gas使用量（如果wait_for_receipt=true）"
+        }
+      }
+    },
+    "chainrpcBuildTransactionResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "raw_transaction": {
+          "type": "string",
+          "title": "未签名交易（hex编码，0x前缀，RLP编码）"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_limit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_price": {
+          "type": "string"
+        },
+        "estimated_fee": {
+          "type": "string",
+          "title": "预估手续费（wei）"
+        }
+      }
+    },
+    "chainrpcCancelTransactionResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "cancel_tx_hash": {
+          "type": "string"
+        },
+        "original_tx_hash": {
+          "type": "string"
+        }
+      }
+    },
+    "chainrpcChainHealth": {
+      "type": "object",
+      "properties": {
+        "chain": {
+          "$ref": "#/definitions/chainrpcChainRpcType"
+        },
+        "healthy": {
+          "type": "boolean"
+        },
+        "current_node": {
+          "type": "string"
+        },
+        "response_time_ms": {
+          "type": "string",
+          "format": "int64"
+        },
+        "block_height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "last_block_time": {
+          "type": "string",
+          "format": "int64"
+        },
+        "error_message": {
+          "type": "string"
+        }
+      }
+    },
+    "chainrpcChainRpcBuildTronTransactionResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "raw_data": {
+          "type": "string",
+          "title": "未签名的交易 rawData（hex编码的protobuf序列化数据）"
+        }
+      }
+    },
+    "chainrpcChainRpcType": {
+      "type": "string",
+      "enum": [
+        "CHAIN_TYPE_UNSPECIFIED",
+        "CHAIN_TYPE_TRON",
+        "CHAIN_TYPE_BSC",
+        "CHAIN_TYPE_ETHEREUM",
+        "CHAIN_TYPE_POLYGON"
+      ],
+      "default": "CHAIN_TYPE_UNSPECIFIED",
+      "description": "- CHAIN_TYPE_TRON: TRON (TRX/TRC20)\n - CHAIN_TYPE_BSC: Binance Smart Chain (BNB/BEP20)\n - CHAIN_TYPE_ETHEREUM: Ethereum (ETH/ERC20)\n - CHAIN_TYPE_POLYGON: Polygon (MATIC/ERC20)",
+      "title": "区块链类型"
+    },
+    "chainrpcEstimateGasReq": {
+      "type": "object",
+      "properties": {
+        "chain": {
+          "$ref": "#/definitions/chainrpcChainRpcType"
+        },
+        "from_address": {
+          "type": "string"
+        },
+        "to_address": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "title": "金额"
+        },
+        "data": {
+          "type": "string",
+          "title": "交易数据（可选）"
+        },
+        "token_contract": {
+          "type": "string",
+          "title": "代币合约（可选）"
+        }
+      },
+      "title": "==================== Gas估算 ===================="
+    },
+    "chainrpcEstimateGasResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "gas_limit": {
+          "type": "string",
+          "format": "uint64",
+          "title": "估算的Gas限制"
+        },
+        "gas_price": {
+          "type": "string",
+          "title": "当前Gas价格"
+        },
+        "estimated_fee": {
+          "type": "string",
+          "title": "预估费用"
+        },
+        "estimated_fee_usd": {
+          "type": "string",
+          "title": "预估费用（USD）"
+        }
+      }
+    },
+    "chainrpcEstimateTronFeeReq": {
+      "type": "object",
+      "properties": {
+        "from_address": {
+          "type": "string",
+          "title": "Sender's TRON address (Base58 format)"
+        },
+        "to_address": {
+          "type": "string",
+          "title": "Recipient's TRON address (Base58 format)"
+        },
+        "amount": {
+          "type": "string",
+          "title": "Amount in smallest unit (SUN for TRX, token decimals for TRC20)"
+        },
+        "contract_address": {
+          "type": "string",
+          "title": "Optional: TRC20 contract address (empty = native TRX transfer)"
+        }
+      },
+      "title": "==================== TRON 手续费估算 ===================="
+    },
+    "chainrpcEstimateTronFeeResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "bandwidth_required": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Estimated bandwidth consumption"
+        },
+        "energy_required": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Estimated energy consumption (0 for TRX)"
+        },
+        "estimated_fee_sun": {
+          "type": "string",
+          "title": "Total fee in SUN (smallest unit)"
+        },
+        "estimated_fee_trx": {
+          "type": "string",
+          "title": "Total fee in TRX (for display)"
+        },
+        "estimated_fee_usd": {
+          "type": "string",
+          "title": "USD equivalent"
+        },
+        "to_address_activated": {
+          "type": "boolean",
+          "title": "Whether recipient is activated"
+        },
+        "activation_fee_sun": {
+          "type": "string",
+          "title": "Activation fee if needed (0 if activated)"
+        },
+        "from_bandwidth_available": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Resource breakdown (optional, for debugging)"
+        },
+        "from_energy_available": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "chainrpcEventLog": {
+      "type": "object",
+      "properties": {
+        "log_index": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string",
+          "title": "合约地址"
+        },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "decoded_event": {
+          "type": "string",
+          "title": "解码后的事件名称"
+        },
+        "decoded_params": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "chainrpcGasPriceInfo": {
+      "type": "object",
+      "properties": {
+        "speed": {
+          "$ref": "#/definitions/chainrpcGasSpeed"
+        },
+        "gas_price": {
+          "type": "string",
+          "title": "Wei"
+        },
+        "gas_price_gwei": {
+          "type": "string",
+          "title": "Gwei"
+        },
+        "estimated_time_seconds": {
+          "type": "integer",
+          "format": "int32",
+          "title": "预估确认时间"
+        },
+        "gas_limit": {
+          "type": "string",
+          "format": "uint64",
+          "title": "预估 Gas Limit（根据 transaction_type 返回典型值）"
+        },
+        "max_fee_wei": {
+          "type": "string",
+          "title": "最大费用（Wei）= gas_price * gas_limit"
+        },
+        "max_fee_gwei": {
+          "type": "string",
+          "title": "最大费用（Gwei）"
+        }
+      }
+    },
+    "chainrpcGasSpeed": {
+      "type": "string",
+      "enum": [
+        "GAS_SPEED_UNSPECIFIED",
+        "GAS_SPEED_SLOW",
+        "GAS_SPEED_STANDARD",
+        "GAS_SPEED_FAST",
+        "GAS_SPEED_INSTANT"
+      ],
+      "default": "GAS_SPEED_UNSPECIFIED",
+      "description": "- GAS_SPEED_SLOW: 慢（省钱）\n - GAS_SPEED_STANDARD: 标准\n - GAS_SPEED_FAST: 快速\n - GAS_SPEED_INSTANT: 极速",
+      "title": "Gas速度级别"
+    },
+    "chainrpcGetBalanceResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "balance": {
+          "type": "string",
+          "title": "余额（最小单位）"
+        },
+        "balance_formatted": {
+          "type": "string",
+          "title": "格式化余额（如 1.5 ETH）"
+        },
+        "balance_usd": {
+          "type": "number",
+          "format": "double",
+          "title": "USD价值"
+        },
+        "block_number": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "chainrpcGetBlockHeightResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "block_height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "block_hash": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "chainrpcGetBlockResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "block": {
+          "$ref": "#/definitions/chainrpcBlockInfo"
+        }
+      }
+    },
+    "chainrpcGetGasPriceReq": {
+      "type": "object",
+      "properties": {
+        "chain": {
+          "$ref": "#/definitions/chainrpcChainRpcType"
+        },
+        "speed": {
+          "$ref": "#/definitions/chainrpcGasSpeed",
+          "title": "速度级别"
+        },
+        "transaction_type": {
+          "type": "string",
+          "title": "交易类型（可选）：native_transfer, token_transfer, swap, approve 等，用于估算 gas_limit"
+        },
+        "token_address": {
+          "type": "string",
+          "title": "代币地址（可选，token_transfer 或 swap 时需要）"
+        }
+      },
+      "title": "==================== Gas价格 ===================="
+    },
+    "chainrpcGetGasPriceResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "prices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/chainrpcGasPriceInfo"
+          },
+          "title": "不同速度的价格"
+        },
+        "current_block": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "chainrpcGetMultiBalanceResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "balances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/chainrpcBalanceInfo"
+          }
+        },
+        "total_usd": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "chainrpcGetNodeStatusResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/chainrpcNodeInfo"
+          }
+        },
+        "active_node": {
+          "type": "string"
+        }
+      }
+    },
+    "chainrpcGetNonceResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string"
+        },
+        "pending_nonce": {
+          "type": "string",
+          "title": "pending状态的nonce"
+        }
+      }
+    },
+    "chainrpcGetTokenBalanceResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "balance": {
+          "type": "string",
+          "title": "余额（最小单位）"
+        },
+        "balance_formatted": {
+          "type": "string",
+          "title": "格式化余额"
+        },
+        "balance_usd": {
+          "type": "number",
+          "format": "double"
+        },
+        "token_symbol": {
+          "type": "string"
+        },
+        "token_decimals": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "chainrpcGetTokenInfoBatchResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "tokens": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/chainrpcTokenInfo"
+          }
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "chainrpcGetTokenInfoResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "token_info": {
+          "$ref": "#/definitions/chainrpcTokenInfo"
+        }
+      }
+    },
+    "chainrpcGetTransactionReceiptResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "receipt": {
+          "$ref": "#/definitions/chainrpcTransactionReceipt"
+        }
+      }
+    },
+    "chainrpcGetTransactionResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "transaction": {
+          "$ref": "#/definitions/chainrpcTransactionDetail"
+        }
+      }
+    },
+    "chainrpcGetTransactionStatusResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/chainrpcTxStatus"
+        },
+        "confirmations": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "required_confirmations": {
+          "type": "string",
+          "format": "uint64",
+          "title": "要求的确认数"
+        },
+        "is_confirmed": {
+          "type": "boolean"
+        },
+        "block_number": {
+          "type": "string"
+        }
+      }
+    },
+    "chainrpcGetTronAccountResourcesResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "bandwidth_total": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Total bandwidth limit",
+          "title": "Bandwidth resources"
+        },
+        "bandwidth_used": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Bandwidth consumed"
+        },
+        "bandwidth_available": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Remaining bandwidth"
+        },
+        "energy_total": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Total energy limit",
+          "title": "Energy resources"
+        },
+        "energy_used": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Energy consumed"
+        },
+        "energy_available": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Remaining energy"
+        },
+        "trx_balance_sun": {
+          "type": "string",
+          "description": "TRX balance in SUN",
+          "title": "Account info"
+        },
+        "trx_balance_trx": {
+          "type": "string",
+          "title": "TRX balance in TRX (for display)"
+        },
+        "is_activated": {
+          "type": "boolean",
+          "title": "Whether address has been activated"
+        }
+      }
+    },
+    "chainrpcHealthCheckResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "chains": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/chainrpcChainHealth"
+          }
+        },
+        "healthy_count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "total_count": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "chainrpcNodeInfo": {
+      "type": "object",
+      "properties": {
+        "node_id": {
+          "type": "string"
+        },
+        "node_type": {
+          "$ref": "#/definitions/chainrpcNodeType"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "healthy": {
+          "type": "boolean"
+        },
+        "response_time_ms": {
+          "type": "string",
+          "format": "int64"
+        },
+        "success_rate": {
+          "type": "integer",
+          "format": "int32",
+          "title": "成功率（百分比）"
+        },
+        "total_requests": {
+          "type": "string",
+          "format": "int64"
+        },
+        "failed_requests": {
+          "type": "string",
+          "format": "int64"
+        },
+        "last_success_time": {
+          "type": "string",
+          "format": "int64"
+        },
+        "last_error": {
+          "type": "string"
+        },
+        "is_primary": {
+          "type": "boolean",
+          "title": "是否为主节点"
+        },
+        "weight": {
+          "type": "number",
+          "format": "double",
+          "title": "权重"
+        }
+      }
+    },
+    "chainrpcNodeType": {
+      "type": "string",
+      "enum": [
+        "NODE_TYPE_UNSPECIFIED",
+        "NODE_TYPE_QUICKNODE",
+        "NODE_TYPE_INFURA",
+        "NODE_TYPE_ALCHEMY",
+        "NODE_TYPE_ANKR",
+        "NODE_TYPE_CUSTOM"
+      ],
+      "default": "NODE_TYPE_UNSPECIFIED",
+      "description": "- NODE_TYPE_CUSTOM: 自建节点",
+      "title": "节点类型"
+    },
+    "chainrpcSpeedUpTransactionResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "new_tx_hash": {
+          "type": "string"
+        },
+        "old_tx_hash": {
+          "type": "string"
+        },
+        "new_gas_price": {
+          "type": "string"
+        },
+        "old_gas_price": {
+          "type": "string"
+        }
+      }
+    },
+    "chainrpcSwitchNodeResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "old_node": {
+          "type": "string"
+        },
+        "new_node": {
+          "type": "string"
+        },
+        "switched_at": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "chainrpcTestNodeResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "healthy": {
+          "type": "boolean"
+        },
+        "response_time_ms": {
+          "type": "string",
+          "format": "int64"
+        },
+        "block_height": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "chain_id": {
+          "type": "string"
+        },
+        "node_info": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "chainrpcTokenBalanceInfo": {
+      "type": "object",
+      "properties": {
+        "token_contract": {
+          "type": "string"
+        },
+        "token_symbol": {
+          "type": "string"
+        },
+        "decimals": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "balance": {
+          "type": "string"
+        },
+        "balance_formatted": {
+          "type": "string"
+        },
+        "balance_usd": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "chainrpcTokenInfo": {
+      "type": "object",
+      "properties": {
+        "contract_address": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "decimals": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "total_supply": {
+          "type": "string"
+        },
+        "total_supply_formatted": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string",
+          "title": "合约所有者"
+        },
+        "verified": {
+          "type": "boolean",
+          "title": "是否验证"
+        },
+        "price_usd": {
+          "type": "number",
+          "format": "double",
+          "title": "USD价格"
+        }
+      }
+    },
+    "chainrpcTransactionDetail": {
+      "type": "object",
+      "properties": {
+        "tx_hash": {
+          "type": "string"
+        },
+        "chain": {
+          "$ref": "#/definitions/chainrpcChainRpcType"
+        },
+        "block_number": {
+          "type": "string"
+        },
+        "block_hash": {
+          "type": "string"
+        },
+        "block_timestamp": {
+          "type": "string",
+          "format": "int64"
+        },
+        "transaction_index": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "from_address": {
+          "type": "string"
+        },
+        "to_address": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "title": "金额"
+        },
+        "gas_price": {
+          "type": "string"
+        },
+        "gas_limit": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_used": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_fee": {
+          "type": "string",
+          "title": "实际手续费"
+        },
+        "status": {
+          "$ref": "#/definitions/chainrpcTxStatus"
+        },
+        "nonce": {
+          "type": "string"
+        },
+        "input_data": {
+          "type": "string",
+          "format": "byte"
+        },
+        "confirmations": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "contract_address": {
+          "type": "string",
+          "title": "合约地址（代币转账时）"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/chainrpcEventLog"
+          }
+        },
+        "error_message": {
+          "type": "string"
+        }
+      }
+    },
+    "chainrpcTransactionReceipt": {
+      "type": "object",
+      "properties": {
+        "tx_hash": {
+          "type": "string"
+        },
+        "block_number": {
+          "type": "string"
+        },
+        "block_hash": {
+          "type": "string"
+        },
+        "transaction_index": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "from_address": {
+          "type": "string"
+        },
+        "to_address": {
+          "type": "string"
+        },
+        "gas_used": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "gas_fee": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/chainrpcTxStatus"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/chainrpcEventLog"
+          }
+        },
+        "contract_address": {
+          "type": "string",
+          "title": "合约创建时的地址"
+        }
+      }
+    },
+    "chainrpcTransactionResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "tx_hash": {
+          "type": "string",
+          "title": "交易hash"
+        },
+        "nonce": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "status": {
+          "$ref": "#/definitions/chainrpcTxStatus"
+        },
+        "broadcasted_at": {
+          "type": "string",
+          "format": "int64"
+        },
+        "block_number": {
+          "type": "string",
+          "title": "如果wait_for_receipt=true"
+        },
+        "gas_used": {
+          "type": "string",
+          "format": "uint64",
+          "title": "如果wait_for_receipt=true"
+        }
+      },
+      "description": "bool success = 1;\n  string message = 2;\n  string tx_hash = 3;\n  string raw_transaction = 4;         // 未签名交易（hex编码）\n  string tx_hash_preview = 5;         // 预计的交易hash\n  string gas_price = 6;               // 实际使用的Gas价格\n  uint64 gas_limit = 7;               // 实际使用的Gas限制\n  string estimated_fee = 8;           // 预估手续费\n  uint64 nonce = 9;                   // 实际使用的Nonce\n  map<string, string> extra_data = 10; // 额外数据（链特定）\n  int64 uid = 11;                    // 用户ID",
+      "title": "==================== 交易响应 ===================="
+    },
+    "chainrpcTransferItem": {
+      "type": "object",
+      "properties": {
+        "to_address": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "string"
+        },
+        "token_contract": {
+          "type": "string",
+          "title": "空表示主币"
+        }
+      }
+    },
+    "chainrpcTxStatus": {
+      "type": "string",
+      "enum": [
+        "TX_STATUS_UNSPECIFIED",
+        "TX_STATUS_PENDING",
+        "TX_STATUS_CONFIRMED",
+        "TX_STATUS_FAILED",
+        "TX_STATUS_DROPPED",
+        "TX_STATUS_REPLACED"
+      ],
+      "default": "TX_STATUS_UNSPECIFIED",
+      "description": "- TX_STATUS_PENDING: 待确认\n - TX_STATUS_CONFIRMED: 已确认\n - TX_STATUS_FAILED: 失败\n - TX_STATUS_DROPPED: 被丢弃\n - TX_STATUS_REPLACED: 被替换",
+      "title": "交易状态"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "GatewayPayload_chainrpcEstimateGasResp": {
+      "type": "object",
+      "properties": {
+        "gas_limit": {
+          "type": "string",
+          "format": "uint64",
+          "title": "估算的Gas限制"
+        },
+        "gas_price": {
+          "type": "string",
+          "title": "当前Gas价格"
+        },
+        "estimated_fee": {
+          "type": "string",
+          "title": "预估费用"
+        },
+        "estimated_fee_usd": {
+          "type": "string",
+          "title": "预估费用（USD）"
+        }
+      }
+    },
+    "GatewayPayload_chainrpcEstimateTronFeeResp": {
+      "type": "object",
+      "properties": {
+        "bandwidth_required": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Estimated bandwidth consumption"
+        },
+        "energy_required": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Estimated energy consumption (0 for TRX)"
+        },
+        "estimated_fee_sun": {
+          "type": "string",
+          "title": "Total fee in SUN (smallest unit)"
+        },
+        "estimated_fee_trx": {
+          "type": "string",
+          "title": "Total fee in TRX (for display)"
+        },
+        "estimated_fee_usd": {
+          "type": "string",
+          "title": "USD equivalent"
+        },
+        "to_address_activated": {
+          "type": "boolean",
+          "title": "Whether recipient is activated"
+        },
+        "activation_fee_sun": {
+          "type": "string",
+          "title": "Activation fee if needed (0 if activated)"
+        },
+        "from_bandwidth_available": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Resource breakdown (optional, for debugging)"
+        },
+        "from_energy_available": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "GatewayPayload_chainrpcGetGasPriceResp": {
+      "type": "object",
+      "properties": {
+        "prices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/chainrpcGasPriceInfo"
+          },
+          "title": "不同速度的价格"
+        },
+        "current_block": {
+          "type": "string"
+        }
+      }
+    },
+    "GatewayPayload_chainrpcGetTronAccountResourcesResp": {
+      "type": "object",
+      "properties": {
+        "bandwidth_total": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Total bandwidth limit",
+          "title": "Bandwidth resources"
+        },
+        "bandwidth_used": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Bandwidth consumed"
+        },
+        "bandwidth_available": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Remaining bandwidth"
+        },
+        "energy_total": {
+          "type": "string",
+          "format": "uint64",
+          "description": "Total energy limit",
+          "title": "Energy resources"
+        },
+        "energy_used": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Energy consumed"
+        },
+        "energy_available": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Remaining energy"
+        },
+        "trx_balance_sun": {
+          "type": "string",
+          "description": "TRX balance in SUN",
+          "title": "Account info"
+        },
+        "trx_balance_trx": {
+          "type": "string",
+          "title": "TRX balance in TRX (for display)"
+        },
+        "is_activated": {
+          "type": "boolean",
+          "title": "Whether address has been activated"
+        }
+      }
+    },
+    "GatewayUnifiedResponse_chainrpcEstimateGasResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/GatewayPayload_chainrpcEstimateGasResp"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "details": {
+          "type": "object"
+        }
+      }
+    },
+    "GatewayUnifiedResponse_chainrpcEstimateTronFeeResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/GatewayPayload_chainrpcEstimateTronFeeResp"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "details": {
+          "type": "object"
+        }
+      }
+    },
+    "GatewayUnifiedResponse_chainrpcGetGasPriceResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/GatewayPayload_chainrpcGetGasPriceResp"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "details": {
+          "type": "object"
+        }
+      }
+    },
+    "GatewayUnifiedResponse_chainrpcGetTronAccountResourcesResp": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/GatewayPayload_chainrpcGetTronAccountResourcesResp"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "details": {
+          "type": "object"
+        }
+      }
+    }
+  },
+  "schemes": [
+    "http",
+    "https"
+  ]
+}

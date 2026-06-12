@@ -1,0 +1,9 @@
+openapiOptions:
+  method:
+    - method: swap.Swap.GetMySwapConfigs
+      option:
+        tags:
+          - Swap
+        summary: "查询我的Swap配置"
+        description: "业务端查询自己项目的生效Swap配置（从API Key自动获取项目名称）"
+

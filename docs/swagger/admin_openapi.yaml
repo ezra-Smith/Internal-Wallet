@@ -1,0 +1,1145 @@
+openapiOptions:
+  method:
+    - method: admin.Admin.GetDashboardOverview
+      option:
+        tags:
+          - Dashboard
+        summary: "获取仪表板核心概览数据"
+        description: "获取用户统计、金库余额、转账概览、审批统计等快速统计数据"
+
+    - method: admin.Admin.GetDashboardTrends
+      option:
+        tags:
+          - Dashboard
+        summary: "获取仪表板趋势图表数据"
+        description: "获取资金流水趋势、转账批次趋势、审批分布、Vault币种余额Top 5"
+
+    - method: admin.Admin.GetDashboardActivities
+      option:
+        tags:
+          - Dashboard
+        summary: "获取最近操作动态"
+        description: "获取转账批次、提现审批、用户注册、Vault调整等最近操作记录"
+
+    - method: admin.Admin.RefreshToken
+      option:
+        tags:
+          - Auth
+
+    - method: admin.Admin.Logout
+      option:
+        tags:
+          - Auth
+
+    - method: admin.Admin.AdminMFACaptchaGenerate
+      option:
+        tags:
+          - Auth
+
+    - method: admin.Admin.AdminMFACaptchaValidate
+      option:
+        tags:
+          - Auth
+
+    - method: admin.Admin.AdminMFALogin
+      option:
+        tags:
+          - Auth
+
+    - method: admin.Admin.GetHotWalletRuntimeStatus
+      option:
+        tags:
+          - Wallet
+
+    - method: admin.Admin.StartHotWalletInit
+      option:
+        tags:
+          - Wallet
+
+    - method: admin.Admin.GetHotWalletMnemonicPage
+      option:
+        tags:
+          - Wallet
+
+    - method: admin.Admin.GetHotWalletMnemonicChallenge
+      option:
+        tags:
+          - Wallet
+
+    - method: admin.Admin.VerifyHotWalletMnemonicChallenge
+      option:
+        tags:
+          - Wallet
+
+    - method: admin.Admin.UnlockSignerHotWallet
+      option:
+        tags:
+          - Wallet
+
+    - method: admin.Admin.AdminMFAGetTwoFAQrCode
+      option:
+        tags:
+          - Auth
+
+    - method: admin.Admin.AdminMFABindTwoFA
+      option:
+        tags:
+          - Auth
+
+    - method: admin.Admin.AdminMFAVerifyTwoFA
+      option:
+        tags:
+          - Auth
+
+    - method: admin.Admin.ListAdmins
+      option:
+        tags:
+          - Admins
+
+    - method: admin.Admin.CreateAdmin
+      option:
+        tags:
+          - Admins
+
+    - method: admin.Admin.UpdateAdmin
+      option:
+        tags:
+          - Admins
+
+    - method: admin.Admin.DisableAdmin
+      option:
+        tags:
+          - Admins
+
+    - method: admin.Admin.ResetAdminPassword
+      option:
+        tags:
+          - Admins
+
+    - method: admin.Admin.ResetAdminTwoFA
+      option:
+        tags:
+          - Admins
+
+    - method: admin.Admin.ChangeMyPassword
+      option:
+        tags:
+          - Settings
+
+    - method: admin.Admin.ListUsers
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.GetUsersStatistics
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.ListUserWithdrawAuditWhitelistRules
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.UpsertUserWithdrawAuditWhitelistRules
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.GetUserDetail
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.FreezeUser
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.UnfreezeUser
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.TerminateUser
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.UpdateUserRole
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.UpdateUserMemberLevel
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.ResetUserPassword
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.ResetUserTradePassword
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.UnlockTradePassword
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.UpdateUserWithdrawAuditWhitelist
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.UnbindUserTotp
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.ListUser2FAHistory
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.AddUserNote
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.ExportUsers
+      option:
+        tags:
+          - Users
+
+    - method: admin.Admin.GetMe
+      option:
+        tags:
+          - Settings
+
+    - method: admin.Admin.GetMySecuritySettings
+      option:
+        tags:
+          - Settings
+
+    - method: admin.Admin.StartTwoFASetup
+      option:
+        tags:
+          - Settings
+
+    - method: admin.Admin.ConfirmTwoFASetup
+      option:
+        tags:
+          - Settings
+
+    - method: admin.Admin.StartTwoFARebind
+      option:
+        tags:
+          - Settings
+
+    - method: admin.Admin.DisableTwoFA
+      option:
+        tags:
+          - Settings
+
+    - method: admin.Admin.GetMyRBAC
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.GetRbacPermissionMap
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.ListMenus
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.CreateMenu
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.GetMenuTree
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.GetMenuById
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.UpdateMenu
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.DeleteMenu
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.ListPermissions
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.CreatePermission
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.GetPermissionById
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.UpdatePermission
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.DeletePermission
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.GetPermissionsByMenuId
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.ListRoles
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.CreateRole
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.GetRoleById
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.UpdateRole
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.DeleteRole
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.GetRoleMenus
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.GetRolePermissions
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.AssignMenusToRole
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.AssignPermissionsToRole
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.GetUserRoles
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.AssignRolesToUser
+      option:
+        tags:
+          - RBAC
+
+    - method: admin.Admin.GetSystemConfig
+      option:
+        tags:
+          - Settings
+
+    - method: admin.Admin.UpdateSystemConfig
+      option:
+        tags:
+          - Settings
+
+    - method: admin.Admin.GetAuditLogs
+      option:
+        tags:
+          - Audit
+
+    - method: admin.Admin.ListAlertConfigs
+      option:
+        tags:
+          - Alert
+        summary: "获取预警配置列表"
+        description: "查询所有预警配置规则，支持分页和筛选"
+
+    - method: admin.Admin.CreateAlertConfig
+      option:
+        tags:
+          - Alert
+        summary: "创建预警配置"
+        description: "创建新的交易金额预警规则"
+
+    - method: admin.Admin.GetAlertConfig
+      option:
+        tags:
+          - Alert
+        summary: "获取预警配置详情"
+        description: "获取指定ID的预警配置详细信息"
+
+    - method: admin.Admin.UpdateAlertConfig
+      option:
+        tags:
+          - Alert
+        summary: "更新预警配置"
+        description: "更新指定ID的预警配置规则"
+
+    - method: admin.Admin.DeleteAlertConfig
+      option:
+        tags:
+          - Alert
+        summary: "删除预警配置"
+        description: "软删除指定ID的预警配置（不可恢复）"
+
+    - method: admin.Admin.ToggleAlertConfig
+      option:
+        tags:
+          - Alert
+        summary: "启用/禁用预警配置"
+        description: "切换预警配置的启用状态"
+
+    - method: admin.Admin.GetAlertConfigWithStats
+      option:
+        tags:
+          - Alert
+        summary: "获取预警配置及实时统计"
+        description: "获取预警配置详情，包含当前窗口累计金额、交易笔数、进度等实时数据"
+
+    - method: admin.Admin.CreateSwapApiKey
+      option:
+        tags:
+          - Swap
+        summary: "创建Swap API密钥"
+        description: "为指定项目创建Swap服务API密钥（用于业务端调用）"
+
+    - method: admin.Admin.ListSwapApiKeys
+      option:
+        tags:
+          - Swap
+        summary: "列出Swap API密钥"
+        description: "列出所有已创建的Swap API密钥（支持分页）"
+
+    - method: admin.Admin.RevokeSwapApiKey
+      option:
+        tags:
+          - Swap
+        summary: "撤销Swap API密钥"
+        description: "撤销指定的Swap API密钥（设置为非激活状态）"
+
+    - method: admin.Admin.ListSwapProvidersForDropdown
+      option:
+        tags:
+          - Swap
+        summary: "获取Swap服务商列表（下拉框）"
+        description: "获取所有启用的服务商，仅返回ID和名称，用于UI下拉框选择"
+
+    - method: admin.Admin.ListSwapProviders
+      option:
+        tags:
+          - Swap
+        summary: "列出Swap服务商（完整信息）"
+        description: "查询Swap服务商列表（支持分页和过滤）"
+
+    - method: admin.Admin.GetSwapProviderDetail
+      option:
+        tags:
+          - Swap
+        summary: "获取Swap服务商详情"
+        description: "根据ID获取单个服务商的详细信息"
+
+    - method: admin.Admin.CreateSwapProvider
+      option:
+        tags:
+          - Swap
+        summary: "创建Swap服务商"
+        description: "创建新的Swap服务商（包含全局默认参数）"
+
+    - method: admin.Admin.UpdateSwapProvider
+      option:
+        tags:
+          - Swap
+        summary: "更新Swap服务商"
+        description: "更新服务商信息和全局参数"
+
+    - method: admin.Admin.DeleteSwapProvider
+      option:
+        tags:
+          - Swap
+        summary: "删除Swap服务商"
+        description: "软删除指定的服务商"
+
+    - method: admin.Admin.EnableSwapProvider
+      option:
+        tags:
+          - Swap
+        summary: "启用Swap服务商"
+        description: "启用指定的服务商"
+
+    - method: admin.Admin.DisableSwapProvider
+      option:
+        tags:
+          - Swap
+        summary: "禁用Swap服务商"
+        description: "禁用指定的服务商"
+
+    - method: admin.Admin.ListSwapConfigs
+      option:
+        tags:
+          - Swap
+        summary: "列出全局Swap配置"
+        description: "查询全局Swap配置列表（扁平化：provider+chain+token一体）"
+
+    - method: admin.Admin.GetSwapConfigDetail
+      option:
+        tags:
+          - Swap
+        summary: "获取Swap配置详情"
+        description: "根据ID获取单个Swap配置的详细信息"
+
+    - method: admin.Admin.CreateSwapConfig
+      option:
+        tags:
+          - Swap
+        summary: "创建Swap配置"
+        description: "创建新的Swap配置（provider+chain+token+所有参数）"
+
+    - method: admin.Admin.UpdateSwapConfigDetail
+      option:
+        tags:
+          - Swap
+        summary: "更新Swap配置"
+        description: "更新指定Swap配置的参数（名称、启用状态、手续费等）"
+
+    - method: admin.Admin.DeleteSwapConfig
+      option:
+        tags:
+          - Swap
+        summary: "删除Swap配置"
+        description: "软删除指定的Swap配置"
+
+    - method: admin.Admin.ListProjectSwapConfigs
+      option:
+        tags:
+          - Swap
+        summary: "列出项目的Swap配置"
+        description: "查询指定项目已启用的Swap配置列表（联表查询）"
+
+    - method: admin.Admin.EnableSwapConfigForProject
+      option:
+        tags:
+          - Swap
+        summary: "为项目启用Swap配置"
+        description: "为指定项目启用某个全局Swap配置"
+
+    - method: admin.Admin.DisableSwapConfigForProject
+      option:
+        tags:
+          - Swap
+        summary: "为项目禁用Swap配置"
+        description: "为指定项目禁用某个已启用的Swap配置"
+
+    - method: admin.Admin.ListSwapTransactions
+      option:
+        tags:
+          - Swap
+        summary: "查询Swap交易列表"
+        description: "按条件查询Swap交易记录（钱包地址、链ID、服务商、状态等）"
+
+    - method: admin.Admin.GetCurrencyOverview
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.ListCurrencies
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.CreateCurrency
+      option:
+        tags:
+          - Assets
+        summary: "新增币种"
+        description: "创建新的币种（包括名称、精度、图标等基础信息）"
+
+    - method: admin.Admin.GetCurrency
+      option:
+        tags:
+          - Assets
+        summary: "获取币种基础信息"
+        description: "获取单个币种的基础信息（用于前端编辑表单回显）"
+
+    - method: admin.Admin.UpdateCurrency
+      option:
+        tags:
+          - Assets
+        summary: "更新币种基础信息"
+        description: "更新币种的基础信息（名称、精度、图标URL），只能在币种禁用状态下更新"
+
+    - method: admin.Admin.ListChains
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.UpdateChainIcon
+      option:
+        tags:
+          - Assets
+        summary: "更新链Logo"
+        description: "更新指定链的图标URL（http/https）"
+
+    - method: admin.Admin.GetCurrencyConfig
+      option:
+        tags:
+          - Assets
+        summary: "获取币种配置信息"
+        description: "获取币种的配置信息（充值提现限额、手续费等）"
+
+    - method: admin.Admin.UpdateCurrencyConfig
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.UpdateCurrencyStatus
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.GetCurrencyGlobalWithdrawFee
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.UpdateCurrencyGlobalWithdrawFee
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.GetCurrencyGlobalWithdrawAudit
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.UpdateCurrencyGlobalWithdrawAudit
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.GetCurrencyGlobalTransferAudit
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.UpdateCurrencyGlobalTransferAudit
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.AccountingListAccountTypes
+      option:
+        tags:
+          - Accounting
+
+    - method: admin.Admin.AccountingCreateAccountType
+      option:
+        tags:
+          - Accounting
+
+    - method: admin.Admin.AccountingUpdateAccountType
+      option:
+        tags:
+          - Accounting
+
+    - method: admin.Admin.AccountingDeleteAccountType
+      option:
+        tags:
+          - Accounting
+
+    - method: admin.Admin.AccountingSetAccountTypeAssets
+      option:
+        tags:
+          - Accounting
+
+    - method: admin.Admin.AccountingEnsureUserSetup
+      option:
+        tags:
+          - Accounting
+
+    - method: admin.Admin.AccountingGetUserBalances
+      option:
+        tags:
+          - Accounting
+
+    - method: admin.Admin.AccountingEnsureSystemAccounts
+      option:
+        tags:
+          - Accounting
+
+    - method: admin.Admin.AccountingListLedgerTx
+      option:
+        tags:
+          - Accounting
+
+    - method: admin.Admin.AccountingGetLedgerTxDetail
+      option:
+        tags:
+          - Accounting
+
+    - method: admin.Admin.AccountingListUserTransactionRecords
+      option:
+        tags:
+          - Accounting
+        summary: "查询用户交易记录列表"
+
+    - method: admin.Admin.AccountingGetUserTransactionRecordDetail
+      option:
+        tags:
+          - Accounting
+        summary: "查询交易记录详情"
+
+    - method: admin.Admin.ListDepositAddresses
+      option:
+        tags:
+          - SubAddresses
+        summary: "查询充值地址列表"
+
+    - method: admin.Admin.GetDepositAddress
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.GetDepositAddress
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.CreateDepositAddress
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.UpdateDepositAddress
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.DeleteDepositAddress
+      option:
+        tags:
+          - Assets
+
+    - method: admin.Admin.ListDepositAddressBalances
+      option:
+        tags:
+          - SubAddresses
+        summary: "查询充值地址余额列表"
+
+    - method: admin.Admin.GetDepositAddressBalance
+      option:
+        tags:
+          - SubAddresses
+        summary: "获取单个地址余额"
+
+    - method: admin.Admin.GetDepositAddressBalanceStats
+      option:
+        tags:
+          - SubAddresses
+        summary: "获取余额统计数据"
+        description: "获取地址总数、待归集数、总余额等KPI统计"
+
+    - method: admin.Admin.GetDepositAddressBalanceByAsset
+      option:
+        tags:
+          - SubAddresses
+        summary: "按币种统计待归集金额（币种分布）"
+        description: "返回各币种的待归集金额、地址数、占比等数据，用于生成币种分布饼图"
+
+    - method: admin.Admin.UpdateDepositAddressBalance
+      option:
+        tags:
+          - SubAddresses
+        summary: "更新地址余额（ChainSync使用）"
+
+    - method: admin.Admin.ListConsolidationTasks
+      option:
+        tags:
+          - Consolidation
+        summary: "查询归集（Consolidation）任务列表"
+
+    - method: admin.Admin.GetConsolidationTask
+      option:
+        tags:
+          - Consolidation
+        summary: "获取归集（Consolidation）任务详情"
+
+    - method: admin.Admin.RetryConsolidationTask
+      option:
+        tags:
+          - Consolidation
+        summary: "重试归集（Consolidation）任务"
+
+    - method: admin.Admin.CancelConsolidationTask
+      option:
+        tags:
+          - Consolidation
+        summary: "取消归集（Consolidation）任务"
+
+    - method: admin.Admin.TriggerConsolidation
+      option:
+        tags:
+          - Consolidation
+        summary: "手动触发归集（Consolidation）"
+
+    - method: admin.Admin.GetConsolidationStats
+      option:
+        tags:
+          - Consolidation
+        summary: "归集（Consolidation）统计"
+
+    - method: admin.Admin.ListConsolidationLogs
+      option:
+        tags:
+          - Consolidation
+        summary: "查询归集（Consolidation）日志"
+
+    - method: admin.Admin.ListConsolidationTopupRecords
+      option:
+        tags:
+          - Consolidation
+        summary: "查询归集（Consolidation）补给记录"
+
+    - method: admin.Admin.ListEnergyRentalRecords
+      option:
+        tags:
+          - Consolidation
+        summary: "查询能量租赁记录"
+
+    - method: admin.Admin.GetEnergyRentalRecord
+      option:
+        tags:
+          - Consolidation
+        summary: "获取能量租赁记录详情"
+
+    - method: admin.Admin.ListDeposits
+      option:
+        tags:
+          - Deposits
+
+    - method: admin.Admin.GetDeposit
+      option:
+        tags:
+          - Deposits
+
+    - method: admin.Admin.GetDeposit
+      option:
+        tags:
+          - Deposits
+
+    - method: admin.Admin.CreateDeposit
+      option:
+        tags:
+          - Deposits
+
+    - method: admin.Admin.UpdateDeposit
+      option:
+        tags:
+          - Deposits
+
+    - method: admin.Admin.CancelDeposit
+      option:
+        tags:
+          - Deposits
+
+    - method: admin.Admin.ListCurrencyWithdrawals
+      option:
+        tags:
+          - Withdrawals
+
+    - method: admin.Admin.CreateCurrencyWithdrawal
+      option:
+        tags:
+          - Withdrawals
+
+    - method: admin.Admin.GetCurrencyWithdrawal
+      option:
+        tags:
+          - Withdrawals
+
+    - method: admin.Admin.GetCurrencyWithdrawal
+      option:
+        tags:
+          - Withdrawals
+
+    - method: admin.Admin.UpdateCurrencyWithdrawal
+      option:
+        tags:
+          - Withdrawals
+
+    - method: admin.Admin.ApproveCurrencyWithdrawal
+      option:
+        tags:
+          - Withdrawals
+
+    - method: admin.Admin.RejectCurrencyWithdrawal
+      option:
+        tags:
+          - Withdrawals
+
+    - method: admin.Admin.ListCurrencyWithdrawalEvents
+      option:
+        tags:
+          - Withdrawals
+
+    - method: admin.Admin.ListInternalTransfers
+      option:
+        tags:
+          - InternalTransfers
+
+    - method: admin.Admin.GetInternalTransfer
+      option:
+        tags:
+          - InternalTransfers
+
+    - method: admin.Admin.ApproveInternalTransfer
+      option:
+        tags:
+          - InternalTransfers
+
+    - method: admin.Admin.RejectInternalTransfer
+      option:
+        tags:
+          - InternalTransfers
+
+    - method: admin.Admin.CancelInternalTransfer
+      option:
+        tags:
+          - InternalTransfers
+
+    - method: admin.Admin.CancelCurrencyWithdrawal
+      option:
+        tags:
+          - Withdrawals
+
+    - method: admin.Admin.ListTransferBatches
+      option:
+        tags:
+          - Transfers
+
+    - method: admin.Admin.GetTransferBatch
+      option:
+        tags:
+          - Transfers
+
+    - method: admin.Admin.SubmitTransferBatch
+      option:
+        tags:
+          - Transfers
+
+    - method: admin.Admin.ApproveTransferBatch
+      option:
+        tags:
+          - Transfers
+
+    - method: admin.Admin.CancelTransferBatch
+      option:
+        tags:
+          - Transfers
+
+    - method: admin.Admin.ExecuteTransferBatch
+      option:
+        tags:
+          - Transfers
+
+    - method: admin.Admin.RetryTransferBatch
+      option:
+        tags:
+          - Transfers
+
+    - method: admin.Admin.GetWeb3UsersSummary
+      option:
+        tags:
+          - Web3Users
+        summary: "获取Web3用户统计概览"
+        description: "获取顶部统计卡片数据（设备总数、地址总数、黑名单地址数、2FA启用率），全局统计不受筛选条件影响"
+
+    - method: admin.Admin.GetWeb3UsersPageList
+      option:
+        tags:
+          - Web3Users
+        summary: "获取Web3用户列表（扁平化数据）"
+        description: "获取Web3用户分页列表，支持多种搜索条件，数据结构扁平化便于前端展示"
+
+    - method: admin.Admin.ListWeb3Users
+      option:
+        tags:
+          - Web3Users
+
+    - method: admin.Admin.GetWeb3User
+      option:
+        tags:
+          - Web3Users
+
+    - method: admin.Admin.ListWeb3UserTransactions
+      option:
+        tags:
+          - Web3Users
+        summary: "查询Web3用户交易记录"
+        description: "查询指定设备的Web3钱包交易记录，支持按地址、类型、方向、资产、状态、日期范围筛选"
+
+    - method: admin.Admin.BlacklistWeb3Address
+      option:
+        tags:
+          - Web3Users
+
+    - method: admin.Admin.UnblacklistWeb3Address
+      option:
+        tags:
+          - Web3Users
+
+    - method: admin.Admin.BatchWeb3AddressBlacklist
+      option:
+        tags:
+          - Web3Users
+
+    - method: admin.Admin.GetWeb3UserStatistics
+      option:
+        tags:
+          - Web3Users
+
+    - method: admin.Admin.ExportWeb3Users
+      option:
+        tags:
+          - Web3Users
+
+    - method: admin.Admin.ListBlacklistAddresses
+      option:
+        tags:
+          - Blacklist
+
+    - method: admin.Admin.CreateBlacklistAddress
+      option:
+        tags:
+          - Blacklist
+
+    - method: admin.Admin.BatchCreateBlacklistAddresses
+      option:
+        tags:
+          - Blacklist
+
+    - method: admin.Admin.UpdateBlacklistAddressMonitorStatus
+      option:
+        tags:
+          - Blacklist
+
+    - method: admin.Admin.DeleteBlacklistAddress
+      option:
+        tags:
+          - Blacklist
+
+    - method: admin.Admin.ExportBlacklistAddresses
+      option:
+        tags:
+          - Blacklist
+
+    - method: admin.Admin.GetVaultOverview
+      option:
+        tags:
+          - Vault
+        summary: "获取资金管理概览"
+        description: "获取所有链的 Vault 资金概览，包括总资产、未归集资产、预警信息等"
+
+    - method: admin.Admin.GetVaultDetail
+      option:
+        tags:
+          - Vault
+
+    - method: admin.Admin.CreateVaultAdjustment
+      option:
+        tags:
+          - Vault
+
+    - method: admin.Admin.ListVaultAdjustments
+      option:
+        tags:
+          - Vault
+
+    - method: admin.Admin.ApproveVaultAdjustment
+      option:
+        tags:
+          - Vault
+
+    - method: admin.Admin.UpdateVaultThresholds
+      option:
+        tags:
+          - Vault
+
+    - method: admin.Admin.SyncVault
+      option:
+        tags:
+          - Vault
+
+    - method: admin.Admin.AddVaultAddress
+      option:
+        tags:
+          - Vault
+        summary: "添加钱包地址"
+        description: "添加外部钱包地址到 Vault 监控列表"
+
+    - method: admin.Admin.ListVaultAddresses
+      option:
+        tags:
+          - Vault
+        summary: "查询钱包地址列表"
+        description: "查询 Vault 管理的所有钱包地址，支持筛选和分页"
+
+    - method: admin.Admin.UpdateVaultAddressStatus
+      option:
+        tags:
+          - Vault
+        summary: "更新地址状态"
+        description: "启用/禁用钱包地址监控，或设置为活跃钱包"
+
+    - method: admin.Admin.DeleteVaultAddress
+      option:
+        tags:
+          - Vault
+        summary: "删除钱包地址"
+        description: "从 Vault 监控列表中删除地址 (软删除)"
+
+    - method: admin.Admin.GetVaultAddressBalances
+      option:
+        tags:
+          - Vault
+        summary: "查询地址余额明细"
+        description: "查询指定地址的所有币种余额"
+

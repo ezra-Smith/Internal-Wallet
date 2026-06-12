@@ -1,0 +1,88 @@
+Name: market.binance-ticker
+Mode: dev
+
+# 日志配置
+Log:
+  ServiceName: market.binance-ticker
+  Mode: console
+  Path: logs/market
+  Level: info
+  Compress: true
+  KeepDays: 7
+  StackCooldownMillis: 100
+
+# Redis（复用本仓库其它服务的 CacheRedis 配置结构；仅使用第一个节点）
+# 密码从环境变量/AWS Secrets Manager注入
+CacheRedis:
+  - Host: localhost:6379
+    Pass: ""  # 占位符，实际值从 secrets 包注入
+    Type: node
+
+Redis:
+  DB: 0
+  TickerHashKey: binance:tickers
+  TTLSeconds: 30
+  SparklineKeyPrefix: "binance:sparkline:"
+
+Binance:
+  BaseURL: wss://stream.binance.com:9443
+  Endpoint: /ws/!miniTicker@arr
+  HandshakeTimeoutMillis: 10000
+  ReadTimeoutMillis: 90000
+  WriteTimeoutMillis: 10000
+  MaxMessageBytes: 16777216
+  MaxConnAgeSeconds: 86340
+
+Reconnect:
+  InitialBackoffMillis: 500
+  MaxBackoffMillis: 30000
+  Multiplier: 2
+  Jitter: 0.2
+
+Health:
+  Enabled: true
+  ListenOn: 0.0.0.0:18080
+  Path: /healthz
+  StaleAfterMillis: 5000
+  RedisPingTimeoutMillis: 500
+
+# Sparkline 简易K线数据配置（使用 Redis ZSET 存储）
+# 定期采样价格数据用于绘制迷你趋势图
+# 数据结构: ZSET, score=时间戳(ms), member=价格
+Sparkline:
+  Enabled: true
+  # 采样间隔（秒），默认 300 (5分钟) → 24小时产生288个数据点
+  SampleIntervalSeconds: 300
+  # 数据保留时间（小时），默认 24 小时
+  # 设为 168 可保留 7 天数据
+  RetentionHours: 24
+
+# Fiat (USDT -> fiat) mid rates via Binance C2C public API
+Fiat:
+  Enabled: true
+  # Redis hash key storing latest fiat rates (field=USDTCNY, value=json)
+  RedisHashKey: fiat:tickers
+  # TTL on the hash key; 0 disables TTL
+  TTLSeconds: 600
+  # Fetch interval in seconds
+  UpdateIntervalSeconds: 30
+  # Per-request timeout
+  RequestTimeoutMillis: 10000
+  # Max retry count per request (0 disables retries)
+  MaxRetries: 3
+  BaseURL: https://c2c.binance.com
+  Endpoint: /bapi/c2c/v2/public/c2c/adv/quoted-price
+  Pairs:
+    - Asset: USDT
+      FiatCurrency: CNY
+      Enabled: true
+    - Asset: USDT
+      FiatCurrency: USD
+      Enabled: true
+
+# 可选：链路追踪（与仓库其它服务保持一致）
+Telemetry:
+  Name: market.binance-ticker
+  Endpoint: http://localhost:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger

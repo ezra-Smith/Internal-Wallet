@@ -1,0 +1,25 @@
+Name: accounting.rpc
+ListenOn: 0.0.0.0:9015
+Mode: dev
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: accounting.rpc
+
+# 雪花ID配置（必须配置，范围0-1023，每个服务唯一）
+# 建议为 accounting 分配一个未占用的 NodeID
+NodeID: 7
+
+# GORM MySQL/MariaDB 配置
+# 密码从环境变量/AWS Secrets Manager注入
+MySQL:
+  Host: localhost
+  Port: 3306
+  Username: crypto
+  Password: ""  # 占位符，实际值从 secrets 包注入
+  Database: crypto_wallet
+  MaxIdleConns: 10
+  MaxOpenConns: 100
+  ConnMaxLifetime: 3600
+  LogLevel: 4
+  SlowThreshold: 200

@@ -1,0 +1,3549 @@
+# ============================================================================
+# 企业内部钱包系统 - API路由配置示例
+#
+# Swagger 生成约定：
+# - 每条 route 必须设置 `tag: ...`
+# - 每条 route 可选设置 `summary` / `description`（用于 Swagger operation 的 summary/description）
+# - 每个 service 维护 `tag_descriptions`（用于 Swagger tags 描述）
+# - 通过 `./scripts/sync-swagger-http-yaml.sh` 生成 docs/swagger/*，不要手改产物
+# ============================================================================
+
+services:
+  # ==================== Business Service - 业务服务 ====================
+   # 用户管理、资金账户、内部转账、闪兑等
+  business:
+    tag_descriptions:
+      Auth: 登录、令牌、密码与2FA
+      Assets: 资产概览、充值、提现、记录
+      InternalTransfer: 内部转账（用户之间的资产转移）
+      Notifications: 消息通知相关
+      Me: 个人资料与概览
+      LinkedWallets: 第三方钱包绑定与管理
+      Settings: 账号设置与偏好
+      WithdrawAuditWhitelist: 提现免审白名单（自绑定）
+      Swap: Web3 Swap（DEX 聚合报价/交易）
+      Web3Wallet: Web3 自托管钱包（用户管理、资产、交易记录）
+    routes:
+      - path: /api/v1/business/get_country_codes
+        method: POST
+        service: Business
+        rpc: GetCountryCodes
+        tag: Auth
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: 获取支持的国家/地区区号
+        description: 返回系统支持的手机号国家/地区区号列表（E.164，带 + 前缀）
+      - path: /api/v1/business/send_sms_code
+        method: POST
+        service: Business
+        rpc: SendSMSCode
+        tag: Auth
+        auth: false
+        rate_limit: 5
+        rate_limit_type: ip
+        summary: 发送手机验证码
+        description: 向手机号发送验证码
+      - path: /api/v1/business/send_email_code
+        method: POST
+        service: Business
+        rpc: SendEmailCode
+        tag: Auth
+        auth: false
+        rate_limit: 5
+        rate_limit_type: ip
+        summary: 发送邮箱验证码
+        description: 向邮箱发送验证码（请求体需提供 email）
+      - path: /api/v1/business/login_by_email_code
+        method: POST
+        service: Business
+        rpc: LoginByEmailCode
+        tag: Auth
+        auth: false
+        rate_limit: 5
+        rate_limit_type: ip
+        summary: 邮箱验证码登录/注册
+        description: 使用邮箱与验证码登录，首次使用自动注册
+      - path: /api/v1/business/login_by_phone_code
+        method: POST
+        service: Business
+        rpc: LoginByPhoneCode
+        tag: Auth
+        auth: false
+        rate_limit: 5
+        rate_limit_type: ip
+        summary: 手机验证码登录/注册
+        description: 使用手机号（country_code + phone）与验证码登录，首次使用自动注册
+      - path: /api/v1/business/login_by_google
+        method: POST
+        service: Business
+        rpc: LoginByGoogle
+        tag: Auth
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: Google OAuth 登录
+        description: 使用 Google OAuth ID Token 登录或注册，支持自动注册新用户
+      - path: /api/v1/business/refresh_token
+        method: POST
+        service: Business
+        rpc: RefreshToken
+        tag: Auth
+        auth: false
+        rate_limit: 5
+        rate_limit_type: ip
+        summary: 刷新令牌
+        description: 使用刷新令牌获取新的访问令牌
+      - path: /api/v1/business/forgot_password_by_email
+        method: POST
+        service: Business
+        rpc: ForgotPasswordByEmail
+        tag: Auth
+        auth: false
+        rate_limit: 5
+        rate_limit_type: ip
+        summary: 忘记密码（邮箱）
+        description: 通过邮箱验证码重置登录密码
+      - path: /api/v1/business/forgot_password_by_phone
+        method: POST
+        service: Business
+        rpc: ForgotPasswordByPhone
+        tag: Auth
+        auth: false
+        rate_limit: 5
+        rate_limit_type: ip
+        summary: 忘记密码（手机）
+        description: 通过短信验证码重置登录密码
+      - path: /api/v1/business/geetest/validate
+        method: POST
+        service: Business
+        rpc: ValidateGeetest
+        tag: Auth
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: Geetest 验证
+        description: 校验 Geetest v4 验证参数
+      - path: /api/v1/business/logout
+        method: POST
+        service: Business
+        rpc: Logout
+        tag: Auth
+        auth: true
+        summary: 登出
+        description: 销毁会话并使令牌失效
+      - path: /api/v1/business/get_my_overview
+        method: POST
+        service: Business
+        rpc: GetMyOverview
+        tag: Me
+        auth: true
+        rate_limit: 10
+        summary: 我的页
+        description: 获取我的页面概览信息
+      - path: /api/v1/business/get_asset_overview
+        method: POST
+        service: Business
+        rpc: GetAssetOverview
+        tag: Assets
+        auth: true
+        summary: 资产页
+        description: 获取用户资产概览
+      - path: /api/v1/business/get_asset_detail
+        method: POST
+        service: Business
+        rpc: GetAssetDetail
+        tag: Assets
+        auth: true
+        summary: 资产页-详情
+        description: 获取资产详情与交易记录
+      - path: /api/v1/business/get_asset_config
+        method: POST
+        service: Business
+        rpc: GetAssetConfig
+        tag: Assets
+        auth: false
+        summary: 获取所有资产配置
+        description: 获取所有资产配置信息（包含精度、状态等）
+      - path: /api/v1/business/list_transaction_records
+        method: POST
+        service: Business
+        rpc: ListTransactionRecords
+        tag: Assets
+        auth: true
+        summary: 资产页-交易记录
+        description: 分页获取资产相关的交易记录
+      - path: /api/v1/business/get_transaction_record_detail
+        method: POST
+        service: Business
+        rpc: GetTransactionRecordDetail
+        tag: Assets
+        auth: true
+        summary: 资产页-交易记录-详情
+        description: 获取交易记录的详细信息
+      - path: /api/v1/business/get_deposit_info
+        method: POST
+        service: Business
+        rpc: GetDepositInfo
+        tag: Assets
+        auth: true
+        summary: 资产-充值
+        description: 获取可充值资产与网络信息
+      - path: /api/v1/business/create_deposit
+        method: POST
+        service: Business
+        rpc: CreateDeposit
+        tag: Assets
+        auth: true
+        summary: CreateDeposit
+      - path: /api/v1/business/list_deposit_records
+        method: POST
+        service: Business
+        rpc: ListDepositRecords
+        tag: Assets
+        auth: true
+        summary: 资产-充值记录
+        description: 分页获取充值记录
+      - path: /api/v1/business/get_deposit_detail
+        method: POST
+        service: Business
+        rpc: GetDepositDetail
+        tag: Assets
+        auth: true
+        summary: 资产-充值详情
+        description: 获取指定充值记录详情
+      - path: /api/v1/business/list_deposit_address_book
+        method: POST
+        service: Business
+        rpc: ListDepositAddressBook
+        tag: Assets
+        auth: true
+        summary: 资产-充值地址簿列表
+        description: 获取用户充值地址簿（支持同链多地址，按链/币种统计）
+      - path: /api/v1/business/create_deposit_address_book
+        method: POST
+        service: Business
+        rpc: CreateDepositAddressBook
+        tag: Assets
+        auth: true
+        summary: 资产-新增充值地址
+        description: 为指定链生成新的充值地址（可设为默认）
+      - path: /api/v1/business/get_deposit_address_book_detail
+        method: POST
+        service: Business
+        rpc: GetDepositAddressBookDetail
+        tag: Assets
+        auth: true
+        summary: 资产-充值地址详情
+        description: 获取单个充值地址详情（含累计收款统计）
+      - path: /api/v1/business/update_deposit_address_book
+        method: POST
+        service: Business
+        rpc: UpdateDepositAddressBook
+        tag: Assets
+        auth: true
+        summary: 资产-更新充值地址备注
+        description: 更新充值地址的标签/备注
+      - path: /api/v1/business/delete_deposit_address_book
+        method: POST
+        service: Business
+        rpc: DeleteDepositAddressBook
+        tag: Assets
+        auth: true
+        summary: 资产-删除充值地址
+        description: 删除充值地址（校验是否存在待确认充值、以及同链至少保留一个地址）
+      - path: /api/v1/business/set_default_deposit_address_book
+        method: POST
+        service: Business
+        rpc: SetDefaultDepositAddressBook
+        tag: Assets
+        auth: true
+        summary: 资产-设置默认充值地址
+        description: 设置同链默认充值地址（自动取消同链其他默认）
+      - path: /api/v1/business/list_deposit_address_book_deposits
+        method: POST
+        service: Business
+        rpc: ListDepositAddressBookDeposits
+        tag: Assets
+        auth: true
+        summary: 资产-充值地址收款记录
+        description: 获取指定充值地址的充值记录列表
+      - path: /api/v1/business/list_withdraw_records
+        method: POST
+        service: Business
+        rpc: ListWithdrawRecords
+        tag: Assets
+        auth: true
+        summary: 资产-提现记录
+        description: 分页获取提现记录
+      - path: /api/v1/business/list_action_assets
+        method: POST
+        service: Business
+        rpc: ListActionAssets
+        tag: Assets
+        auth: true
+        summary: 资产页-币种列表
+        description: 获取充值/提现相关资产列表
+      - path: /api/v1/business/list_action_networks
+        method: POST
+        service: Business
+        rpc: ListActionNetworks
+        tag: Assets
+        auth: true
+        summary: 资产页-网络列表
+        description: 获取指定资产的可用网络及费用
+      - path: /api/v1/business/get_asset_withdraw_fee_config
+        method: POST
+        service: Business
+        rpc: GetAssetWithdrawFeeConfig
+        tag: Assets
+        auth: true
+        summary: 资产页-获取指定代币的可提现区间金额
+        description: 获取指定代币的可提现区间金额（包含最小值、最大值）
+      - path: /api/v1/business/get_exchange_rate
+        method: POST
+        service: Business
+        rpc: GetExchangeRate
+        tag: Assets
+        auth: false
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: 资产页-汇率查询
+        description: 查询两个币种之间的实时汇率（从 market 服务获取价格数据）
+      - path: /api/v1/business/list_fiat_rates
+        method: POST
+        service: Business
+        rpc: ListFiatRates
+        tag: Assets
+        auth: false
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: 资产页-法币汇率列表
+        description: 查询 1 USDT = n 法币汇率列表（支持传入多个法币过滤；未命中返回 missing 列表）
+      - path: /api/v1/business/get_withdraw_info
+        method: POST
+        service: Business
+        rpc: GetWithdrawInfo
+        tag: Assets
+        auth: true
+        summary: 资产页-提币
+        description: 获取可提现资产与网络信息
+      - path: /api/v1/business/estimate_withdraw_fee
+        method: POST
+        service: Business
+        rpc: EstimateWithdrawFee
+        tag: Assets
+        auth: true
+        summary: Web2 提币手续费预估
+        description: 仅按后端提币手续费规则（fixed/percent）预估手续费，不构建链上交易，不使用 Web3 gas 接口
+      - path: /api/v1/business/calc_withdraw_fee
+        method: POST
+        service: Business
+        rpc: CalcWithdrawFee
+        tag: Assets
+        auth: true
+        summary: Web2 提币手续费计算
+        description: 校验资产/网络/余额后按后端规则计算手续费，返回 fee/min_withdraw_amount/required_amount
+      - path: /api/v1/business/create_withdraw
+        method: POST
+        service: Business
+        rpc: CreateWithdraw
+        tag: Assets
+        auth: true
+        summary: 资产页-提币
+        description: 创建提现请求
+      - path: /api/v1/business/get_withdraw_audit_status
+        method: POST
+        service: Business
+        rpc: GetWithdrawAuditStatus
+        tag: Assets
+        auth: true
+        summary: 资产页-提币审核状态
+        description: 查询提现审核状态
+      - path: /api/v1/business/get_withdraw_detail
+        method: POST
+        service: Business
+        rpc: GetWithdrawDetail
+        tag: Assets
+        auth: true
+        summary: 资产页-提现详情
+        description: 获取提现记录详情
+      - path: /api/v1/business/list_notifications
+        method: POST
+        service: Business
+        rpc: ListNotifications
+        tag: Notifications
+        auth: true
+        summary: 资产页-消息通知
+        description: 获取通知列表
+      - path: /api/v1/business/mark_notification_read
+        method: POST
+        service: Business
+        rpc: MarkNotificationRead
+        tag: Notifications
+        auth: true
+        summary: 资产页-消息通知
+        description: 标记单条通知为已读
+      - path: /api/v1/business/mark_all_notifications_read
+        method: POST
+        service: Business
+        rpc: MarkAllNotificationsRead
+        tag: Notifications
+        auth: true
+        summary: 资产页-消息通知
+        description: 标记所有通知为已读
+      - path: /api/v1/business/delete_notification
+        method: POST
+        service: Business
+        rpc: DeleteNotification
+        tag: Notifications
+        auth: true
+        summary: 资产页-消息通知
+        description: 删除单条通知
+      - path: /api/v1/business/clear_all_notifications
+        method: POST
+        service: Business
+        rpc: ClearAllNotifications
+        tag: Notifications
+        auth: true
+        summary: 资产页-消息通知
+        description: 清空所有通知
+      - path: /api/v1/business/register_device
+        method: POST
+        service: Business
+        rpc: RegisterDevice
+        tag: Notifications
+        auth: false
+        rate_limit: 20
+        rate_limit_type: ip
+        summary: 设备注册（Web3用户）
+        description: 注册设备，绑定设备ID和极光registration_id，用于推送通知
+      - path: /api/v1/business/send_push_notification_by_alias
+        method: POST
+        service: Business
+        rpc: SendPushNotificationByAlias
+        tag: Notifications
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: 通过别名批量推送通知
+        description: 通过别名（user_id或设备ID）批量发送推送通知，最多支持1000个别名
+      - path: /api/v1/business/send_push_notification_by_device_token
+        method: POST
+        service: Business
+        rpc: SendPushNotificationByDeviceToken
+        tag: Notifications
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: 推送通知（Web3用户）
+        description: 通过设备ID发送推送通知，用于Web3用户场景
+      - path: /api/v1/business/get_user_info
+        method: POST
+        service: Business
+        rpc: GetUserInfo
+        tag: Me
+        auth: true
+        summary: 我的页-资料
+        description: 获取个人资料
+      - path: /api/v1/business/update_user_info
+        method: POST
+        service: Business
+        rpc: UpdateUserInfo
+        tag: Me
+        auth: true
+        summary: 我的页-资料
+        description: 更新个人资料
+      - path: /api/v1/business/bind_email
+        method: POST
+        service: Business
+        rpc: BindEmail
+        tag: Settings
+        auth: true
+        summary: 我的页-邮箱
+        description: 绑定邮箱
+      - path: /api/v1/business/change_email
+        method: POST
+        service: Business
+        rpc: ChangeEmail
+        tag: Settings
+        auth: true
+        summary: 我的页-邮箱
+        description: 更换邮箱
+      - path: /api/v1/business/bind_phone
+        method: POST
+        service: Business
+        rpc: BindPhone
+        tag: Settings
+        auth: true
+        summary: 我的页-手机号
+        description: 绑定手机号
+      - path: /api/v1/business/change_phone
+        method: POST
+        service: Business
+        rpc: ChangePhone
+        tag: Settings
+        auth: true
+        summary: 我的页-手机号
+        description: 更换手机号
+      - path: /api/v1/business/list_wallet_providers
+        method: POST
+        service: Business
+        rpc: ListWalletProviders
+        tag: LinkedWallets
+        auth: true
+        summary: 我的页-关联钱包
+        description: 列出支持的钱包提供方
+      - path: /api/v1/business/list_provider_accounts
+        method: POST
+        service: Business
+        rpc: ListProviderAccounts
+        tag: LinkedWallets
+        auth: true
+        summary: 我的页-关联钱包
+        description: 列出第三方钱包账号
+      - path: /api/v1/business/link_wallet_account
+        method: POST
+        service: Business
+        rpc: LinkWalletAccount
+        tag: LinkedWallets
+        auth: true
+        summary: 我的页-关联钱包
+        description: 绑定并关联第三方钱包账号
+      - path: /api/v1/business/unlink_wallet_account
+        method: POST
+        service: Business
+        rpc: UnlinkWalletAccount
+        tag: LinkedWallets
+        auth: true
+        summary: 我的页-关联钱包
+        description: 解除关联第三方钱包账号
+      - path: /api/v1/business/set_primary_linked_wallet
+        method: POST
+        service: Business
+        rpc: SetPrimaryLinkedWallet
+        tag: LinkedWallets
+        auth: true
+        summary: 我的页-关联钱包
+        description: 设置主关联钱包账号
+      - path: /api/v1/business/get_linked_wallet_accounts
+        method: POST
+        service: Business
+        rpc: GetLinkedWalletAccounts
+        tag: LinkedWallets
+        auth: true
+        summary: 我的页-关联钱包
+        description: 获取已关联的钱包账号列表
+      - path: /api/v1/business/change_password
+        method: POST
+        service: Business
+        rpc: ChangePassword
+        tag: Settings
+        auth: true
+        summary: 我的页-登录密码
+        description: 修改登录密码
+      - path: /api/v1/business/set_trade_password
+        method: POST
+        service: Business
+        rpc: SetTradePassword
+        tag: Settings
+        auth: true
+        summary: 我的页-交易密码
+        description: 设置资金交易密码
+      - path: /api/v1/business/reset_trade_password
+        method: POST
+        service: Business
+        rpc: ResetTradePassword
+        tag: Settings
+        auth: true
+        summary: 我的页-交易密码
+        description: 重置资金交易密码
+      - path: /api/v1/business/verify_trade_password
+        method: POST
+        service: Business
+        rpc: VerifyTradePassword
+        tag: Settings
+        auth: true
+        summary: 我的页-交易密码
+        description: 验证资金交易密码
+      - path: /api/v1/business/set_web3_trade_password
+        method: POST
+        service: Business
+        rpc: SetWeb3TradePassword
+        tag: Settings
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: Web3用户-设置交易密码
+        description: Web3用户设置交易密码（基于device_id）
+      - path: /api/v1/business/verify_web3_trade_password
+        method: POST
+        service: Business
+        rpc: VerifyWeb3TradePassword
+        tag: Settings
+        auth: false
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: Web3用户-验证交易密码
+        description: Web3用户验证交易密码（用于swap等敏感操作前验证）
+      - path: /api/v1/business/update_web3_trade_password
+        method: POST
+        service: Business
+        rpc: UpdateWeb3TradePassword
+        tag: Settings
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: Web3用户-修改交易密码
+        description: Web3用户修改交易密码（需要验证旧密码）
+      - path: /api/v1/business/register_biometric_key
+        method: POST
+        service: Business
+        rpc: RegisterBiometricKey
+        tag: Settings
+        auth: true
+        rate_limit: 20
+        rate_limit_type: ip
+        summary: 我的页-生物识别
+        description: 注册/更新生物识别公钥（需要交易密码校验）
+      - path: /api/v1/business/create_withdraw_biometric_challenge
+        method: POST
+        service: Business
+        rpc: CreateWithdrawBiometricChallenge
+        tag: Settings
+        auth: true
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: 我的页-生物识别
+        description: 创建提币生物识别挑战（用于签名）
+      - path: /api/v1/business/create_withdraw_audit_whitelist_binding_biometric_challenge
+        method: POST
+        service: Business
+        rpc: CreateWithdrawAuditWhitelistBindingBiometricChallenge
+        tag: Settings
+        auth: true
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: 我的页-生物识别
+        description: 创建提现免审白名单绑定生物识别挑战（用于签名）
+      - path: /api/v1/business/create_reset_trade_password_biometric_challenge
+        method: POST
+        service: Business
+        rpc: CreateResetTradePasswordBiometricChallenge
+        tag: Settings
+        auth: true
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: 我的页-生物识别
+        description: 创建重置交易密码生物识别挑战（用于签名）
+      - path: /api/v1/business/unbind_biometric
+        method: POST
+        service: Business
+        rpc: UnbindBiometric
+        tag: Settings
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        summary: 我的页-生物识别
+        description: 解绑当前用户生物识别（仅交易密码）
+      - path: /api/v1/business/get_google_auth_setup
+        method: POST
+        service: Business
+        rpc: GetGoogleAuthSetup
+        tag: Settings
+        auth: true
+        summary: 我的页-双重认证
+        description: 获取 Google 验证器设置信息（生成 secret 和 QR 码）
+      - path: /api/v1/business/bind_google_auth
+        method: POST
+        service: Business
+        rpc: BindGoogleAuth
+        tag: Settings
+        auth: true
+        summary: 我的页-双重认证
+        description: 绑定谷歌验证器
+      - path: /api/v1/business/unbind_google_auth
+        method: POST
+        service: Business
+        rpc: UnbindGoogleAuth
+        tag: Settings
+        auth: true
+        summary: 我的页-双重认证
+        description: 解绑谷歌验证器
+      - path: /api/v1/business/disable_google_auth_2fa
+        method: POST
+        service: Business
+        rpc: DisableGoogleAuth2FA
+        tag: Settings
+        auth: true
+        summary: 我的页-双重认证
+        description: 关闭双重认证（不解绑谷歌验证器）
+      - path: /api/v1/business/enable_google_auth_2fa
+        method: POST
+        service: Business
+        rpc: EnableGoogleAuth2FA
+        tag: Settings
+        auth: true
+        summary: 我的页-双重认证
+        description: 开启双重认证（已绑定GA，传验证码开启）
+      - path: /api/v1/business/disable_google_auth_2fa_with_code
+        method: POST
+        service: Business
+        rpc: DisableGoogleAuth2FAWithCode
+        tag: Settings
+        auth: true
+        summary: 我的页-双重认证
+        description: 关闭双重认证（已绑定GA，传验证码关闭）
+      - path: /api/v1/business/verify_google_auth_code
+        method: POST
+        service: Business
+        rpc: VerifyGoogleAuthCode
+        tag: Settings
+        auth: true
+        summary: 我的页-双重认证
+        description: 校验Google验证器验证码（仅校验，不做任何状态修改）
+      - path: /api/v1/business/list_login_records
+        method: POST
+        service: Business
+        rpc: ListLoginRecords
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－登录记录
+        description: 获取登录记录列表
+      - path: /api/v1/business/list_wallet_addresses
+        method: POST
+        service: Business
+        rpc: ListWalletAddresses
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－钱包地址
+        description: 获取钱包地址列表
+      - path: /api/v1/business/add_wallet_address
+        method: POST
+        service: Business
+        rpc: AddWalletAddress
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－钱包地址
+        description: 添加钱包地址
+      - path: /api/v1/business/update_wallet_address
+        method: POST
+        service: Business
+        rpc: UpdateWalletAddress
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－钱包地址
+        description: 更新钱包地址
+      - path: /api/v1/business/delete_wallet_address
+        method: POST
+        service: Business
+        rpc: DeleteWalletAddress
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－钱包地址
+        description: 删除钱包地址
+      - path: /api/v1/business/set_default_wallet_address
+        method: POST
+        service: Business
+        rpc: SetDefaultWalletAddress
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－钱包地址
+        description: 设置默认钱包地址
+      - path: /api/v1/business/validate_wallet_address
+        method: POST
+        service: Business
+        rpc: ValidateWalletAddress
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－钱包地址
+        description: 验证钱包地址有效性
+      # 内部地址（通过UID/邮箱添加平台内用户）
+      - path: /api/v1/business/list_internal_wallet_addresses
+        method: POST
+        service: Business
+        rpc: ListInternalWalletAddresses
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－内部地址列表
+        description: 获取内部地址列表（通过UID/邮箱添加的平台内用户）
+      - path: /api/v1/business/add_internal_wallet_address
+        method: POST
+        service: Business
+        rpc: AddInternalWalletAddress
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－添加内部地址
+        description: 通过UID或邮箱添加平台内部用户地址
+      - path: /api/v1/business/update_internal_wallet_address
+        method: POST
+        service: Business
+        rpc: UpdateInternalWalletAddress
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－更新内部地址
+        description: 更新内部地址标签/备注
+      - path: /api/v1/business/delete_internal_wallet_address
+        method: POST
+        service: Business
+        rpc: DeleteInternalWalletAddress
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－删除内部地址
+        description: 删除内部地址
+      - path: /api/v1/business/lookup_internal_user
+        method: POST
+        service: Business
+        rpc: LookupInternalUser
+        tag: Settings
+        auth: true
+        summary: 我的页-使用设置－查找内部用户
+        description: 通过UID或邮箱查找平台内部用户（添加前预览）
+      # 内部转账（用户之间的资产转移，支持审核）
+      - path: /api/v1/business/validate_internal_transfer_target
+        method: POST
+        service: Business
+        rpc: ValidateInternalTransferTarget
+        tag: InternalTransfer
+        auth: true
+        summary: 校验内部转账目标用户
+        description: 校验内部转账目标用户是否存在（支持 UID 和邮箱）
+      - path: /api/v1/business/submit_internal_transfer
+        method: POST
+        service: Business
+        rpc: SubmitInternalTransfer
+        tag: InternalTransfer
+        auth: true
+        summary: 提交内部转账
+        description: 提交内部转账请求（用户之间的资产转移，根据审核规则可能需要人工审核）
+      - path: /api/v1/business/cancel_internal_transfer
+        method: POST
+        service: Business
+        rpc: CancelInternalTransfer
+        tag: InternalTransfer
+        auth: true
+        summary: 取消内部转账
+        description: 取消待审核状态的内部转账订单
+      - path: /api/v1/business/list_withdraw_audit_whitelist_bindable_networks
+        method: POST
+        service: Business
+        rpc: ListWithdrawAuditWhitelistBindableNetworks
+        tag: WithdrawAuditWhitelist
+        auth: true
+        summary: 提现免审白名单-可绑定网络
+        description: 获取用户自绑定提现免审白名单支持的网络列表（数据源同提现）
+      - path: /api/v1/business/set_my_withdraw_audit_whitelist_binding
+        method: POST
+        service: Business
+        rpc: SetMyWithdrawAuditWhitelistBinding
+        tag: WithdrawAuditWhitelist
+        auth: true
+        summary: 提现免审白名单-自绑定
+        description: 用户自绑定/解绑提现免审白名单地址（同一资产+链仅保留一条）
+      - path: /api/v1/business/get_my_withdraw_audit_whitelist_binding_status
+        method: POST
+        service: Business
+        rpc: GetMyWithdrawAuditWhitelistBindingStatus
+        tag: WithdrawAuditWhitelist
+        auth: true
+        summary: 提现免审白名单-绑定状态
+        description: 获取当前登录用户的提现免审白名单自绑定状态
+      - path: /api/v1/business/unbind_my_withdraw_audit_whitelist_bindings
+        method: POST
+        service: Business
+        rpc: UnbindMyWithdrawAuditWhitelistBindings
+        tag: WithdrawAuditWhitelist
+        auth: true
+        summary: 提现免审白名单-解绑全部
+        description: 解绑当前登录用户的全部提现免审白名单自绑定数据
+      - path: /api/v1/business/get_preferences
+        method: POST
+        service: Business
+        rpc: GetPreferences
+        tag: Settings
+        auth: true
+        summary: 我的页-偏好设置
+        description: 获取用户偏好设置
+      - path: /api/v1/business/set_preferences
+        method: POST
+        service: Business
+        rpc: SetPreferences
+        tag: Settings
+        auth: true
+        summary: 我的页-偏好设置
+        description: 设置用户偏好
+      - path: /api/v1/business/get_client_config
+        method: POST
+        service: Business
+        rpc: GetClientConfig
+        tag: Settings
+        auth: false
+        summary: 获取客户端配置
+        description: 获取客户端配置（如is_show开关等）
+      - path: /api/v1/business/list_language_options
+        method: POST
+        service: Business
+        rpc: ListLanguageOptions
+        tag: Settings
+        auth: false
+        summary: 我的页-偏好设置
+        description: 获取语言可选项
+      - path: /api/v1/business/list_price_unit_options
+        method: POST
+        service: Business
+        rpc: ListPriceUnitOptions
+        tag: Settings
+        auth: false
+
+      # ==================== Web3 Swap (Business -> Swap Microservice) ====================
+      # 注意：这些接口不需要JWT认证，用户可以直接访问（仅依赖IP限流）
+      - path: /api/v1/business/swap/get_quote
+        method: POST
+        service: Business
+        rpc: SwapGetQuote
+        tag: Swap
+        auth: false
+        rate_limit: 20
+        rate_limit_type: ip
+        summary: Web3 Swap - 获取报价
+        description: 通过 swap 微服务（OKX）获取兑换报价
+      - path: /api/v1/business/swap/execute_swap
+        method: POST
+        service: Business
+        rpc: SwapExecuteSwap
+        tag: Swap
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: Web3 Swap - 构建交易
+        description: 通过 swap 微服务构建未签名交易（含可选 approve 交易）
+      - path: /api/v1/business/swap/get_approval_transaction
+        method: POST
+        service: Business
+        rpc: SwapGetApprovalTransaction
+        tag: Swap
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: Web3 Swap - 获取授权交易
+        description: 获取未签名的代币授权交易（支持重置授权、无限授权、指定额度授权）
+      - path: /api/v1/business/swap/reset_approval
+        method: POST
+        service: Business
+        rpc: SwapResetApproval
+        tag: Swap
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: Web3 Swap - 重置代币授权（广播）
+        description: 广播已签名的重置授权交易到区块链
+      - path: /api/v1/business/swap/get_status
+        method: POST
+        service: Business
+        rpc: SwapGetSwapStatus
+        tag: Swap
+        auth: false
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: Web3 Swap - 查询状态
+        description: 通过 swap 微服务按 tx_hash 查询链上确认状态（可选绑定 swap_id）
+      - path: /api/v1/business/swap/get_detail
+        method: POST
+        service: Business
+        rpc: SwapGetSwapDetail
+        tag: Swap
+        auth: false
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: Web3 Swap - 查询详情
+        description: 从 swap_svc_transactions 按 tx_hash（可选 chain_id）查询交易详情
+      - path: /api/v1/business/swap/get_history
+        method: POST
+        service: Business
+        rpc: SwapGetSwapHistory
+        tag: Swap
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: Web3 Swap - 历史记录
+        description: 通过 swap 微服务查询指定钱包地址的 swap 历史
+      - path: /api/v1/business/swap/get_external_status
+        method: POST
+        service: Business
+        rpc: SwapGetExternalSwapStatus
+        tag: Swap
+        auth: false
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: Web3 Swap - 查询外部交易状态
+        description: 通过 OKX DEX API 查询链上交易历史详情（包含 token details, gas, dex router 等详细信息）
+      - path: /api/v1/business/swap/get_supported_tokens
+        method: POST
+        service: Business
+        rpc: SwapGetSupportedTokens
+        tag: Swap
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: Web3 Swap - 支持的 Token
+        description: 通过 swap 微服务获取指定链支持的 token 列表（带缓存）
+      - path: /api/v1/business/swap/get_supported_chains
+        method: POST
+        service: Business
+        rpc: SwapGetSupportedChains
+        tag: Swap
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: Web3 Swap - 支持的链
+        description: 通过 swap 微服务获取支持的链列表
+
+      # ==================== Web3 Wallet (自托管钱包) ====================
+      # Web3 用户无需传统认证，仅通过 device_id 识别
+      - path: /api/v1/business/web3/user/create
+        method: POST
+        service: Business
+        rpc: CreateWeb3User
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: 创建 Web3 用户
+        description: 基于设备 ID 创建 Web3 自托管钱包用户，用于链上交易记录追踪
+
+      - path: /api/v1/business/web3/user/address/add
+        method: POST
+        service: Business
+        rpc: BatchAddWeb3UserAddress
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+        summary: 批量添加 Web3 用户地址
+        description: 为 Web3 用户批量添加钱包地址（一次添加多条链的地址，最多10个）
+
+      - path: /api/v1/business/web3/chains
+        method: GET
+        service: Business
+        rpc: ListWeb3Chains
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 20
+        rate_limit_type: ip
+        summary: 获取 Web3 可用链列表
+        description: 返回 Web3 可用链列表（无需鉴权）
+
+      - path: /api/v1/business/web3/user/info
+        method: POST
+        service: Business
+        rpc: GetWeb3UserByDeviceId
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 20
+        rate_limit_type: ip
+        summary: 获取 Web3 用户信息
+        description: 根据 device_id 获取 Web3 用户信息（设备信息、安全设置等）
+
+      - path: /api/v1/business/web3/assets/overview
+        method: POST
+        service: Business
+        rpc: GetWeb3AssetOverview
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 20
+        rate_limit_type: ip
+        summary: 获取 Web3 用户资产概览
+        description: 获取 Web3 用户的资产列表和总估值（包含多链多地址）
+
+      - path: /api/v1/business/web3/transactions/list
+        method: POST
+        service: Business
+        rpc: ListWeb3Transactions
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: 获取 Web3 交易记录列表
+        description: 获取 Web3 用户的链上交易记录，支持按资产、类型、时间筛选和分页
+
+      - path: /api/v1/business/web3/transactions/detail
+        method: POST
+        service: Business
+        rpc: GetWeb3TransactionDetail
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: 获取 Web3 交易详情
+        description: 根据交易哈希获取链上交易的完整详情（包含地址标签、确认数、区块浏览器链接等）
+
+      - path: /api/v1/business/get_web3_transaction_result
+        method: POST
+        service: Business
+        rpc: GetWeb3TransactionResult
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 30
+        rate_limit_type: ip
+        summary: Web3 交易结果查询
+        description: 根据交易哈希查询 Web3 交易结果（状态、确认数等）。优先从数据库查询，如果数据库没有且提供了 network 参数，则实时查询链上状态
+
+      - path: /api/v1/business/web3/assets/supported
+        method: POST
+        service: Business
+        rpc: ListWeb3SupportedAssets
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 20
+        rate_limit_type: ip
+        summary: 获取 Web3 支持的资产列表
+        description: 根据链代码获取该链支持的资产列表（包含合约地址、图标、充值提现配置等）
+
+      - path: /api/v1/business/web3/transaction/broadcast
+        method: POST
+        service: Business
+        rpc: BroadcastWeb3Transaction
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 50
+        rate_limit_type: ip
+        summary: 广播 Web3 交易
+        description: Web3 用户广播已签名的交易（自动记录到交易记录表）
+
+      - path: /api/v1/business/web3/nonce
+        method: POST
+        service: Business
+        rpc: GetWeb3Nonce
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 100
+        rate_limit_type: ip
+        summary: 获取 Web3 地址的 Nonce
+        description: 获取 Web3 用户地址的 Nonce 值（用于构建 EVM 交易）。返回已确认的 nonce 和 pending nonce（推荐使用 pending nonce 以包含待确认交易）
+
+      - path: /api/v1/business/web3/tron/build-transaction
+        method: POST
+        service: Business
+        rpc: BuildTronTransaction
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 100
+        rate_limit_type: ip
+        summary: 构建 TRON 交易
+        description: 构建 TRON 交易（支持 TRX 主币转账和 TRC20 代币转账），返回未签名的 rawData（hex编码的protobuf序列化数据），供客户端签名后广播。contract_address 为空时为 TRX 转账，有值时为 TRC20 代币转账
+
+      - path: /api/v1/business/web3/token/detail
+        method: POST
+        service: Business
+        rpc: GetWeb3TokenDetail
+        tag: Web3Wallet
+        auth: false
+        rate_limit: 20
+        rate_limit_type: ip
+        summary: 获取 Web3 代币详细信息
+        description: 获取 Web3 代币的详细信息，包括价格、基本信息（合约地址、网络、铸造时间、发行地址）和概览（总供应量、流通供应量、总市值、流通市值、持有者数量）。主币的 contract_address 可为空，代币必须提供合约地址。
+
+  # ==================== ChainRPC Service - 链操作服务 ====================
+  chainrpc:
+    tag_descriptions:
+      ChainTransaction: 链上交易构建与广播
+      ChainGas: Gas 费用估算与价格查询
+      ChainQuery: 链上数据查询（余额、交易状态、区块等）
+    routes:
+      # ---------- Gas 价格查询 ----------
+      - path: /api/v1/chain/gas/price
+        method: POST
+        service: ChainRPC
+        rpc: GetGasPrice
+        tag: ChainGas
+        auth: false
+        rate_limit: 100
+        rate_limit_type: ip
+        summary: 获取分级 Gas 价格
+        description: 获取不同速度级别的 Gas 价格（慢/标准/快/极速），包含预估确认时间和 Gwei 价格。适用于 Swap 交易设置等场景（ETH/BSC）
+
+      # ---------- Gas 估算 ----------
+      - path: /api/v1/chain/gas/estimate
+        method: POST
+        service: ChainRPC
+        rpc: EstimateGas
+        tag: ChainGas
+        auth: false
+        rate_limit: 100
+        rate_limit_type: ip
+        summary: 估算交易 Gas Limit
+        description: 估算单笔交易的 Gas Limit 和当前费用（适用于后台系统和精确计算场景，不推荐移动端使用）
+
+      # ---------- TRON 手续费/资源 ----------
+      - path: /api/v1/chain/tron/estimate-fee
+        method: POST
+        service: ChainRPC
+        rpc: EstimateTronFee
+        tag: ChainGas
+        auth: false
+        rate_limit: 100
+        rate_limit_type: ip
+        summary: 估算 TRON 手续费
+        description: Estimate TRON transaction fee (bandwidth + energy + activation)
+
+      - path: /api/v1/chain/tron/account-resources/{address}
+        method: GET
+        service: ChainRPC
+        rpc: GetTronAccountResources
+        tag: ChainQuery
+        auth: false
+        rate_limit: 100
+        rate_limit_type: ip
+        path_params: ["address"]
+        summary: 查询 TRON 地址资源
+        description: Query TRON address resources (bandwidth, energy, balance)
+        #
+        #      # ---------- 链上查询 ----------
+        #      - path: /api/v1/chain/balance
+        #        method: GET
+        #        service: ChainRPC
+        #        rpc: GetBalance
+        #        auth: true
+        #        rate_limit: 100
+        #
+        #      - path: /api/v1/chain/balance/token
+        #        method: GET
+        #        service: ChainRPC
+        #        rpc: GetTokenBalance
+        #        auth: true
+        #        rate_limit: 100
+        #
+        #      - path: /api/v1/chain/transaction/status
+        #        method: GET
+        #        service: ChainRPC
+        #        rpc: GetTransactionStatus
+        #        auth: true
+        #        rate_limit: 200
+        #
+        #      - path: /api/v1/chain/block/height
+        #        method: GET
+        #        service: ChainRPC
+        #        rpc: GetBlockHeight
+        #        auth: false
+        #        rate_limit: 100
+        #
+        #      - path: /api/v1/chain/nonce
+        #        method: GET
+        #        service: ChainRPC
+        #        rpc: GetNonce
+        #        auth: true
+        #        rate_limit: 100
+        #
+        #      # ---------- 代币信息 ----------
+        #      - path: /api/v1/chain/token/info
+        #        method: GET
+        #        service: ChainRPC
+        #        rpc: GetTokenInfo
+        #        auth: false
+        #        rate_limit: 100
+        #
+        #      # ---------- 节点管理 ----------
+        #      - path: /api/v1/chain/health
+        #        method: GET
+        #        service: ChainRPC
+        #        rpc: HealthCheck
+        #        auth: false
+        #        rate_limit: 50
+        #
+        #  # ==================== ChainSync Service - 扫链服务 ====================
+        #  # 区块链监听、充值到账、交易确认等
+        #  chainsync:
+        #    routes:
+        #      # ---------- 同步状态管理 ----------
+        #      - path: /api/v1/sync/status
+        #        method: GET
+        #        service: ChainSync
+        #        rpc: GetSyncStatus
+        #        auth: true
+        #        rate_limit: 50
+        #
+        #      - path: /api/v1/sync/start
+        #        method: POST
+        #        service: ChainSync
+        #        rpc: StartSync
+        #        auth: true
+        #        rate_limit: 10
+        #
+        #      - path: /api/v1/sync/stop
+        #        method: POST
+        #        service: ChainSync
+        #        rpc: StopSync
+        #        auth: true
+        #        rate_limit: 10
+        #
+        #      # ---------- 地址监控 ----------
+        #      - path: /api/v1/sync/monitor/add
+        #        method: POST
+        #        service: ChainSync
+        #        rpc: AddAddressMonitor
+        #        auth: true
+        #        rate_limit: 50
+        #
+        #      - path: /api/v1/sync/monitor/remove
+        #        method: POST
+        #        service: ChainSync
+        #        rpc: RemoveAddressMonitor
+        #        auth: true
+        #        rate_limit: 50
+        #
+        #      - path: /api/v1/sync/monitor/list
+        #        method: GET
+        #        service: ChainSync
+        #        rpc: GetMonitoredAddresses
+        #        auth: true
+        #        rate_limit: 50
+        #
+        #      # ---------- 交易查询 ----------
+        #      - path: /api/v1/sync/transaction
+        #        method: GET
+        #        service: ChainSync
+        #        rpc: GetTransaction
+        #        auth: true
+        #        rate_limit: 100
+        #
+        #      - path: /api/v1/sync/transactions/address
+        #        method: GET
+        #        service: ChainSync
+        #        rpc: GetAddressTransactions
+        #        auth: true
+        #        rate_limit: 100
+        #
+        #      # ---------- 余额查询 ----------
+        #      - path: /api/v1/sync/balance/address
+        #        method: GET
+        #        service: ChainSync
+        #        rpc: GetAddressBalance
+        #        auth: true
+        #        rate_limit: 100
+        #
+        #      - path: /api/v1/sync/balance/multi
+        #        method: POST
+        #        service: ChainSync
+        #        rpc: GetMultiAddressBalance
+        #        auth: true
+        #        rate_limit: 50
+
+
+  # ==================== Swap Service - Swap 服务（业务端 API Key 认证） ====================
+  swap:
+    tag_descriptions:
+      Swap: Web3 Swap（API Key 接口）
+    routes:
+      # 业务端接口：使用 Swap Service 的 API Key 认证（非 Admin JWT）
+      - path: /api/v1/swap/my/configs
+        method: GET
+        service: Swap
+        rpc: GetMySwapConfigs
+        tag: Swap
+        auth: false  # 使用 Swap Service 的 API Key 认证（非 Admin JWT）
+        rate_limit: 20
+        rate_limit_type: ip
+        summary: 查询我的Swap配置
+        description: 业务端查询自己项目的生效Swap配置（从API Key自动获取项目名称）
+
+  # ==================== Admin Service - 后台管理服务 ====================
+  admin:
+    tag_descriptions:
+      Auth: 登录、令牌、验证码与2FA
+      Admins: 后台管理员账号管理
+      Users: Web2 用户管理
+      RBAC: RBAC 菜单、角色、权限与授权
+      Settings: 系统与账号设置
+      Wallet: 热钱包初始化与 Signer 解锁
+      Audit: 审计日志查询
+      Swap: 闪兑配置与管理
+      Assets: 钱包资产与配置
+      Accounting: 记账/账户类型/余额
+      Deposits: 充值记录管理
+      Withdrawals: 提现记录管理
+      Transfers: 批量转账批次管理
+      InternalTransfers: 内部转账审核管理
+      Web3Users: Web3 用户与地址管理
+      SubAddresses: 子地址/派生地址与余额管理
+      SweepTasks: 地址余额归集任务管理
+      Consolidation: 归集（Consolidation）任务/日志/补给/能量租赁
+      Blacklist: 链上敏感地址黑名单管理
+      Vault: Vault 资金管理
+      Dashboard: 仪表板统计数据
+      Alert: 预警配置管理
+    routes:
+      # ---------- Dashboard ----------
+      - path: /api/v1/admin/dashboard/overview
+        method: GET
+        service: Admin
+        rpc: GetDashboardOverview
+        tag: Dashboard
+        auth: true
+        summary: 获取仪表板核心概览数据
+        description: 获取用户统计、金库余额、转账概览、审批统计等快速统计数据
+      - path: /api/v1/admin/dashboard/trends
+        method: GET
+        service: Admin
+        rpc: GetDashboardTrends
+        tag: Dashboard
+        auth: true
+        summary: 获取仪表板趋势图表数据
+        description: 获取资金流水趋势、转账批次趋势、审批分布、Vault币种余额Top 5
+        query_params:
+          - fund_flow_months
+          - transfer_days
+      - path: /api/v1/admin/dashboard/activities
+        method: GET
+        service: Admin
+        rpc: GetDashboardActivities
+        tag: Dashboard
+        auth: true
+        summary: 获取最近操作动态
+        description: 获取转账批次、提现审批、用户注册、Vault调整等最近操作记录
+        query_params:
+          - page
+          - page_size
+      # ---------- Auth ----------
+      - path: /api/v1/admin/auth/refresh
+        method: POST
+        service: Admin
+        rpc: RefreshToken
+        tag: Auth
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/auth/logout
+        method: POST
+        service: Admin
+        rpc: Logout
+        tag: Auth
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      # ---------- Admin MFA Flow (new REST paths) ----------
+      - path: /api/v1/admin/auth/captcha/generate
+        method: POST
+        service: Admin
+        rpc: AdminMFACaptchaGenerate
+        tag: Auth
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+      - path: /api/v1/admin/auth/captcha/validate
+        method: POST
+        service: Admin
+        rpc: AdminMFACaptchaValidate
+        tag: Auth
+        auth: false
+        rate_limit: 10
+        rate_limit_type: ip
+      - path: /api/v1/admin/auth/login
+        method: POST
+        service: Admin
+        rpc: AdminMFALogin
+        tag: Auth
+        auth: false
+        rate_limit: 1
+        rate_limit_type: ip
+      # ---------- Hot Wallet Init / Signer Unlock ----------
+      - path: /api/v1/admin/wallet/init/status
+        method: GET
+        service: Admin
+        rpc: GetHotWalletRuntimeStatus
+        tag: Wallet
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/wallet/init/start
+        method: POST
+        service: Admin
+        rpc: StartHotWalletInit
+        tag: Wallet
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+      - path: /api/v1/admin/wallet/init/mnemonic/page
+        method: GET
+        service: Admin
+        rpc: GetHotWalletMnemonicPage
+        tag: Wallet
+        auth: true
+        rate_limit: 30
+        rate_limit_type: user
+      - path: /api/v1/admin/wallet/init/challenge
+        method: POST
+        service: Admin
+        rpc: GetHotWalletMnemonicChallenge
+        tag: Wallet
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/wallet/init/verify
+        method: POST
+        service: Admin
+        rpc: VerifyHotWalletMnemonicChallenge
+        tag: Wallet
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/signer/unlock
+        method: POST
+        service: Admin
+        rpc: UnlockSignerHotWallet
+        tag: Wallet
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/auth/2fa/qrcode
+        method: POST
+        service: Admin
+        rpc: AdminMFAGetTwoFAQrCode
+        tag: Auth
+        auth: false
+        rate_limit: 2
+        rate_limit_type: ip
+      - path: /api/v1/admin/auth/2fa/bind
+        method: POST
+        service: Admin
+        rpc: AdminMFABindTwoFA
+        tag: Auth
+        auth: false
+        rate_limit: 1
+        rate_limit_type: ip
+      - path: /api/v1/admin/auth/2fa/verify
+        method: POST
+        service: Admin
+        rpc: AdminMFAVerifyTwoFA
+        tag: Auth
+        auth: false
+        rate_limit: 2
+        rate_limit_type: ip
+      # ---------- Admin Users ----------
+      - path: /api/v1/admin/settings/admins
+        method: GET
+        service: Admin
+        rpc: ListAdmins
+        tag: Admins
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/settings/admins
+        method: POST
+        service: Admin
+        rpc: CreateAdmin
+        tag: Admins
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/settings/admins/{admin_id}
+        method: PUT
+        service: Admin
+        rpc: UpdateAdmin
+        tag: Admins
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["admin_id"]
+      - path: /api/v1/admin/settings/admins/{admin_id}/disable
+        method: POST
+        service: Admin
+        rpc: DisableAdmin
+        tag: Admins
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["admin_id"]
+      - path: /api/v1/admin/settings/admins/{admin_id}/reset-password
+        method: POST
+        service: Admin
+        rpc: ResetAdminPassword
+        tag: Admins
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["admin_id"]
+      - path: /api/v1/admin/settings/admins/{admin_id}/reset-2fa
+        method: POST
+        service: Admin
+        rpc: ResetAdminTwoFA
+        tag: Admins
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["admin_id"]
+      - path: /api/v1/admin/settings/change-password
+        method: POST
+        service: Admin
+        rpc: ChangeMyPassword
+        tag: Settings
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      # ---------- Users (Web2) ----------
+      - path: /api/v1/admin/users
+        method: GET
+        service: Admin
+        rpc: ListUsers
+        tag: Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/users/statistics
+        method: GET
+        service: Admin
+        rpc: GetUsersStatistics
+        tag: Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/users/{uid}/withdraw-audit-whitelist-rules
+        method: GET
+        service: Admin
+        rpc: ListUserWithdrawAuditWhitelistRules
+        tag: Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/withdraw-audit-whitelist-rules
+        method: PUT
+        service: Admin
+        rpc: UpsertUserWithdrawAuditWhitelistRules
+        tag: Users
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}
+        method: GET
+        service: Admin
+        rpc: GetUserDetail
+        tag: Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/freeze
+        method: POST
+        service: Admin
+        rpc: FreezeUser
+        tag: Users
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/unfreeze
+        method: POST
+        service: Admin
+        rpc: UnfreezeUser
+        tag: Users
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/terminate
+        method: POST
+        service: Admin
+        rpc: TerminateUser
+        tag: Users
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/role
+        method: PUT
+        service: Admin
+        rpc: UpdateUserRole
+        tag: Users
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/member-level
+        method: PUT
+        service: Admin
+        rpc: UpdateUserMemberLevel
+        tag: Users
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/reset-password
+        method: POST
+        service: Admin
+        rpc: ResetUserPassword
+        tag: Users
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/reset-trade-password
+        method: POST
+        service: Admin
+        rpc: ResetUserTradePassword
+        tag: Users
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/unlock-trade-password
+        method: POST
+        service: Admin
+        rpc: UnlockTradePassword
+        tag: Users
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/withdraw-audit-whitelist
+        method: PUT
+        service: Admin
+        rpc: UpdateUserWithdrawAuditWhitelist
+        tag: Users
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/2fa/unbind
+        method: POST
+        service: Admin
+        rpc: UnbindUserTotp
+        tag: Users
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/2fa/history
+        method: GET
+        service: Admin
+        rpc: ListUser2FAHistory
+        tag: Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/{uid}/notes
+        method: POST
+        service: Admin
+        rpc: AddUserNote
+        tag: Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["uid"]
+      - path: /api/v1/admin/users/export
+        method: POST
+        service: Admin
+        rpc: ExportUsers
+        tag: Users
+        auth: true
+        rate_limit: 2
+        rate_limit_type: user
+      # ---------- My ----------
+      - path: /api/v1/admin/me
+        method: GET
+        service: Admin
+        rpc: GetMe
+        tag: Settings
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      # ---------- Security (My Account) ----------
+      - path: /api/v1/admin/settings/security
+        method: GET
+        service: Admin
+        rpc: GetMySecuritySettings
+        tag: Settings
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/settings/2fa/setup
+        method: POST
+        service: Admin
+        rpc: StartTwoFASetup
+        tag: Settings
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/settings/2fa/confirm
+        method: POST
+        service: Admin
+        rpc: ConfirmTwoFASetup
+        tag: Settings
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/settings/2fa/rebind
+        method: POST
+        service: Admin
+        rpc: StartTwoFARebind
+        tag: Settings
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+      - path: /api/v1/admin/settings/2fa/disable
+        method: POST
+        service: Admin
+        rpc: DisableTwoFA
+        tag: Settings
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+      # ---------- RBAC v2 (Menus / Permissions / Roles) ----------
+      - path: /api/v1/admin/rbac/me
+        method: GET
+        service: Admin
+        rpc: GetMyRBAC
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/rbac/permission-map
+        method: GET
+        service: Admin
+        rpc: GetRbacPermissionMap
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      # Menus
+      - path: /api/v1/admin/rbac/menus
+        method: GET
+        service: Admin
+        rpc: ListMenus
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/rbac/menus
+        method: POST
+        service: Admin
+        rpc: CreateMenu
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/rbac/menus/tree
+        method: GET
+        service: Admin
+        rpc: GetMenuTree
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/rbac/menus/{id}
+        method: GET
+        service: Admin
+        rpc: GetMenuById
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/rbac/menus/{id}
+        method: PUT
+        service: Admin
+        rpc: UpdateMenu
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/rbac/menus/{id}
+        method: DELETE
+        service: Admin
+        rpc: DeleteMenu
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+      # Permissions
+      - path: /api/v1/admin/rbac/permissions
+        method: GET
+        service: Admin
+        rpc: ListPermissions
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/rbac/permissions
+        method: POST
+        service: Admin
+        rpc: CreatePermission
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/rbac/permissions/{id}
+        method: GET
+        service: Admin
+        rpc: GetPermissionById
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/rbac/permissions/{id}
+        method: PUT
+        service: Admin
+        rpc: UpdatePermission
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/rbac/permissions/{id}
+        method: DELETE
+        service: Admin
+        rpc: DeletePermission
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/rbac/menus/{menu_id}/permissions
+        method: GET
+        service: Admin
+        rpc: GetPermissionsByMenuId
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["menu_id"]
+      # Roles
+      - path: /api/v1/admin/rbac/roles
+        method: GET
+        service: Admin
+        rpc: ListRoles
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/rbac/roles
+        method: POST
+        service: Admin
+        rpc: CreateRole
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/rbac/roles/{id}
+        method: GET
+        service: Admin
+        rpc: GetRoleById
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/rbac/roles/{id}
+        method: PUT
+        service: Admin
+        rpc: UpdateRole
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/rbac/roles/{id}
+        method: DELETE
+        service: Admin
+        rpc: DeleteRole
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/rbac/roles/{role_id}/menus
+        method: GET
+        service: Admin
+        rpc: GetRoleMenus
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["role_id"]
+      - path: /api/v1/admin/rbac/roles/{role_id}/permissions
+        method: GET
+        service: Admin
+        rpc: GetRolePermissions
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["role_id"]
+      - path: /api/v1/admin/rbac/roles/{role_id}/menus
+        method: POST
+        service: Admin
+        rpc: AssignMenusToRole
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["role_id"]
+      - path: /api/v1/admin/rbac/roles/{role_id}/permissions
+        method: POST
+        service: Admin
+        rpc: AssignPermissionsToRole
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["role_id"]
+      - path: /api/v1/admin/rbac/users/{user_id}/roles
+        method: GET
+        service: Admin
+        rpc: GetUserRoles
+        tag: RBAC
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["user_id"]
+      - path: /api/v1/admin/rbac/users/{user_id}/roles
+        method: POST
+        service: Admin
+        rpc: AssignRolesToUser
+        tag: RBAC
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["user_id"]
+      # ---------- System Config ----------
+      - path: /api/v1/admin/settings/config
+        method: GET
+        service: Admin
+        rpc: GetSystemConfig
+        tag: Settings
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/settings/config
+        method: PUT
+        service: Admin
+        rpc: UpdateSystemConfig
+        tag: Settings
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      # ---------- Audit Logs ----------
+      - path: /api/v1/admin/settings/audit-logs
+        method: GET
+        service: Admin
+        rpc: GetAuditLogs
+        tag: Audit
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      # ---------- Alert Config 预警配置管理 ----------
+      - path: /api/v1/admin/alert/configs
+        method: GET
+        service: Admin
+        rpc: ListAlertConfigs
+        tag: Alert
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        summary: 获取预警配置列表
+        description: 查询所有预警配置规则，支持分页和筛选
+      - path: /api/v1/admin/alert/configs
+        method: POST
+        service: Admin
+        rpc: CreateAlertConfig
+        tag: Alert
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        summary: 创建预警配置
+        description: 创建新的交易金额预警规则
+      - path: /api/v1/admin/alert/configs/{config_id}
+        method: GET
+        service: Admin
+        rpc: GetAlertConfig
+        tag: Alert
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        summary: 获取预警配置详情
+        description: 获取指定ID的预警配置详细信息
+        path_params: ["config_id"]
+      - path: /api/v1/admin/alert/configs/{config_id}
+        method: PUT
+        service: Admin
+        rpc: UpdateAlertConfig
+        tag: Alert
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        summary: 更新预警配置
+        description: 更新指定ID的预警配置规则
+        path_params: ["config_id"]
+      - path: /api/v1/admin/alert/configs/{config_id}
+        method: DELETE
+        service: Admin
+        rpc: DeleteAlertConfig
+        tag: Alert
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        summary: 删除预警配置
+        description: 软删除指定ID的预警配置（不可恢复）
+        path_params: ["config_id"]
+      - path: /api/v1/admin/alert/configs/{config_id}/toggle
+        method: POST
+        service: Admin
+        rpc: ToggleAlertConfig
+        tag: Alert
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        summary: 启用/禁用预警配置
+        description: 切换预警配置的启用状态
+        path_params: ["config_id"]
+      - path: /api/v1/admin/alert/configs/{config_id}/stats
+        method: GET
+        service: Admin
+        rpc: GetAlertConfigWithStats
+        tag: Alert
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        summary: 获取预警配置及实时统计
+        description: 获取预警配置详情，包含当前窗口累计金额、交易笔数、进度等实时数据
+        path_params: ["config_id"]
+      # ---------- Swap API Key 管理 ----------
+      # 为项目创建/管理 Swap Service API Key
+
+      - path: /api/v1/admin/swap/api-keys
+        method: POST
+        service: Admin
+        rpc: CreateSwapApiKey
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        summary: 创建Swap API密钥
+        description: 为指定项目创建Swap服务API密钥（用于业务端调用）
+
+      - path: /api/v1/admin/swap/api-keys
+        method: GET
+        service: Admin
+        rpc: ListSwapApiKeys
+        tag: Swap
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        summary: 列出Swap API密钥
+        description: 列出所有已创建的Swap API密钥（支持分页）
+
+      - path: /api/v1/admin/swap/api-keys/{id}/revoke
+        method: POST
+        service: Admin
+        rpc: RevokeSwapApiKey
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params:
+          - id
+        summary: 撤销Swap API密钥
+        description: 撤销指定的Swap API密钥（设置为非激活状态）
+
+      # ---------- Swap Provider管理 ----------
+      # 服务商CRUD操作
+
+      # 简化列表（用于下拉框）
+      - path: /api/v1/admin/swap/providers/dropdown
+        method: GET
+        service: Admin
+        rpc: ListSwapProvidersForDropdown
+        tag: Swap
+        auth: true
+        rate_limit: 20
+        rate_limit_type: user
+        summary: 获取Swap服务商列表（下拉框）
+        description: 获取所有启用的服务商，仅返回ID和名称，用于UI下拉框选择
+
+      # 完整列表（支持分页和过滤）
+      - path: /api/v1/admin/swap/providers
+        method: GET
+        service: Admin
+        rpc: ListSwapProviders
+        tag: Swap
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        summary: 列出Swap服务商（完整信息）
+        description: 查询Swap服务商列表（支持分页和过滤）
+
+      - path: /api/v1/admin/swap/providers/{id}
+        method: GET
+        service: Admin
+        rpc: GetSwapProviderDetail
+        tag: Swap
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["id"]
+        summary: 获取Swap服务商详情
+        description: 根据ID获取单个服务商的详细信息
+
+      - path: /api/v1/admin/swap/providers
+        method: POST
+        service: Admin
+        rpc: CreateSwapProvider
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        summary: 创建Swap服务商
+        description: 创建新的Swap服务商（包含全局默认参数）
+
+      - path: /api/v1/admin/swap/providers/{id}
+        method: PUT
+        service: Admin
+        rpc: UpdateSwapProvider
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+        summary: 更新Swap服务商
+        description: 更新服务商信息和全局参数
+
+      - path: /api/v1/admin/swap/providers/{id}
+        method: DELETE
+        service: Admin
+        rpc: DeleteSwapProvider
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+        summary: 删除Swap服务商
+        description: 软删除指定的服务商
+
+      - path: /api/v1/admin/swap/providers/{id}/enable
+        method: POST
+        service: Admin
+        rpc: EnableSwapProvider
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+        summary: 启用Swap服务商
+        description: 启用指定的服务商
+
+      - path: /api/v1/admin/swap/providers/{id}/disable
+        method: POST
+        service: Admin
+        rpc: DisableSwapProvider
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+        summary: 禁用Swap服务商
+        description: 禁用指定的服务商
+
+      # ---------- Swap Configuration (Simplified Architecture) ----------
+      # 全局配置管理 - CRUD操作
+
+      - path: /api/v1/admin/swap/configs
+        method: GET
+        service: Admin
+        rpc: ListSwapConfigs
+        tag: Swap
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        summary: 列出全局Swap配置
+        description: 查询全局Swap配置列表（扁平化：provider+chain+token一体）
+
+      - path: /api/v1/admin/swap/configs/{id}
+        method: GET
+        service: Admin
+        rpc: GetSwapConfigDetail
+        tag: Swap
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["id"]
+        summary: 获取Swap配置详情
+        description: 根据ID获取单个Swap配置的详细信息
+
+      - path: /api/v1/admin/swap/configs
+        method: POST
+        service: Admin
+        rpc: CreateSwapConfig
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        summary: 创建Swap配置
+        description: 创建新的Swap配置（provider+chain+token+所有参数）
+
+      - path: /api/v1/admin/swap/configs/{id}
+        method: PUT
+        service: Admin
+        rpc: UpdateSwapConfigDetail
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+        summary: 更新Swap配置
+        description: 更新指定Swap配置的参数（名称、启用状态、手续费等）
+
+      - path: /api/v1/admin/swap/configs/{id}
+        method: DELETE
+        service: Admin
+        rpc: DeleteSwapConfig
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+        summary: 删除Swap配置
+        description: 软删除指定的Swap配置
+
+      # 项目配置管理 - 启用/禁用
+
+      - path: /api/v1/admin/swap/projects/{project_name}/configs
+        method: GET
+        service: Admin
+        rpc: ListProjectSwapConfigs
+        tag: Swap
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["project_name"]
+        summary: 列出项目的Swap配置
+        description: 查询指定项目已启用的Swap配置列表（联表查询）
+
+      - path: /api/v1/admin/swap/projects/{project_name}/configs/enable
+        method: POST
+        service: Admin
+        rpc: EnableSwapConfigForProject
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["project_name"]
+        summary: 为项目启用Swap配置
+        description: 为指定项目启用某个全局Swap配置
+
+      - path: /api/v1/admin/swap/projects/configs/{id}/disable
+        method: POST
+        service: Admin
+        rpc: DisableSwapConfigForProject
+        tag: Swap
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+        summary: 为项目禁用Swap配置
+        description: 为指定项目禁用某个已启用的Swap配置
+
+      # Swap交易查询
+
+      - path: /api/v1/admin/swap/transactions
+        method: GET
+        service: Admin
+        rpc: ListSwapTransactions
+        tag: Swap
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        summary: 查询Swap交易列表
+        description: 按条件查询Swap交易记录（钱包地址、链ID、服务商、状态等）
+
+
+      # ---------- Wallet Assets / Currencies ----------
+      - path: /api/v1/admin/currencies/overview
+        method: GET
+        service: Admin
+        rpc: GetCurrencyOverview
+        tag: Assets
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/currencies
+        method: GET
+        service: Admin
+        rpc: ListCurrencies
+        tag: Assets
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/currencies
+        method: POST
+        service: Admin
+        rpc: CreateCurrency
+        tag: Assets
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        summary: 新增币种
+        description: 创建新的币种（包括名称、精度、图标等基础信息）
+      - path: /api/v1/admin/currencies/{asset_code}
+        method: GET
+        service: Admin
+        rpc: GetCurrency
+        tag: Assets
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["asset_code"]
+        summary: 获取币种基础信息
+        description: 获取单个币种的基础信息（用于前端编辑表单回显）
+      - path: /api/v1/admin/currencies/{asset_code}
+        method: POST
+        service: Admin
+        rpc: UpdateCurrency
+        tag: Assets
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["asset_code"]
+        summary: 更新币种基础信息
+        description: 更新币种的基础信息（名称、精度、图标URL），只能在币种禁用状态下更新
+      - path: /api/v1/admin/chains
+        method: GET
+        service: Admin
+        rpc: ListChains
+        tag: Assets
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/chains/{chain_code}/icon
+        method: PUT
+        service: Admin
+        rpc: UpdateChainIcon
+        tag: Assets
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["chain_code"]
+        summary: 更新链Logo
+        description: 更新指定链的图标URL（http/https）
+      - path: /api/v1/admin/currencies/{asset_code}/config
+        method: GET
+        service: Admin
+        rpc: GetCurrencyConfig
+        tag: Assets
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["asset_code"]
+        summary: 获取币种配置信息
+        description: 获取币种的配置信息（充值提现限额、手续费等）
+      - path: /api/v1/admin/currencies/{asset_code}/config
+        method: PUT
+        service: Admin
+        rpc: UpdateCurrencyConfig
+        tag: Assets
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["asset_code"]
+      - path: /api/v1/admin/currencies/{asset_code}/status
+        method: PUT
+        service: Admin
+        rpc: UpdateCurrencyStatus
+        tag: Assets
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["asset_code"]
+      - path: /api/v1/admin/currencies/fees/global
+        method: GET
+        service: Admin
+        rpc: GetCurrencyGlobalWithdrawFee
+        tag: Assets
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/currencies/fees/global
+        method: PUT
+        service: Admin
+        rpc: UpdateCurrencyGlobalWithdrawFee
+        tag: Assets
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/currencies/audit/global
+        method: GET
+        service: Admin
+        rpc: GetCurrencyGlobalWithdrawAudit
+        tag: Assets
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/currencies/audit/global
+        method: PUT
+        service: Admin
+        rpc: UpdateCurrencyGlobalWithdrawAudit
+        tag: Assets
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      # ---------- Transfer Audit (Global) ----------
+      - path: /api/v1/admin/currencies/transfer-audit/global
+        method: GET
+        service: Admin
+        rpc: GetCurrencyGlobalTransferAudit
+        tag: Assets
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/currencies/transfer-audit/global
+        method: PUT
+        service: Admin
+        rpc: UpdateCurrencyGlobalTransferAudit
+        tag: Assets
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+
+      # ---------- Accounting / Ledger ----------
+      - path: /api/v1/admin/accounting/account-types
+        method: GET
+        service: Admin
+        rpc: AccountingListAccountTypes
+        tag: Accounting
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/accounting/account-types
+        method: POST
+        service: Admin
+        rpc: AccountingCreateAccountType
+        tag: Accounting
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/accounting/account-types/{code}
+        method: PUT
+        service: Admin
+        rpc: AccountingUpdateAccountType
+        tag: Accounting
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["code"]
+      - path: /api/v1/admin/accounting/account-types/{code}
+        method: DELETE
+        service: Admin
+        rpc: AccountingDeleteAccountType
+        tag: Accounting
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["code"]
+      - path: /api/v1/admin/accounting/account-types/{code}/assets
+        method: PUT
+        service: Admin
+        rpc: AccountingSetAccountTypeAssets
+        tag: Accounting
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["code"]
+      - path: /api/v1/admin/accounting/users/{user_id}/ensure
+        method: POST
+        service: Admin
+        rpc: AccountingEnsureUserSetup
+        tag: Accounting
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["user_id"]
+      - path: /api/v1/admin/accounting/users/{user_id}/balances
+        method: GET
+        service: Admin
+        rpc: AccountingGetUserBalances
+        tag: Accounting
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["user_id"]
+      - path: /api/v1/admin/accounting/system/ensure
+        method: POST
+        service: Admin
+        rpc: AccountingEnsureSystemAccounts
+        tag: Accounting
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/accounting/ledger/tx
+        method: GET
+        service: Admin
+        rpc: AccountingListLedgerTx
+        tag: Accounting
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/accounting/ledger/tx/{tx_id}
+        method: GET
+        service: Admin
+        rpc: AccountingGetLedgerTxDetail
+        tag: Accounting
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["tx_id"]
+      - path: /api/v1/admin/accounting/transactions/list
+        method: POST
+        service: Admin
+        rpc: AccountingListUserTransactionRecords
+        tag: Accounting
+        summary: "查询用户交易记录列表"
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/accounting/transactions/{id}
+        method: GET
+        service: Admin
+        rpc: AccountingGetUserTransactionRecordDetail
+        tag: Accounting
+        summary: "查询交易记录详情"
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["id"]
+
+      # ---------- Wallet Assets / Deposit Addresses ----------
+      - path: /api/v1/admin/deposit-addresses
+        method: GET
+        service: Admin
+        rpc: ListDepositAddresses
+        tag: SubAddresses
+        summary: "查询充值地址列表"
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/deposit-addresses/{id}
+        method: GET
+        service: Admin
+        rpc: GetDepositAddress
+        tag: Assets
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/deposit-addresses/by-address/{address}
+        method: GET
+        service: Admin
+        rpc: GetDepositAddress
+        tag: Assets
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["address"]
+      - path: /api/v1/admin/deposit-addresses
+        method: POST
+        service: Admin
+        rpc: CreateDepositAddress
+        tag: Assets
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/deposit-addresses/{id}
+        method: PUT
+        service: Admin
+        rpc: UpdateDepositAddress
+        tag: Assets
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/deposit-addresses/{id}
+        method: DELETE
+        service: Admin
+        rpc: DeleteDepositAddress
+        tag: Assets
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+
+      # ---------- Deposit Address Balances ----------
+      - path: /api/v1/admin/deposit-address-balances
+        method: GET
+        service: Admin
+        rpc: ListDepositAddressBalances
+        tag: SubAddresses
+        summary: "查询充值地址余额列表"
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+
+      - path: /api/v1/admin/deposit-address-balances/{id}
+        method: GET
+        service: Admin
+        rpc: GetDepositAddressBalance
+        tag: SubAddresses
+        summary: "获取单个地址余额"
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["id"]
+
+      - path: /api/v1/admin/deposit-address-balances/stats
+        method: GET
+        service: Admin
+        rpc: GetDepositAddressBalanceStats
+        tag: SubAddresses
+        summary: "获取余额统计数据"
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        description: "获取地址总数、待归集数、总余额等KPI统计"
+
+      - path: /api/v1/admin/deposit-address-balances/stats/by-asset
+        method: GET
+        service: Admin
+        rpc: GetDepositAddressBalanceByAsset
+        tag: SubAddresses
+        summary: "按币种统计待归集金额（币种分布）"
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        description: "返回各币种的待归集金额、地址数、占比等数据，用于生成币种分布饼图"
+
+      - path: /api/v1/admin/deposit-address-balances
+        method: PUT
+        service: Admin
+        rpc: UpdateDepositAddressBalance
+        tag: SubAddresses
+        summary: "更新地址余额（ChainSync使用）"
+        auth: true
+        rate_limit: 30
+        rate_limit_type: user
+
+      # ---------- Consolidation (New module; independent from Sweep Tasks) ----------
+      - path: /api/v1/admin/consolidation/tasks
+        method: GET
+        service: Admin
+        rpc: ListConsolidationTasks
+        tag: Consolidation
+        summary: "查询归集（Consolidation）任务列表"
+        auth: true
+        rate_limit: 20
+        rate_limit_type: user
+
+      - path: /api/v1/admin/consolidation/tasks/{task_id}
+        method: GET
+        service: Admin
+        rpc: GetConsolidationTask
+        tag: Consolidation
+        summary: "获取归集（Consolidation）任务详情"
+        auth: true
+        rate_limit: 20
+        rate_limit_type: user
+        path_params: ["task_id"]
+
+      - path: /api/v1/admin/consolidation/tasks/{task_id}/retry
+        method: POST
+        service: Admin
+        rpc: RetryConsolidationTask
+        tag: Consolidation
+        summary: "重试归集（Consolidation）任务"
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["task_id"]
+
+      - path: /api/v1/admin/consolidation/tasks/{task_id}/cancel
+        method: POST
+        service: Admin
+        rpc: CancelConsolidationTask
+        tag: Consolidation
+        summary: "取消归集（Consolidation）任务"
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["task_id"]
+
+      - path: /api/v1/admin/consolidation/trigger
+        method: POST
+        service: Admin
+        rpc: TriggerConsolidation
+        tag: Consolidation
+        summary: "手动触发归集（Consolidation）"
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+
+      - path: /api/v1/admin/consolidation/stats
+        method: GET
+        service: Admin
+        rpc: GetConsolidationStats
+        tag: Consolidation
+        summary: "归集（Consolidation）统计"
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+
+      - path: /api/v1/admin/consolidation/logs
+        method: GET
+        service: Admin
+        rpc: ListConsolidationLogs
+        tag: Consolidation
+        summary: "查询归集（Consolidation）日志"
+        auth: true
+        rate_limit: 20
+        rate_limit_type: user
+
+      - path: /api/v1/admin/consolidation/topups
+        method: GET
+        service: Admin
+        rpc: ListConsolidationTopupRecords
+        tag: Consolidation
+        summary: "查询归集（Consolidation）补给记录"
+        auth: true
+        rate_limit: 20
+        rate_limit_type: user
+
+      - path: /api/v1/admin/consolidation/energy-rentals
+        method: GET
+        service: Admin
+        rpc: ListEnergyRentalRecords
+        tag: Consolidation
+        summary: "查询能量租赁记录"
+        auth: true
+        rate_limit: 20
+        rate_limit_type: user
+
+      - path: /api/v1/admin/consolidation/energy-rentals/{id}
+        method: GET
+        service: Admin
+        rpc: GetEnergyRentalRecord
+        tag: Consolidation
+        summary: "获取能量租赁记录详情"
+        auth: true
+        rate_limit: 20
+        rate_limit_type: user
+        path_params: ["id"]
+
+      # ---------- Wallet Assets / Deposits ----------
+      - path: /api/v1/admin/deposits
+        method: GET
+        service: Admin
+        rpc: ListDeposits
+        tag: Deposits
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/deposits/{id}
+        method: GET
+        service: Admin
+        rpc: GetDeposit
+        tag: Deposits
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/deposits/by-tx/{transaction_hash}
+        method: GET
+        service: Admin
+        rpc: GetDeposit
+        tag: Deposits
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["transaction_hash"]
+      - path: /api/v1/admin/deposits
+        method: POST
+        service: Admin
+        rpc: CreateDeposit
+        tag: Deposits
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/deposits/{id}
+        method: PUT
+        service: Admin
+        rpc: UpdateDeposit
+        tag: Deposits
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/deposits/{id}
+        method: DELETE
+        service: Admin
+        rpc: CancelDeposit
+        tag: Deposits
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["id"]
+
+      # ---------- Currency Withdrawals (Business) ----------
+      - path: /api/v1/admin/currency-withdrawals
+        method: GET
+        service: Admin
+        rpc: ListCurrencyWithdrawals
+        tag: Withdrawals
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/currency-withdrawals
+        method: POST
+        service: Admin
+        rpc: CreateCurrencyWithdrawal
+        tag: Withdrawals
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/currency-withdrawals/{id}
+        method: GET
+        service: Admin
+        rpc: GetCurrencyWithdrawal
+        tag: Withdrawals
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/currency-withdrawals/by-tx/{tx_hash}
+        method: GET
+        service: Admin
+        rpc: GetCurrencyWithdrawal
+        tag: Withdrawals
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["tx_hash"]
+      - path: /api/v1/admin/currency-withdrawals/{id}
+        method: PUT
+        service: Admin
+        rpc: UpdateCurrencyWithdrawal
+        tag: Withdrawals
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/currency-withdrawals/{id}/approve
+        method: PUT
+        service: Admin
+        rpc: ApproveCurrencyWithdrawal
+        tag: Withdrawals
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/currency-withdrawals/{id}/reject
+        method: PUT
+        service: Admin
+        rpc: RejectCurrencyWithdrawal
+        tag: Withdrawals
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/currency-withdrawals/{id}/events
+        method: GET
+        service: Admin
+        rpc: ListCurrencyWithdrawalEvents
+        tag: Withdrawals
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["id"]
+      # -------- Internal Transfers (User-to-User) --------
+      - path: /api/v1/admin/internal-transfers
+        method: GET
+        service: Admin
+        rpc: ListInternalTransfers
+        tag: InternalTransfers
+        auth: true
+        rate_limit: 20
+        rate_limit_type: user
+      - path: /api/v1/admin/internal-transfers/{id}
+        method: GET
+        service: Admin
+        rpc: GetInternalTransfer
+        tag: InternalTransfers
+        auth: true
+        rate_limit: 20
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/internal-transfers/{id}/approve
+        method: PUT
+        service: Admin
+        rpc: ApproveInternalTransfer
+        tag: InternalTransfers
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/internal-transfers/{id}/reject
+        method: PUT
+        service: Admin
+        rpc: RejectInternalTransfer
+        tag: InternalTransfers
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/internal-transfers/{id}/cancel
+        method: PUT
+        service: Admin
+        rpc: CancelInternalTransfer
+        tag: InternalTransfers
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/currency-withdrawals/{id}
+        method: DELETE
+        service: Admin
+        rpc: CancelCurrencyWithdrawal
+        tag: Withdrawals
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["id"]
+
+      # ---------- Transfer (Batch Payout) ----------
+      - path: /api/v1/admin/transfer/batches
+        method: GET
+        service: Admin
+        rpc: ListTransferBatches
+        tag: Transfers
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/transfer/batches/{batch_id}
+        method: GET
+        service: Admin
+        rpc: GetTransferBatch
+        tag: Transfers
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["batch_id"]
+      - path: /api/v1/admin/transfer/batches/{batch_id}/submit
+        method: POST
+        service: Admin
+        rpc: SubmitTransferBatch
+        tag: Transfers
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["batch_id"]
+      - path: /api/v1/admin/transfer/batches/{batch_id}/approve
+        method: POST
+        service: Admin
+        rpc: ApproveTransferBatch
+        tag: Transfers
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["batch_id"]
+      - path: /api/v1/admin/transfer/batches/{batch_id}/cancel
+        method: POST
+        service: Admin
+        rpc: CancelTransferBatch
+        tag: Transfers
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["batch_id"]
+      - path: /api/v1/admin/transfer/batches/{batch_id}/execute
+        method: POST
+        service: Admin
+        rpc: ExecuteTransferBatch
+        tag: Transfers
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["batch_id"]
+      - path: /api/v1/admin/transfer/batches/{batch_id}/retry
+        method: POST
+        service: Admin
+        rpc: RetryTransferBatch
+        tag: Transfers
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["batch_id"]
+
+      # ---------- Web3 Users ----------
+      - path: /api/v1/admin/web3users/summary
+        method: GET
+        service: Admin
+        rpc: GetWeb3UsersSummary
+        tag: Web3Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        summary: 获取Web3用户统计概览
+        description: 获取顶部统计卡片数据（设备总数、地址总数、黑名单地址数、2FA启用率），全局统计不受筛选条件影响
+      - path: /api/v1/admin/web3users/list
+        method: POST
+        service: Admin
+        rpc: GetWeb3UsersPageList
+        tag: Web3Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        summary: 获取Web3用户列表（扁平化数据）
+        description: 获取Web3用户分页列表，支持多种搜索条件，数据结构扁平化便于前端展示
+      - path: /api/v1/admin/web3users
+        method: POST
+        service: Admin
+        rpc: ListWeb3Users
+        tag: Web3Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/web3users/{device_id}
+        method: GET
+        service: Admin
+        rpc: GetWeb3User
+        tag: Web3Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["device_id"]
+      - path: /api/v1/admin/web3users/{device_id}/transactions
+        method: POST
+        service: Admin
+        rpc: ListWeb3UserTransactions
+        tag: Web3Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["device_id"]
+        summary: 查询Web3用户交易记录
+        description: 查询指定设备的Web3钱包交易记录，支持按地址、类型、方向、资产、状态、日期范围筛选
+      - path: /api/v1/admin/web3users/{device_id}/addresses/{address}/blacklist
+        method: POST
+        service: Admin
+        rpc: BlacklistWeb3Address
+        tag: Web3Users
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["device_id", "address"]
+      - path: /api/v1/admin/web3users/{device_id}/addresses/{address}/blacklist
+        method: DELETE
+        service: Admin
+        rpc: UnblacklistWeb3Address
+        tag: Web3Users
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["device_id", "address"]
+      - path: /api/v1/admin/web3users/addresses/blacklist/batch
+        method: POST
+        service: Admin
+        rpc: BatchWeb3AddressBlacklist
+        tag: Web3Users
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+      - path: /api/v1/admin/web3users/statistics
+        method: GET
+        service: Admin
+        rpc: GetWeb3UserStatistics
+        tag: Web3Users
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/web3users/export
+        method: POST
+        service: Admin
+        rpc: ExportWeb3Users
+        tag: Web3Users
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+
+      # ---------- Blacklist (Sensitive Addresses) ----------
+      - path: /api/v1/admin/blacklist/addresses
+        method: GET
+        service: Admin
+        rpc: ListBlacklistAddresses
+        tag: Blacklist
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/blacklist/addresses
+        method: POST
+        service: Admin
+        rpc: CreateBlacklistAddress
+        tag: Blacklist
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+      - path: /api/v1/admin/blacklist/addresses/batch
+        method: POST
+        service: Admin
+        rpc: BatchCreateBlacklistAddresses
+        tag: Blacklist
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+      - path: /api/v1/admin/blacklist/addresses/{id}/monitor-status
+        method: POST
+        service: Admin
+        rpc: UpdateBlacklistAddressMonitorStatus
+        tag: Blacklist
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/blacklist/addresses/{id}
+        method: DELETE
+        service: Admin
+        rpc: DeleteBlacklistAddress
+        tag: Blacklist
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/blacklist/addresses/export
+        method: GET
+        service: Admin
+        rpc: ExportBlacklistAddresses
+        tag: Blacklist
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+
+      # ---------- Vault ----------
+      - path: /api/v1/admin/vault/overview
+        method: GET
+        service: Admin
+        rpc: GetVaultOverview
+        tag: Vault
+        summary: 获取资金管理概览
+        description: 获取所有链的 Vault 资金概览，包括总资产、未归集资产、预警信息等
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/vault/{chain_id}
+        method: GET
+        service: Admin
+        rpc: GetVaultDetail
+        tag: Vault
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+        path_params: ["chain_id"]
+      - path: /api/v1/admin/vault/adjust
+        method: POST
+        service: Admin
+        rpc: CreateVaultAdjustment
+        tag: Vault
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+      - path: /api/v1/admin/vault/adjustments
+        method: GET
+        service: Admin
+        rpc: ListVaultAdjustments
+        tag: Vault
+        auth: true
+        rate_limit: 10
+        rate_limit_type: user
+      - path: /api/v1/admin/vault/adjustments/{id}/approve
+        method: POST
+        service: Admin
+        rpc: ApproveVaultAdjustment
+        tag: Vault
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["id"]
+      - path: /api/v1/admin/vault/thresholds
+        method: PUT
+        service: Admin
+        rpc: UpdateVaultThresholds
+        tag: Vault
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+      - path: /api/v1/admin/vault/{chain_id}/sync
+        method: POST
+        service: Admin
+        rpc: SyncVault
+        tag: Vault
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["chain_id"]
+
+      # ---------- Vault Address Management ----------
+      - path: /api/v1/admin/vault/addresses
+        method: POST
+        service: Admin
+        rpc: AddVaultAddress
+        tag: Vault
+        summary: 添加钱包地址
+        description: 添加外部钱包地址到 Vault 监控列表
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+
+      - path: /api/v1/admin/vault/addresses
+        method: GET
+        service: Admin
+        rpc: ListVaultAddresses
+        tag: Vault
+        summary: 查询钱包地址列表
+        description: 查询 Vault 管理的所有钱包地址，支持筛选和分页
+        auth: true
+        rate_limit: 20
+        rate_limit_type: user
+
+      - path: /api/v1/admin/vault/addresses/{id}/status
+        method: PUT
+        service: Admin
+        rpc: UpdateVaultAddressStatus
+        tag: Vault
+        summary: 更新地址状态
+        description: 启用/禁用钱包地址监控，或设置为活跃钱包
+        auth: true
+        rate_limit: 5
+        rate_limit_type: user
+        path_params: ["id"]
+
+      - path: /api/v1/admin/vault/addresses/{id}
+        method: DELETE
+        service: Admin
+        rpc: DeleteVaultAddress
+        tag: Vault
+        summary: 删除钱包地址
+        description: 从 Vault 监控列表中删除地址 (软删除)
+        auth: true
+        rate_limit: 3
+        rate_limit_type: user
+        path_params: ["id"]
+
+      - path: /api/v1/admin/vault/addresses/{address_id}/balances
+        method: GET
+        service: Admin
+        rpc: GetVaultAddressBalances
+        tag: Vault
+        summary: 查询地址余额明细
+        description: 查询指定地址的所有币种余额
+        auth: true
+        rate_limit: 20
+        rate_limit_type: user
+        path_params: ["address_id"]
+
+# ============================================================================
+# 自定义端点 - 无法通过标准 RPC 路由的接口（如文件上传）
+# ============================================================================
+custom_endpoints:
+  business:
+    # 用户头像上传
+    - path: /api/v1/business/upload_avatar
+      method: POST
+      tag: Me
+      summary: 我的页-头像上传
+      description: 上传用户头像到 S3，返回公开访问 URL
+      consumes: [multipart/form-data]
+      produces: [application/json]
+      parameters:
+        - {name: file, in: formData, description: "头像文件（PNG、JPG、GIF、WEBP，最大 2MB）", required: true, type: file}
+      responses:
+        "200":
+          description: 上传成功
+          schema:
+            type: object
+            properties:
+              success: {type: boolean}
+              code: {type: integer}
+              message: {type: string}
+              data:
+                type: object
+                properties:
+                  avatar_url: {type: string, description: 头像的公开访问 URL}
+              request_id: {type: string}
+              timestamp: {type: string}
+        "400":
+          description: 文件类型不支持或文件过大
+          schema: {$ref: "#/definitions/ErrorResponse"}
+        "401":
+          description: 未授权
+          schema: {$ref: "#/definitions/ErrorResponse"}
+  admin:
+    # 批量转账导入
+    - path: /api/v1/admin/transfer/import
+      method: POST
+      tag: Transfers
+      summary: 批量转账导入
+      description: 上传 Excel/CSV 文件批量导入转账记录，创建转账批次
+      consumes: [multipart/form-data]
+      produces: [application/json]
+      parameters:
+        - name: file
+          in: formData
+          description: Excel 或 CSV 文件（最大 5MB）
+          required: true
+          type: file
+        - name: name
+          in: formData
+          description: 批次名称
+          required: false
+          type: string
+        - name: network
+          in: formData
+          description: 网络标识（如 ETH、BSC）
+          required: false
+          type: string
+        - name: currency
+          in: formData
+          description: 币种代码（如 USDT、ETH）
+          required: false
+          type: string
+        - name: description
+          in: formData
+          description: 批次描述
+          required: false
+          type: string
+        - name: transfer_type
+          in: formData
+          description: 转账类型
+          required: false
+          type: string
+      responses:
+        "200":
+          description: 成功响应
+          schema:
+            type: object
+            properties:
+              success: {type: boolean}
+              code: {type: integer, format: int32}
+              message: {type: string}
+              data:
+                type: object
+                properties:
+                  batch_id: {type: string, description: 批次ID}
+                  total_count: {type: integer, format: int32, description: 总记录数}
+                  valid_count: {type: integer, format: int32, description: 有效记录数}
+                  invalid_count: {type: integer, format: int32, description: 无效记录数}
+              request_id: {type: string}
+              timestamp: {type: string, format: date-time}
+        "400":
+          description: 请求参数错误
+          schema: {$ref: "#/definitions/ErrorResponse"}
+        "401":
+          description: 未授权
+          schema: {$ref: "#/definitions/ErrorResponse"}
+
+    # 批量转账导入预览
+    - path: /api/v1/admin/transfer/import/preview
+      method: POST
+      tag: Transfers
+      summary: 批量转账导入预览
+      description: 上传文件并预览导入结果，不实际创建批次
+      consumes: [multipart/form-data]
+      produces: [application/json]
+      parameters:
+        - {name: file, in: formData, description: "Excel 或 CSV 文件（最大 5MB）", required: true, type: file}
+        - {name: name, in: formData, type: string}
+        - {name: network, in: formData, type: string}
+        - {name: currency, in: formData, type: string}
+        - {name: description, in: formData, type: string}
+        - {name: transfer_type, in: formData, type: string}
+      responses:
+        "200":
+          description: 成功响应
+          schema:
+            type: object
+            properties:
+              success: {type: boolean}
+              code: {type: integer}
+              message: {type: string}
+              data:
+                type: object
+                properties:
+                  total_count: {type: integer}
+                  valid_count: {type: integer}
+                  invalid_count: {type: integer}
+                  preview_items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        row: {type: integer}
+                        address: {type: string}
+                        amount: {type: string}
+                        status: {type: string}
+                        error: {type: string}
+              request_id: {type: string}
+              timestamp: {type: string, format: date-time}
+
+    # 货币图标上传
+    - path: /api/v1/admin/currencies/icon/upload
+      method: POST
+      tag: Assets
+      summary: 货币图标上传
+      description: 上传货币图标到 S3，返回公开访问 URL
+      consumes: [multipart/form-data]
+      produces: [application/json]
+      parameters:
+        - {name: file, in: formData, description: "图标文件（PNG、JPG、GIF、WEBP，最大 2MB）", required: true, type: file}
+        - {name: asset_code, in: formData, description: "货币代码（如 BTC、ETH、USDT）", type: string}
+      responses:
+        "200":
+          description: 上传成功
+          schema:
+            type: object
+            properties:
+              success: {type: boolean}
+              code: {type: integer}
+              message: {type: string}
+              data:
+                type: object
+                properties:
+                  url: {type: string, description: 图标的公开访问 URL}
+              request_id: {type: string}
+              timestamp: {type: string}
+        "400":
+          description: 文件类型不支持或文件过大
+          schema: {$ref: "#/definitions/ErrorResponse"}
+        "403":
+          description: 权限不足
+          schema: {$ref: "#/definitions/ErrorResponse"}
+
+    # 链图标上传
+    - path: /api/v1/admin/chains/icon/upload
+      method: POST
+      tag: Assets
+      summary: 链图标上传
+      description: 上传区块链图标到 S3，返回公开访问 URL
+      consumes: [multipart/form-data]
+      produces: [application/json]
+      parameters:
+        - {name: file, in: formData, description: "图标文件（PNG、JPG、GIF、WEBP，最大 2MB）", required: true, type: file}
+        - {name: chain_code, in: formData, description: "链代码（如 ETH、BSC、POLYGON）", type: string}
+      responses:
+        "200":
+          description: 上传成功
+          schema:
+            type: object
+            properties:
+              success: {type: boolean}
+              code: {type: integer}
+              message: {type: string}
+              data:
+                type: object
+                properties:
+                  url: {type: string, description: 图标的公开访问 URL}
+              request_id: {type: string}
+              timestamp: {type: string}
+        "400":
+          description: 文件类型不支持或文件过大
+          schema: {$ref: "#/definitions/ErrorResponse"}
+        "403":
+          description: 权限不足
+          schema: {$ref: "#/definitions/ErrorResponse"}

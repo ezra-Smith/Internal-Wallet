@@ -1,0 +1,30 @@
+# Air - live reloading for admin-rpc (local dev).
+#
+# Usage (inside repo root):
+#   cd services/admin/rpc
+#   air -c .air.local.toml
+#
+# Note:
+# - This uses repo config files (./services/admin/rpc/etc/admin.yaml).
+# - The existing .air.toml is used by deploy/admin/docker-compose.yml where configs
+#   are generated into /tmp/*.yaml inside the container.
+
+root = "../../.."
+tmp_dir = ".air"
+
+[build]
+  # This config is intended to be run from `services/admin/rpc`.
+  cmd = "go build -o ../../../.air/admin-rpc ."
+  bin = "../../../.air/admin-rpc"
+  full_bin = "../../../.air/admin-rpc -f etc/admin.local.yaml"
+  include_ext = ["go", "yaml", "yml"]
+  include_dir = ["services/admin/rpc", "common", "proto"]
+  exclude_dir = [".air", ".git", ".cache", ".gocache", ".gomodcache", "web"]
+  delay = 300
+  stop_on_error = false
+
+[log]
+  time = false
+
+[misc]
+  clean_on_exit = true

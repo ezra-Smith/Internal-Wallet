@@ -1,0 +1,6094 @@
+syntax = "proto3";
+
+package admin;
+
+option go_package = "./pb";
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/wrappers.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Zink Wallet Admin API"
+    version: "v1"
+    description: "Admin API (served via api-gateway)"
+  }
+  host: "127.0.0.1:8080"
+  schemes: HTTP
+  schemes: HTTPS
+  security_definitions: {
+    security: {
+      key: "Bearer"
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+        description: "JWT Bearer Token，格式：Bearer {token}"
+      }
+    }
+  }
+  security: {
+    security_requirement: {
+      key: "Bearer"
+      value: {}
+    }
+  }
+};
+
+// ============================================================================
+// Admin Service - 后台管理 (仅 Admin IAM v1)
+// 说明：
+// - 本项目通过 api-gateway 将 HTTP 请求转发到 gRPC。
+// - JSON 字段名由 proto 字段名生成（snake_case）。
+// ============================================================================
+
+service Admin {
+  // ==================== Auth ====================
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+
+  // ==================== Wallet Init / Signer Unlock ====================
+  rpc GetHotWalletRuntimeStatus(AdminGetHotWalletRuntimeStatusRequest) returns (AdminGetHotWalletRuntimeStatusResponse);
+  rpc StartHotWalletInit(AdminStartHotWalletInitRequest) returns (AdminStartHotWalletInitResponse);
+  rpc GetHotWalletMnemonicPage(AdminGetHotWalletMnemonicPageRequest) returns (AdminGetHotWalletMnemonicPageResponse);
+  rpc GetHotWalletMnemonicChallenge(AdminGetHotWalletMnemonicChallengeRequest) returns (AdminGetHotWalletMnemonicChallengeResponse);
+  rpc VerifyHotWalletMnemonicChallenge(AdminVerifyHotWalletMnemonicChallengeRequest) returns (AdminVerifyHotWalletMnemonicChallengeResponse);
+  rpc UnlockSignerHotWallet(AdminUnlockSignerHotWalletRequest) returns (AdminUnlockSignerHotWalletResponse);
+
+  // ==================== Admin MFA Flow (HTTP: /api/v1/admin/auth/*) ====================
+  // Captcha key1 -> temp_key key2 -> password login -> auth_key key3 (2FA bind) / session_identifier (2FA verify)
+  rpc AdminMFACaptchaGenerate(AdminMFACaptchaGenerateRequest) returns (AdminMFACaptchaGenerateResponse);
+  rpc AdminMFACaptchaValidate(AdminMFACaptchaValidateRequest) returns (AdminMFACaptchaValidateResponse);
+  rpc AdminMFALogin(AdminMFALoginRequest) returns (AdminMFALoginResponse);
+  rpc AdminMFAGetTwoFAQrCode(AdminMFAGetTwoFAQrCodeRequest) returns (AdminMFAGetTwoFAQrCodeResponse);
+  rpc AdminMFABindTwoFA(AdminMFABindTwoFARequest) returns (AdminMFABindTwoFAResponse);
+  rpc AdminMFAVerifyTwoFA(AdminMFAVerifyTwoFARequest) returns (AdminMFAVerifyTwoFAResponse);
+
+  // ==================== Admin Users ====================
+  rpc ListAdmins(ListAdminsRequest) returns (ListAdminsResponse);
+  rpc CreateAdmin(CreateAdminRequest) returns (CreateAdminResponse);
+  rpc UpdateAdmin(UpdateAdminRequest) returns (UpdateAdminResponse);
+  rpc DisableAdmin(DisableAdminRequest) returns (DisableAdminResponse);
+  rpc ResetAdminPassword(ResetAdminPasswordRequest) returns (ResetAdminPasswordResponse);
+  rpc ResetAdminTwoFA(ResetAdminTwoFARequest) returns (ResetAdminTwoFAResponse);
+  rpc ChangeMyPassword(ChangeMyPasswordRequest) returns (ChangeMyPasswordResponse);
+
+  // ==================== Users (Web2) ====================
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc GetUsersStatistics(GetUsersStatisticsRequest) returns (GetUsersStatisticsResponse);
+  rpc ListUserWithdrawAuditWhitelistRules(ListUserWithdrawAuditWhitelistRulesRequest) returns (ListUserWithdrawAuditWhitelistRulesResponse);
+  rpc UpsertUserWithdrawAuditWhitelistRules(UpsertUserWithdrawAuditWhitelistRulesRequest) returns (UpsertUserWithdrawAuditWhitelistRulesResponse);
+  rpc GetUserDetail(GetUserDetailRequest) returns (GetUserDetailResponse);
+  rpc FreezeUser(FreezeUserRequest) returns (FreezeUserResponse);
+  rpc UnfreezeUser(UnfreezeUserRequest) returns (UnfreezeUserResponse);
+  rpc TerminateUser(TerminateUserRequest) returns (TerminateUserResponse);
+  rpc UpdateUserRole(UpdateUserRoleRequest) returns (UpdateUserRoleResponse);
+  rpc UpdateUserMemberLevel(UpdateUserMemberLevelRequest) returns (UpdateUserMemberLevelResponse);
+  rpc ResetUserPassword(ResetUserPasswordRequest) returns (ResetUserPasswordResponse);
+  rpc ResetUserTradePassword(ResetUserTradePasswordRequest) returns (ResetUserTradePasswordResponse);
+  rpc UnlockTradePassword(UnlockTradePasswordRequest) returns (UnlockTradePasswordResponse);
+  rpc UpdateUserWithdrawAuditWhitelist(UpdateUserWithdrawAuditWhitelistRequest) returns (UpdateUserWithdrawAuditWhitelistResponse);
+  rpc UnbindUserTotp(UnbindUserTotpRequest) returns (UnbindUserTotpResponse);
+  rpc ListUser2FAHistory(ListUser2FAHistoryRequest) returns (ListUser2FAHistoryResponse);
+  rpc AddUserNote(AddUserNoteRequest) returns (AddUserNoteResponse);
+  rpc ExportUsers(ExportUsersRequest) returns (ExportUsersResponse);
+
+  // ==================== My (Profile + RBAC) ====================
+  rpc GetMe(GetMeRequest) returns (GetMeResponse);
+
+  // ==================== Security (My Account) ====================
+  rpc GetMySecuritySettings(GetMySecuritySettingsRequest) returns (GetMySecuritySettingsResponse);
+  rpc StartTwoFASetup(StartTwoFASetupRequest) returns (StartTwoFASetupResponse);
+  rpc ConfirmTwoFASetup(ConfirmTwoFASetupRequest) returns (ConfirmTwoFASetupResponse);
+  rpc StartTwoFARebind(StartTwoFARebindRequest) returns (StartTwoFARebindResponse);
+  rpc DisableTwoFA(DisableTwoFARequest) returns (DisableTwoFAResponse);
+
+  // ==================== RBAC v2 (My) ====================
+  rpc GetMyRBAC(GetMyRBACRequest) returns (GetMyRBACResponse);
+  // RBAC v2 (UI helpers) - for frontend permission gating (scheme B)
+  rpc GetRbacPermissionMap(GetRbacPermissionMapRequest) returns (GetRbacPermissionMapResponse);
+
+  // ==================== RBAC v2 (Menus / Permissions / Roles) ====================
+  // -------- Menus --------
+  rpc CreateMenu(CreateMenuRequest) returns (CreateMenuResponse);
+  rpc UpdateMenu(UpdateMenuRequest) returns (UpdateMenuResponse);
+  rpc DeleteMenu(DeleteMenuRequest) returns (DeleteMenuResponse);
+  rpc GetMenuById(GetMenuByIdRequest) returns (GetMenuByIdResponse);
+  rpc ListMenus(ListMenusRequest) returns (ListMenusResponse);
+  rpc GetMenuTree(GetMenuTreeRequest) returns (GetMenuTreeResponse);
+
+  // -------- Permissions --------
+  rpc CreatePermission(CreatePermissionRequest) returns (CreatePermissionResponse);
+  rpc UpdatePermission(UpdatePermissionRequest) returns (UpdatePermissionResponse);
+  rpc DeletePermission(DeletePermissionRequest) returns (DeletePermissionResponse);
+  rpc GetPermissionById(GetPermissionByIdRequest) returns (GetPermissionByIdResponse);
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse);
+  rpc GetPermissionsByMenuId(GetPermissionsByMenuIdRequest) returns (GetPermissionsByMenuIdResponse);
+
+  // -------- Roles --------
+  rpc CreateRole(CreateRoleRequest) returns (CreateRoleResponse);
+  rpc UpdateRole(UpdateRoleRequest) returns (UpdateRoleResponse);
+  rpc DeleteRole(DeleteRoleRequest) returns (DeleteRoleResponse);
+  rpc GetRoleById(GetRoleByIdRequest) returns (GetRoleByIdResponse);
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse);
+  rpc AssignMenusToRole(AssignMenusToRoleRequest) returns (AssignMenusToRoleResponse);
+  rpc AssignPermissionsToRole(AssignPermissionsToRoleRequest) returns (AssignPermissionsToRoleResponse);
+  rpc AssignRolesToUser(AssignRolesToUserRequest) returns (AssignRolesToUserResponse);
+  rpc GetRoleMenus(GetRoleMenusRequest) returns (GetRoleMenusResponse);
+  rpc GetRolePermissions(GetRolePermissionsRequest) returns (GetRolePermissionsResponse);
+  rpc GetUserRoles(GetUserRolesRequest) returns (GetUserRolesResponse);
+
+  // ==================== System Settings ====================
+  rpc GetSystemConfig(GetSystemConfigRequest) returns (GetSystemConfigResponse);
+  rpc UpdateSystemConfig(UpdateSystemConfigRequest) returns (UpdateSystemConfigResponse);
+  rpc GetClientConfig(GetClientConfigRequest) returns (GetClientConfigResponse);
+
+  // ==================== Alert Configs ====================
+  rpc ListAlertConfigs(AdminListAlertConfigsRequest) returns (AdminListAlertConfigsResponse);
+  rpc CreateAlertConfig(AdminCreateAlertConfigRequest) returns (AdminCreateAlertConfigResponse);
+  rpc UpdateAlertConfig(AdminUpdateAlertConfigRequest) returns (AdminUpdateAlertConfigResponse);
+  rpc DeleteAlertConfig(AdminDeleteAlertConfigRequest) returns (AdminDeleteAlertConfigResponse);
+  rpc GetAlertConfig(AdminGetAlertConfigRequest) returns (AdminGetAlertConfigResponse);
+  rpc ToggleAlertConfig(AdminToggleAlertConfigRequest) returns (AdminToggleAlertConfigResponse);
+  rpc GetAlertConfigWithStats(AdminGetAlertConfigWithStatsRequest) returns (AdminGetAlertConfigWithStatsResponse);
+
+  // ==================== Audit Logs ====================
+  rpc GetAuditLogs(GetAuditLogsRequest) returns (GetAuditLogsResponse);
+
+  // ==================== Swap Configuration (Simplified Architecture) ====================
+  // API Key 管理（用于项目接入Swap服务）
+  rpc CreateSwapApiKey(AdminCreateSwapApiKeyRequest) returns (AdminCreateSwapApiKeyResponse);
+  rpc RevokeSwapApiKey(AdminRevokeSwapApiKeyRequest) returns (AdminRevokeSwapApiKeyResponse);
+  rpc ListSwapApiKeys(AdminListSwapApiKeysRequest) returns (AdminListSwapApiKeysResponse);
+
+  // Provider管理
+  rpc ListSwapProvidersForDropdown(AdminListSwapProvidersForDropdownRequest) returns (AdminListSwapProvidersForDropdownResponse);
+  rpc ListSwapProviders(AdminListSwapProvidersRequest) returns (AdminListSwapProvidersResponse);
+  rpc GetSwapProviderDetail(AdminGetSwapProviderDetailRequest) returns (AdminGetSwapProviderDetailResponse);
+  rpc CreateSwapProvider(AdminCreateSwapProviderRequest) returns (AdminCreateSwapProviderResponse);
+  rpc UpdateSwapProvider(AdminUpdateSwapProviderRequest) returns (AdminUpdateSwapProviderResponse);
+  rpc DeleteSwapProvider(AdminDeleteSwapProviderRequest) returns (AdminDeleteSwapProviderResponse);
+  rpc EnableSwapProvider(AdminEnableSwapProviderRequest) returns (AdminEnableSwapProviderResponse);
+  rpc DisableSwapProvider(AdminDisableSwapProviderRequest) returns (AdminDisableSwapProviderResponse);
+
+  // Config管理
+  rpc ListSwapConfigs(AdminListSwapConfigsRequest) returns (AdminListSwapConfigsResponse);
+  rpc GetSwapConfigDetail(AdminGetSwapConfigDetailRequest) returns (AdminGetSwapConfigDetailResponse);
+  rpc CreateSwapConfig(AdminCreateSwapConfigRequest) returns (AdminCreateSwapConfigResponse);
+  rpc UpdateSwapConfigDetail(AdminUpdateSwapConfigDetailRequest) returns (AdminUpdateSwapConfigDetailResponse);
+  rpc DeleteSwapConfig(AdminDeleteSwapConfigRequest) returns (AdminDeleteSwapConfigResponse);
+  rpc ListProjectSwapConfigs(AdminListProjectSwapConfigsRequest) returns (AdminListProjectSwapConfigsResponse);
+  rpc EnableSwapConfigForProject(AdminEnableSwapConfigForProjectRequest) returns (AdminEnableSwapConfigForProjectResponse);
+  rpc DisableSwapConfigForProject(AdminDisableSwapConfigForProjectRequest) returns (AdminDisableSwapConfigForProjectResponse);
+  rpc ListSwapTransactions(AdminListSwapTransactionsRequest) returns (AdminListSwapTransactionsResponse);
+
+  // ==================== Wallet Assets ====================
+  // -------- Currencies (Business Assets) --------
+  // 获取币种总览
+  rpc GetCurrencyOverview(GetCurrencyOverviewRequest) returns (GetCurrencyOverviewResponse);
+  rpc CreateCurrency(CreateCurrencyRequest) returns (CreateCurrencyResponse);
+  rpc UpdateCurrency(UpdateCurrencyRequest) returns (UpdateCurrencyResponse);
+  rpc GetCurrency(GetCurrencyRequest) returns (GetCurrencyResponse);
+  rpc ListCurrencies(ListCurrenciesRequest) returns (ListCurrenciesResponse);
+  rpc GetCurrencyConfig(GetCurrencyConfigRequest) returns (GetCurrencyConfigResponse);
+  rpc UpdateCurrencyConfig(UpdateCurrencyConfigRequest) returns (UpdateCurrencyConfigResponse);
+  rpc UpdateCurrencyStatus(UpdateCurrencyStatusRequest) returns (UpdateCurrencyStatusResponse);
+  rpc GetCurrencyGlobalWithdrawFee(GetCurrencyGlobalWithdrawFeeRequest) returns (GetCurrencyGlobalWithdrawFeeResponse);
+  rpc UpdateCurrencyGlobalWithdrawFee(UpdateCurrencyGlobalWithdrawFeeRequest) returns (UpdateCurrencyGlobalWithdrawFeeResponse);
+  rpc GetCurrencyGlobalWithdrawAudit(GetCurrencyGlobalWithdrawAuditRequest) returns (GetCurrencyGlobalWithdrawAuditResponse);
+  rpc UpdateCurrencyGlobalWithdrawAudit(UpdateCurrencyGlobalWithdrawAuditRequest) returns (UpdateCurrencyGlobalWithdrawAuditResponse);
+  rpc GetCurrencyGlobalTransferAudit(GetCurrencyGlobalTransferAuditRequest) returns (GetCurrencyGlobalTransferAuditResponse);
+  rpc UpdateCurrencyGlobalTransferAudit(UpdateCurrencyGlobalTransferAuditRequest) returns (UpdateCurrencyGlobalTransferAuditResponse);
+
+  // -------- Chains --------
+  rpc ListChains(ListChainsRequest) returns (ListChainsResponse);
+  rpc UpdateChainIcon(UpdateChainIconRequest) returns (UpdateChainIconResponse);
+
+  // -------- Accounting (Ledger) --------
+  rpc AccountingListAccountTypes(AccountingListAccountTypesRequest) returns (AccountingListAccountTypesResponse);
+  rpc AccountingCreateAccountType(AccountingCreateAccountTypeRequest) returns (AccountingCreateAccountTypeResponse);
+  rpc AccountingUpdateAccountType(AccountingUpdateAccountTypeRequest) returns (AccountingUpdateAccountTypeResponse);
+  rpc AccountingDeleteAccountType(AccountingDeleteAccountTypeRequest) returns (AccountingDeleteAccountTypeResponse);
+  rpc AccountingSetAccountTypeAssets(AccountingSetAccountTypeAssetsRequest) returns (AccountingSetAccountTypeAssetsResponse);
+
+  rpc AccountingEnsureUserSetup(AccountingEnsureUserSetupRequest) returns (AccountingEnsureUserSetupResponse);
+  rpc AccountingGetUserBalances(AccountingGetUserBalancesRequest) returns (AccountingGetUserBalancesResponse);
+  rpc AccountingEnsureSystemAccounts(AccountingEnsureSystemAccountsRequest) returns (AccountingEnsureSystemAccountsResponse);
+  rpc AccountingListLedgerTx(AccountingListLedgerTxRequest) returns (AccountingListLedgerTxResponse);
+  rpc AccountingGetLedgerTxDetail(AccountingGetLedgerTxDetailRequest) returns (AccountingGetLedgerTxDetailResponse);
+  rpc AccountingListUserTransactionRecords(AccountingListUserTransactionRecordsRequest) returns (AccountingListUserTransactionRecordsResponse);
+  rpc AccountingGetUserTransactionRecordDetail(AccountingGetUserTransactionRecordDetailRequest) returns (AccountingGetUserTransactionRecordDetailResponse);
+
+  // -------- Deposit Addresses --------
+  rpc ListDepositAddresses(ListDepositAddressesRequest) returns (ListDepositAddressesResponse);
+  rpc ListDepositAddressesWithBalance(ListDepositAddressesWithBalanceRequest) returns (ListDepositAddressesWithBalanceResponse);
+  rpc GetDepositAddress(GetDepositAddressRequest) returns (GetDepositAddressResponse);
+  rpc CreateDepositAddress(CreateDepositAddressRequest) returns (CreateDepositAddressResponse);
+  rpc UpdateDepositAddress(UpdateDepositAddressRequest) returns (UpdateDepositAddressResponse);
+  rpc DeleteDepositAddress(DeleteDepositAddressRequest) returns (DeleteDepositAddressResponse);
+  rpc InitializeUserWallet(InitializeUserWalletRequest) returns (InitializeUserWalletResponse);
+
+  // -------- Deposit Address Balances --------
+  // 获取地址余额列表
+  rpc ListDepositAddressBalances(ListDepositAddressBalancesRequest) returns (ListDepositAddressBalancesResponse);
+  // 获取地址余额
+  rpc GetDepositAddressBalance(GetDepositAddressBalanceRequest) returns (GetDepositAddressBalanceResponse);
+  // 获取地址余额统计
+  rpc GetDepositAddressBalanceStats(GetDepositAddressBalanceStatsRequest) returns (GetDepositAddressBalanceStatsResponse);
+  // 按币种统计待归集金额（币种分布）
+  rpc GetDepositAddressBalanceByAsset(GetDepositAddressBalanceByAssetRequest) returns (GetDepositAddressBalanceByAssetResponse);
+  // 更新地址余额
+  rpc UpdateDepositAddressBalance(UpdateDepositAddressBalanceRequest) returns (UpdateDepositAddressBalanceResponse);
+
+  // -------- Consolidation (New module; independent from Sweep Tasks) --------
+  rpc ListConsolidationTasks(AdminListConsolidationTasksRequest) returns (AdminListConsolidationTasksResponse);
+  rpc GetConsolidationTask(AdminGetConsolidationTaskRequest) returns (AdminGetConsolidationTaskResponse);
+  rpc RetryConsolidationTask(AdminRetryConsolidationTaskRequest) returns (AdminRetryConsolidationTaskResponse);
+  rpc CancelConsolidationTask(AdminCancelConsolidationTaskRequest) returns (AdminCancelConsolidationTaskResponse);
+  rpc TriggerConsolidation(AdminTriggerConsolidationRequest) returns (AdminTriggerConsolidationResponse);
+  rpc GetConsolidationStats(AdminGetConsolidationStatsRequest) returns (AdminGetConsolidationStatsResponse);
+  rpc ListConsolidationLogs(AdminListConsolidationLogsRequest) returns (AdminListConsolidationLogsResponse);
+  rpc ListConsolidationTopupRecords(AdminListConsolidationTopupRecordsRequest) returns (AdminListConsolidationTopupRecordsResponse);
+  rpc ListEnergyRentalRecords(AdminListEnergyRentalRecordsRequest) returns (AdminListEnergyRentalRecordsResponse);
+  rpc GetEnergyRentalRecord(AdminGetEnergyRentalRecordRequest) returns (AdminGetEnergyRentalRecordResponse);
+
+  // -------- Deposits --------
+  rpc ListDeposits(ListDepositsRequest) returns (ListDepositsResponse);
+  rpc GetDeposit(GetDepositRequest) returns (GetDepositResponse);
+  rpc CreateDeposit(CreateDepositRequest) returns (CreateDepositResponse);
+  rpc UpdateDeposit(UpdateDepositRequest) returns (UpdateDepositResponse);
+  rpc CancelDeposit(CancelDepositRequest) returns (CancelDepositResponse);
+
+  // -------- Withdrawals --------
+  rpc CreateCurrencyWithdrawal(CreateCurrencyWithdrawalRequest) returns (CreateCurrencyWithdrawalResponse);
+  rpc GetCurrencyWithdrawal(GetCurrencyWithdrawalRequest) returns (GetCurrencyWithdrawalResponse);
+  rpc ListCurrencyWithdrawals(ListCurrencyWithdrawalsRequest) returns (ListCurrencyWithdrawalsResponse);
+  rpc ApproveCurrencyWithdrawal(ApproveCurrencyWithdrawalRequest) returns (ApproveCurrencyWithdrawalResponse);
+  rpc RejectCurrencyWithdrawal(RejectCurrencyWithdrawalRequest) returns (RejectCurrencyWithdrawalResponse);
+  rpc CancelCurrencyWithdrawal(CancelCurrencyWithdrawalRequest) returns (CancelCurrencyWithdrawalResponse);
+  rpc UpdateCurrencyWithdrawal(UpdateCurrencyWithdrawalRequest) returns (UpdateCurrencyWithdrawalResponse);
+  rpc ListCurrencyWithdrawalEvents(ListCurrencyWithdrawalEventsRequest) returns (ListCurrencyWithdrawalEventsResponse);
+
+  // -------- Internal Transfers (User-to-User) --------
+  rpc ListInternalTransfers(ListInternalTransfersRequest) returns (ListInternalTransfersResponse);
+  rpc GetInternalTransfer(GetInternalTransferRequest) returns (GetInternalTransferResponse);
+  rpc ApproveInternalTransfer(ApproveInternalTransferRequest) returns (ApproveInternalTransferResponse);
+  rpc RejectInternalTransfer(RejectInternalTransferRequest) returns (RejectInternalTransferResponse);
+  rpc CancelInternalTransfer(CancelInternalTransferRequest) returns (CancelInternalTransferResponse);
+
+  // ==================== Transfer (Batch Payout) ====================
+  rpc ListTransferBatches(ListTransferBatchesRequest) returns (ListTransferBatchesResponse);
+  rpc ImportTransferBatch(ImportTransferBatchRequest) returns (ImportTransferBatchResponse);
+  rpc GetTransferBatch(GetTransferBatchRequest) returns (GetTransferBatchResponse);
+  rpc SubmitTransferBatch(SubmitTransferBatchRequest) returns (SubmitTransferBatchResponse);
+  rpc ApproveTransferBatch(ApproveTransferBatchRequest) returns (ApproveTransferBatchResponse);
+  rpc CancelTransferBatch(CancelTransferBatchRequest) returns (CancelTransferBatchResponse);
+  rpc ExecuteTransferBatch(ExecuteTransferBatchRequest) returns (ExecuteTransferBatchResponse);
+  rpc RetryTransferBatch(RetryTransferBatchRequest) returns (RetryTransferBatchResponse);
+
+  // ==================== Web3 Users ====================
+  rpc ListWeb3Users(ListWeb3UsersRequest) returns (ListWeb3UsersResponse);
+  rpc GetWeb3User(GetWeb3UserRequest) returns (GetWeb3UserResponse);
+  rpc GetWeb3UsersPageList(GetWeb3UsersPageListRequest) returns (GetWeb3UsersPageListResponse);
+  rpc GetWeb3UsersSummary(GetWeb3UsersSummaryRequest) returns (GetWeb3UsersSummaryResponse);
+  rpc ListWeb3UserTransactions(ListWeb3UserTransactionsRequest) returns (ListWeb3UserTransactionsResponse);
+  rpc BlacklistWeb3Address(BlacklistWeb3AddressRequest) returns (BlacklistWeb3AddressResponse);
+  rpc UnblacklistWeb3Address(UnblacklistWeb3AddressRequest) returns (UnblacklistWeb3AddressResponse);
+  rpc BatchWeb3AddressBlacklist(BatchWeb3AddressBlacklistRequest) returns (BatchWeb3AddressBlacklistResponse);
+  rpc GetWeb3UserStatistics(GetWeb3UserStatisticsRequest) returns (GetWeb3UserStatisticsResponse);
+  rpc ExportWeb3Users(ExportWeb3UsersRequest) returns (ExportWeb3UsersResponse);
+  rpc ListWeb3UserAddresses(ListWeb3UserAddressesRequest) returns (ListWeb3UserAddressesResponse);
+
+  // ==================== Blacklist (Sensitive Addresses) ====================
+  rpc ListBlacklistAddresses(ListBlacklistAddressesRequest) returns (ListBlacklistAddressesResponse);
+  rpc CreateBlacklistAddress(CreateBlacklistAddressRequest) returns (CreateBlacklistAddressResponse);
+  rpc BatchCreateBlacklistAddresses(BatchCreateBlacklistAddressesRequest) returns (BatchCreateBlacklistAddressesResponse);
+  rpc UpdateBlacklistAddressMonitorStatus(UpdateBlacklistAddressMonitorStatusRequest) returns (UpdateBlacklistAddressMonitorStatusResponse);
+  rpc DeleteBlacklistAddress(DeleteBlacklistAddressRequest) returns (DeleteBlacklistAddressResponse);
+  rpc ExportBlacklistAddresses(ExportBlacklistAddressesRequest) returns (ExportBlacklistAddressesResponse);
+
+  // ==================== Vault Funds Management ====================
+  // 获取资金概览
+  rpc GetVaultOverview(GetVaultOverviewRequest) returns (GetVaultOverviewResponse);
+  // 获取某个链的详细信息
+  rpc GetVaultDetail(GetVaultDetailRequest) returns (GetVaultDetailResponse);
+  // 创建资金调整
+  rpc CreateVaultAdjustment(CreateVaultAdjustmentRequest) returns (CreateVaultAdjustmentResponse);
+  rpc ListVaultAdjustments(ListVaultAdjustmentsRequest) returns (ListVaultAdjustmentsResponse);
+  // 审批资金调整
+  rpc ApproveVaultAdjustment(ApproveVaultAdjustmentRequest) returns (ApproveVaultAdjustmentResponse);
+  // 更新预警阈值
+  rpc UpdateVaultThresholds(UpdateVaultThresholdsRequest) returns (UpdateVaultThresholdsResponse);
+  // 刷新余额
+  rpc SyncVault(SyncVaultRequest) returns (SyncVaultResponse);
+
+  // ==================== Vault Address Management ====================
+  // 添加 Vault 地址
+  rpc AddVaultAddress(AddVaultAddressRequest) returns (AddVaultAddressResponse);
+  // 查看地址列表
+  rpc ListVaultAddresses(ListVaultAddressesRequest) returns (ListVaultAddressesResponse);
+  // 修改地址状态
+  rpc UpdateVaultAddressStatus(UpdateVaultAddressStatusRequest) returns (UpdateVaultAddressStatusResponse);
+  // 删除地址
+  rpc DeleteVaultAddress(DeleteVaultAddressRequest) returns (DeleteVaultAddressResponse);
+  // 获取地址余额
+  rpc GetVaultAddressBalances(GetVaultAddressBalancesRequest) returns (GetVaultAddressBalancesResponse);
+  // 检查热钱包余额是否足够（用于提现前验证）
+  rpc CheckHotWalletBalance(CheckHotWalletBalanceRequest) returns (CheckHotWalletBalanceResponse);
+
+
+  // ==================== Dashboard Statistics ====================
+  // 获取仪表板核心概览数据
+  rpc GetDashboardOverview(GetDashboardOverviewRequest) returns (GetDashboardOverviewResponse);
+  // 获取仪表板趋势图表数据
+  rpc GetDashboardTrends(GetDashboardTrendsRequest) returns (GetDashboardTrendsResponse);
+  // 获取最近操作动态
+  rpc GetDashboardActivities(GetDashboardActivitiesRequest) returns (GetDashboardActivitiesResponse);
+
+}
+
+// ============================================================================
+// Common
+// ============================================================================
+
+message Pagination {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 total = 3;
+  int32 total_pages = 4;
+  bool has_next = 5;
+  bool has_prev = 6;
+}
+
+// ============================================================================
+// Consolidation (Admin module; independent from Sweep Tasks)
+// ============================================================================
+
+message AdminConsolidationTaskItem {
+  string task_id = 1;
+  string chain = 2;           // TRON/ETH/BSC
+  string asset_symbol = 3;    // TRX/ETH/BNB/USDT/USDC
+  string token_contract = 4;  // empty for native
+  string from_address = 5;
+  string to_address = 6;
+  string amount = 7;          // smallest unit
+  string estimated_fee = 8;
+  string actual_fee = 9;
+  int32 status = 10;          // matches consolidation_tasks.status
+  string tx_hash = 11;
+  int32 retry_count = 12;
+  string error_message = 13;
+  string started_at = 14;     // RFC3339 (UTC)
+  string confirmed_at = 15;   // RFC3339 (UTC)
+  string next_attempt_at = 16;// RFC3339 (UTC)
+  string claimed_by = 17;
+  string claimed_until = 18;  // RFC3339 (UTC)
+  int64 energy_rental_id = 19;
+  int32 energy_order_count = 20;
+  int64 energy_total_cost_sun = 21;
+  string created_at = 22;     // RFC3339 (UTC)
+  string updated_at = 23;     // RFC3339 (UTC)
+  // Human-readable values converted from smallest unit.
+  string amount_readable = 24;
+  string estimated_fee_readable = 25;
+  string actual_fee_readable = 26;
+}
+
+message AdminListConsolidationTasksRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string chain = 3;           // optional
+  string asset_symbol = 4;    // optional
+  int32 status = 5;           // optional (0=all)
+  int64 created_at_from = 6;  // optional unix seconds
+  int64 created_at_to = 7;    // optional unix seconds
+  string task_id = 8;         // optional
+  string from_address = 9;    // optional
+  string to_address = 10;     // optional
+  string tx_hash = 11;        // optional
+}
+
+message AdminListConsolidationTasksData {
+  repeated AdminConsolidationTaskItem tasks = 1;
+}
+
+message AdminListConsolidationTasksResponse {
+  bool success = 1;
+  string message = 2;
+  AdminListConsolidationTasksData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message AdminGetConsolidationTaskRequest {
+  string task_id = 1;
+}
+
+message AdminGetConsolidationTaskData {
+  AdminConsolidationTaskItem task = 1;
+}
+
+message AdminGetConsolidationTaskResponse {
+  bool success = 1;
+  string message = 2;
+  AdminGetConsolidationTaskData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AdminRetryConsolidationTaskRequest {
+  string task_id = 1;
+}
+
+message AdminRetryConsolidationTaskResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+message AdminCancelConsolidationTaskRequest {
+  string task_id = 1;
+}
+
+message AdminCancelConsolidationTaskResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+message AdminTriggerConsolidationRequest {
+  string chain = 1;        // optional
+  string asset_symbol = 2; // optional
+  string from_address = 3; // optional
+  bool dry_run = 4;        // optional
+}
+
+message AdminTriggerConsolidationData {
+  int64 total_candidates = 1;
+  int64 total_tasks_created = 2;
+  repeated AdminConsolidationTaskItem tasks = 3;
+}
+
+message AdminTriggerConsolidationResponse {
+  bool success = 1;
+  string message = 2;
+  AdminTriggerConsolidationData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AdminGetConsolidationStatsRequest {
+  string chain = 1;        // optional
+  string asset_symbol = 2; // optional
+  int64 from_ts = 3;       // optional unix seconds
+  int64 to_ts = 4;         // optional unix seconds
+}
+
+message AdminConsolidationStats {
+  int64 total = 1;
+  int64 confirmed = 2;
+  int64 failed = 3;
+  double success_rate = 4;
+  string total_amount = 5;
+  string total_estimated_fee = 6;
+  string total_actual_fee = 7;
+  // Human-readable values converted from smallest unit.
+  // Only meaningful when request specifies a single asset_symbol.
+  string total_amount_readable = 8;
+  string total_estimated_fee_readable = 9;
+  string total_actual_fee_readable = 10;
+}
+
+message AdminGetConsolidationStatsData {
+  AdminConsolidationStats stats = 1;
+}
+
+message AdminGetConsolidationStatsResponse {
+  bool success = 1;
+  string message = 2;
+  AdminGetConsolidationStatsData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AdminConsolidationLogItem {
+  int64 id = 1;
+  string task_id = 2;
+  string log_level = 3;
+  string message = 4;
+  google.protobuf.Struct details = 5;
+  string created_at = 6; // RFC3339 (UTC)
+}
+
+message AdminListConsolidationLogsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string task_id = 3;        // optional
+  string log_level = 4;      // optional
+  int64 created_at_from = 5; // optional unix seconds
+  int64 created_at_to = 6;   // optional unix seconds
+}
+
+message AdminListConsolidationLogsData {
+  repeated AdminConsolidationLogItem logs = 1;
+}
+
+message AdminListConsolidationLogsResponse {
+  bool success = 1;
+  string message = 2;
+  AdminListConsolidationLogsData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message AdminConsolidationTopupRecordItem {
+  int64 id = 1;
+  string task_id = 2;
+  string chain = 3;
+  string asset_symbol = 4;
+  string from_address = 5;
+  string to_address = 6;
+  string amount = 7;
+  string purpose = 8;
+  int32 status = 9;          // matches consolidation_topup_records.status
+  string tx_hash = 10;
+  int32 retry_count = 11;
+  string error_message = 12;
+  string confirmed_at = 13;  // RFC3339 (UTC)
+  string created_at = 14;    // RFC3339 (UTC)
+  string updated_at = 15;    // RFC3339 (UTC)
+  // Human-readable value converted from smallest unit.
+  string amount_readable = 16;
+}
+
+message AdminListConsolidationTopupRecordsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string task_id = 3;         // optional
+  string chain = 4;           // optional
+  string asset_symbol = 5;    // optional
+  string purpose = 6;         // optional
+  int32 status = 7;           // optional (0=all)
+  string to_address = 8;      // optional
+  string tx_hash = 9;         // optional
+  int64 created_at_from = 10; // optional unix seconds
+  int64 created_at_to = 11;   // optional unix seconds
+}
+
+message AdminListConsolidationTopupRecordsData {
+  repeated AdminConsolidationTopupRecordItem records = 1;
+}
+
+message AdminListConsolidationTopupRecordsResponse {
+  bool success = 1;
+  string message = 2;
+  AdminListConsolidationTopupRecordsData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message AdminEnergyRentalRecordItem {
+  int64 id = 1;
+  string order_id = 2;
+  string receiver_address = 3;
+  int64 energy_amount = 4;
+  int32 rental_duration = 5;
+  string price_per_energy = 6;
+  string total_cost = 7;
+  string provider = 8;
+  int32 status = 9; // matches energy_rental_records.status
+  google.protobuf.Struct provider_response = 10;
+  string error_message = 11;
+  string confirmed_at = 12; // RFC3339 (UTC)
+  string created_at = 13;   // RFC3339 (UTC)
+  string updated_at = 14;   // RFC3339 (UTC)
+}
+
+message AdminListEnergyRentalRecordsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string receiver_address = 3; // optional
+  string provider = 4;         // optional
+  int32 status = 5;            // optional (0=all)
+  string order_id = 6;         // optional
+  int64 created_at_from = 7;   // optional unix seconds
+  int64 created_at_to = 8;     // optional unix seconds
+}
+
+message AdminListEnergyRentalRecordsData {
+  repeated AdminEnergyRentalRecordItem records = 1;
+}
+
+message AdminListEnergyRentalRecordsResponse {
+  bool success = 1;
+  string message = 2;
+  AdminListEnergyRentalRecordsData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message AdminGetEnergyRentalRecordRequest {
+  int64 id = 1;
+}
+
+message AdminGetEnergyRentalRecordData {
+  AdminEnergyRentalRecordItem record = 1;
+}
+
+message AdminGetEnergyRentalRecordResponse {
+  bool success = 1;
+  string message = 2;
+  AdminGetEnergyRentalRecordData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Auth (legacy endpoints removed)
+// ============================================================================
+
+// ============================================================================
+// Admin MFA Flow (V1)
+// ============================================================================
+
+message AdminMFACaptchaGenerateRequest {}
+
+message AdminMFACaptchaGenerateResponse {
+  bool success = 1;
+  string captcha_image = 2; // base64 image string
+  string captcha_key = 3;   // key1
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AdminMFACaptchaValidateRequest {
+  string captcha_key = 1;
+  string captcha_answer = 2;
+}
+
+message AdminMFACaptchaValidateResponse {
+  bool success = 1;
+  string temp_key = 2; // key2
+  string message = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AdminMFALoginRequest {
+  string temp_key = 1; // key2
+  string email = 2;
+  string password = 3;
+}
+
+message AdminMFALoginResponse {
+  bool success = 1;
+  string status = 2;            // 2fa_not_bound | 2fa_required | login_successful
+  string auth_key = 3;          // key3 (for 2FA setup only)
+  string session_identifier = 4; // for 2FA verify (Step 7)
+  string message = 5;
+  string request_id = 6;
+  string timestamp = 7;
+  string auth_token = 8; // final JWT (only when status=login_successful)
+  int64 expires_in = 9;
+  AdminUserInfo user_info = 10;
+  string wallet_state = 11; // uninitialized/pending_backup/locked/unlocked (hot wallet)
+}
+
+message AdminMFAGetTwoFAQrCodeRequest {
+  string auth_key = 1;
+}
+
+message AdminMFAGetTwoFAQrCodeResponse {
+  bool success = 1;
+  string qr_code = 2;      // base64 PNG (data URL is also acceptable)
+  string secret_key = 3;   // base32 (manual entry)
+  string issuer = 4;
+  string account_name = 5;
+  string message = 6;
+  string request_id = 7;
+  string timestamp = 8;
+}
+
+message AdminMFABindTwoFARequest {
+  string auth_key = 1;
+  string totp_code = 2;
+  string secret_key = 3;
+}
+
+message AdminMFABindTwoFAResponse {
+  bool success = 1;
+  string status = 2;      // 2fa_bound_successfully
+  string auth_token = 3;  // final JWT
+  int64 expires_in = 4;
+  repeated string backup_codes = 5;
+  string message = 6;
+  string request_id = 7;
+  string timestamp = 8;
+}
+
+message AdminMFAVerifyTwoFARequest {
+  string session_identifier = 1;
+  string totp_code = 2;
+}
+
+message AdminUserInfo {
+  string admin_id = 1;
+  string username = 2;
+  string name = 3;
+  string role = 4;
+  repeated string permissions = 5;
+  bool require_password_change = 6;
+}
+
+message AdminMFAVerifyTwoFAResponse {
+  bool success = 1;
+  string status = 2;     // login_successful
+  string auth_token = 3; // final JWT
+  int64 expires_in = 4;
+  AdminUserInfo user_info = 5;
+  string message = 6;
+  string request_id = 7;
+  string timestamp = 8;
+}
+
+message RefreshTokenRequest {}
+
+message RefreshTokenData {
+  string access_token = 1;
+  int64 expires_in = 2;
+}
+
+message RefreshTokenResponse {
+  bool success = 1;
+  string message = 2;
+  RefreshTokenData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message LogoutRequest {}
+
+message LogoutResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+// ============================================================================
+// Admin Users
+// ============================================================================
+
+message ListAdminsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string role = 3;
+  string status = 4;
+  string keyword = 5;
+}
+
+message AdminUserItem {
+  string admin_id = 1;
+  string username = 2;
+  string name = 3;
+  string role = 4;
+  string status = 5;
+  bool two_factor_enabled = 6;
+  string last_login_at = 7;
+  string last_login_ip = 8;
+  string created_at = 9;
+  string created_by = 10;
+}
+
+message ListAdminsData {
+  repeated AdminUserItem admins = 1;
+}
+
+message ListAdminsResponse {
+  bool success = 1;
+  string message = 2;
+  ListAdminsData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message CreateAdminRequest {
+  string username = 1;
+  string name = 2;
+  string role = 3;
+  string password = 4;
+  bool require_password_change = 5;
+  bool two_factor_required = 6;
+}
+
+message CreateAdminData {
+  string admin_id = 1;
+  string username = 2;
+  string name = 3;
+  string role = 4;
+  string status = 5;
+  string created_at = 6;
+  string temp_password = 7;
+  bool email_sent = 8;
+  string two_factor_secret = 9;
+  string two_factor_otpauth_url = 10;
+}
+
+message CreateAdminResponse {
+  bool success = 1;
+  string message = 2;
+  CreateAdminData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateAdminRequest {
+  string admin_id = 1;
+  string name = 2;
+  string role = 3;
+  string status = 4;
+}
+
+message UpdateAdminData {
+  string admin_id = 1;
+  string name = 2;
+  string role = 3;
+  string updated_at = 4;
+  string updated_by = 5;
+}
+
+message UpdateAdminResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateAdminData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message DisableAdminRequest {
+  string admin_id = 1;
+  string reason = 2;
+}
+
+message DisableAdminData {
+  string admin_id = 1;
+  string status = 2;
+  string disabled_at = 3;
+  string disabled_by = 4;
+}
+
+message DisableAdminResponse {
+  bool success = 1;
+  string message = 2;
+  DisableAdminData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ResetAdminPasswordRequest {
+  string admin_id = 1;
+  bool send_email = 2;
+  bool require_change = 3;
+}
+
+message ResetAdminPasswordData {
+  string admin_id = 1;
+  string password_reset_at = 2;
+  bool email_sent = 3;
+  string temp_password = 4;
+}
+
+message ResetAdminPasswordResponse {
+  bool success = 1;
+  string message = 2;
+  ResetAdminPasswordData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ResetAdminTwoFARequest {
+  string admin_id = 1;
+  string reason = 2;
+}
+
+message ResetAdminTwoFAData {
+  string admin_id = 1;
+  bool two_factor_enabled = 2;
+  string reset_at = 3;
+  string reset_by = 4;
+}
+
+message ResetAdminTwoFAResponse {
+  bool success = 1;
+  string message = 2;
+  ResetAdminTwoFAData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ChangeMyPasswordRequest {
+  string current_password = 1;
+  string new_password = 2;
+  string confirm_password = 3;
+}
+
+message ChangeMyPasswordData {
+  string password_changed_at = 1;
+  string next_expiry = 2;
+}
+
+message ChangeMyPasswordResponse {
+  bool success = 1;
+  string message = 2;
+  ChangeMyPasswordData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+  string auth_token = 6; // refreshed JWT after password change (may be empty if token issuance is unavailable)
+  int64 expires_in = 7;
+}
+
+// ============================================================================
+// User Management (Web2 Users)
+// ============================================================================
+
+message ListUsersRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string status = 3;       // active | frozen | pending_kyc | terminated
+  string role = 4;         // user | vip
+  string keyword = 5;      // uid/email/phone
+  string created_from = 6; // YYYY-MM-DD
+  string created_to = 7;   // YYYY-MM-DD
+  string sort_by = 8;      // created_at | last_login | balance
+  string sort_order = 9;   // asc | desc
+  google.protobuf.BoolValue two_factor_enabled = 10; // filter by 2FA enabled (best-effort via member_security_setting.google_auth_enabled)
+  google.protobuf.BoolValue bypass_withdraw_audit = 11; // filter by withdraw-audit bypass whitelist
+}
+
+message UserListItem {
+  string uid = 1;
+  string email = 2;
+  string phone = 3;
+  string name = 4;
+  string status = 5;
+  string role = 6;
+  string kyc_status = 7;
+  bool two_factor_enabled = 8;
+  string total_balance_usd = 9;
+  string last_login_at = 10;
+  string last_login_ip = 11;
+  string created_at = 12;
+  bool freeze_assets = 13;  // 冻结时是否冻结资产
+  string freeze_reason = 14; // 冻结原因（仅冻结状态）
+  bool google_auth_bound = 15; // 是否绑定了Google Authenticator（身份验证app）
+}
+
+message ListUsersData {
+  repeated UserListItem users = 1;
+}
+
+message ListUsersResponse {
+  bool success = 1;
+  string message = 2;
+  ListUsersData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message GetUserDetailRequest {
+  string uid = 1;
+}
+
+message UserBasicInfo {
+  string uid = 1;
+  string email = 2;
+  string phone = 3;
+  string name = 4;
+  string avatar = 5;
+  string status = 6;
+  string role = 7;
+  string created_at = 8;
+}
+
+message UserSecurityInfo {
+  bool two_factor_enabled = 1;
+  string two_factor_type = 2;
+  string last_password_change = 3;
+  int32 login_attempts_today = 4;
+  string last_login_at = 5;
+  string last_login_ip = 6;
+  string last_login_device = 7;
+  bool google_auth_bound = 8; // 是否绑定了Google Authenticator（身份验证app）
+}
+
+message UserKycInfo {
+  string status = 1;
+  int32 level = 2;
+  string verified_at = 3;
+  string id_type = 4;
+  string id_number = 5;
+}
+
+message UserAssetBalance {
+  string currency = 1;
+  string balance = 2;
+  string balance_usd = 3;
+}
+
+message UserAssetSummary {
+  string total_balance_usd = 1;
+  repeated UserAssetBalance balances = 2;
+}
+
+message UserTransactionSummary {
+  int64 total_deposits = 1;
+  string total_deposit_amount_usd = 2;
+  int64 total_withdrawals = 3;
+  string total_withdrawal_amount_usd = 4;
+  int64 total_swaps = 5;
+  string last_transaction_at = 6;
+}
+
+message UserWhitelistAddress {
+  string id = 1;
+  string network = 2;
+  string address = 3;
+  string label = 4;
+  string created_at = 5;
+}
+
+message UserAdminNote {
+  string id = 1;
+  string uid = 2;
+  string content = 3;
+  bool is_important = 4;
+  string operator = 5;
+  string created_at = 6;
+}
+
+message GetUserDetailData {
+  UserBasicInfo basic_info = 1;
+  UserSecurityInfo security_info = 2;
+  UserKycInfo kyc_info = 3;
+  UserAssetSummary asset_summary = 4;
+  UserTransactionSummary transaction_summary = 5;
+  repeated UserWhitelistAddress whitelist_addresses = 6;
+  repeated UserAdminNote admin_notes = 7;
+  bool bypass_withdraw_audit = 8; // 是否绕过提款审计（白名单）
+}
+
+message GetUserDetailResponse {
+  bool success = 1;
+  string message = 2;
+  GetUserDetailData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message FreezeUserRequest {
+  string uid = 1;
+  string reason = 2;
+  bool freeze_assets = 3;
+  bool notify_user = 4;
+}
+
+message FreezeUserData {
+  string uid = 1;
+  string status = 2;
+  string frozen_at = 3;
+  string frozen_by = 4;
+  string reason = 5;
+}
+
+message FreezeUserResponse {
+  bool success = 1;
+  string message = 2;
+  FreezeUserData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UnfreezeUserRequest {
+  string uid = 1;
+  string reason = 2;
+  bool unfreeze_assets = 3;
+  bool notify_user = 4;
+}
+
+message UnfreezeUserData {
+  string uid = 1;
+  string status = 2;
+  string unfrozen_at = 3;
+  string unfrozen_by = 4;
+  string reason = 5;
+}
+
+message UnfreezeUserResponse {
+  bool success = 1;
+  string message = 2;
+  UnfreezeUserData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message TerminateUserRequest {
+  string uid = 1;
+  string reason = 2;
+  string effective_date = 3;
+  string handle_balance = 4;
+  string withdraw_address = 5;
+}
+
+message TerminateUserData {
+  string uid = 1;
+  string status = 2;
+  string terminated_at = 3;
+  string terminated_by = 4;
+  string reason = 5;
+  string balance_handled = 6;
+}
+
+message TerminateUserResponse {
+  bool success = 1;
+  string message = 2;
+  TerminateUserData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateUserRoleRequest {
+  string uid = 1;
+  string role = 2;
+  string reason = 3;
+}
+
+message UpdateUserRoleData {
+  string uid = 1;
+  string old_role = 2;
+  string new_role = 3;
+  string updated_at = 4;
+  string updated_by = 5;
+}
+
+message UpdateUserRoleResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateUserRoleData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AdminReauth {
+  string admin_password = 1;
+  string totp_code = 2;
+}
+
+message UpdateUserMemberLevelRequest {
+  string uid = 1;
+  int32 member_level = 2;
+  string reason = 3;
+  AdminReauth reauth = 4;
+}
+
+message UpdateUserMemberLevelData {
+  string uid = 1;
+  int32 old_level = 2;
+  int32 new_level = 3;
+  string updated_at = 4;
+  string updated_by = 5;
+}
+
+message UpdateUserMemberLevelResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateUserMemberLevelData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ResetUserPasswordRequest {
+  string uid = 1;
+  string reason = 2;
+  reserved 3;
+  AdminReauth reauth = 4;
+}
+
+message ResetUserPasswordData {
+  string uid = 1;
+  string temp_password = 2;
+  reserved 3;
+  string reset_at = 4;
+  string reset_by = 5;
+}
+
+message ResetUserPasswordResponse {
+  bool success = 1;
+  string message = 2;
+  ResetUserPasswordData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ResetUserTradePasswordRequest {
+  string uid = 1;
+  string reason = 2;
+  AdminReauth reauth = 3;
+}
+
+message ResetUserTradePasswordData {
+  string uid = 1;
+  string reset_at = 2;
+  string reset_by = 3;
+}
+
+message ResetUserTradePasswordResponse {
+  bool success = 1;
+  string message = 2;
+  ResetUserTradePasswordData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UnlockTradePasswordRequest {
+  string uid = 1;
+  string reason = 2;
+}
+
+message UnlockTradePasswordData {
+  string uid = 1;
+  int32 previous_attempts = 2;
+  string unlocked_at = 3;
+  string unlocked_by = 4;
+}
+
+message UnlockTradePasswordResponse {
+  bool success = 1;
+  string message = 2;
+  UnlockTradePasswordData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateUserWithdrawAuditWhitelistRequest {
+  string uid = 1;
+  bool enabled = 2;
+  string reason = 3;
+  AdminReauth reauth = 4;
+}
+
+message UpdateUserWithdrawAuditWhitelistData {
+  string uid = 1;
+  bool enabled = 2;
+  string updated_at = 3;
+  string updated_by = 4;
+}
+
+message UpdateUserWithdrawAuditWhitelistResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateUserWithdrawAuditWhitelistData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UnbindUserTotpRequest {
+  string uid = 1;
+  string reason = 2;
+  AdminReauth reauth = 3;
+}
+
+message UnbindUserTotpData {
+  string uid = 1;
+  bool two_factor_enabled = 2;
+  string unbound_at = 3;
+  string unbound_by = 4;
+}
+
+message UnbindUserTotpResponse {
+  bool success = 1;
+  string message = 2;
+  UnbindUserTotpData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ListUser2FAHistoryRequest {
+  string uid = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message User2FAHistoryItem {
+  string id = 1;
+  string uid = 2;
+  string event = 3;
+  string factor = 4;
+  string operator_type = 5;
+  string operator = 6;
+  string reason = 7;
+  string ip = 8;
+  string user_agent = 9;
+  string created_at = 10;
+}
+
+message ListUser2FAHistoryData {
+  repeated User2FAHistoryItem items = 1;
+}
+
+message ListUser2FAHistoryResponse {
+  bool success = 1;
+  string message = 2;
+  ListUser2FAHistoryData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message AddUserNoteRequest {
+  string uid = 1;
+  string content = 2;
+  bool is_important = 3;
+}
+
+message AddUserNoteData {
+  string id = 1;
+  string uid = 2;
+  string content = 3;
+  bool is_important = 4;
+  string operator = 5;
+  string created_at = 6;
+}
+
+message AddUserNoteResponse {
+  bool success = 1;
+  string message = 2;
+  AddUserNoteData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ExportUsersFilters {
+  string status = 1;
+  string role = 2;
+  string keyword = 3;
+  string created_from = 4;
+  string created_to = 5;
+  string sort_by = 6;
+  string sort_order = 7;
+  google.protobuf.BoolValue two_factor_enabled = 8;
+  google.protobuf.BoolValue bypass_withdraw_audit = 9;
+}
+
+message ExportUsersRequest {
+  ExportUsersFilters filters = 1;
+  repeated string fields = 2;
+  string format = 3; // xlsx | csv
+}
+
+// ----------------------------------------------------------------------------
+// Users statistics (Web2 + Web3 overview)
+// ----------------------------------------------------------------------------
+
+message GetUsersStatisticsRequest {}
+
+message UsersStatisticsData {
+  string web2_total = 1;
+  string web3_total = 2;
+  string whitelist_total = 3;
+  string total_users = 4;
+}
+
+message GetUsersStatisticsResponse {
+  bool success = 1;
+  string message = 2;
+  UsersStatisticsData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ----------------------------------------------------------------------------
+// User withdraw-audit whitelist rules (per address + token + limit in USDT)
+// ----------------------------------------------------------------------------
+
+message UserWithdrawAuditWhitelistRule {
+  string id = 1;
+  string uid = 2;
+  string asset_code = 3;
+  string chain_code = 4;
+  string address = 5;
+  string limit_usdt = 6; // 0 means unlimited
+  bool enabled = 7;
+  string updated_at = 8;
+  string source = 9; // admin/user
+}
+
+message ListUserWithdrawAuditWhitelistRulesRequest {
+  string uid = 1;
+}
+
+message ListUserWithdrawAuditWhitelistRulesData {
+  bool global_enabled = 1; // legacy global bypass (user_whitelist_settings.bypass_withdraw_audit)
+  repeated UserWithdrawAuditWhitelistRule rules = 2;
+}
+
+message ListUserWithdrawAuditWhitelistRulesResponse {
+  bool success = 1;
+  string message = 2;
+  ListUserWithdrawAuditWhitelistRulesData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpsertUserWithdrawAuditWhitelistRuleInput {
+  string asset_code = 1;
+  string chain_code = 2;
+  string address = 3;
+  string limit_usdt = 4; // 0 means unlimited
+  bool enabled = 5;
+  string source = 6; // admin/user (optional; default admin)
+}
+
+message UpsertUserWithdrawAuditWhitelistRulesRequest {
+  string uid = 1;
+  repeated UpsertUserWithdrawAuditWhitelistRuleInput rules = 2;
+  string reason = 3;
+  AdminReauth reauth = 4;
+  bool global_enabled = 5; // legacy global bypass
+}
+
+message UpsertUserWithdrawAuditWhitelistRulesData {
+  string uid = 1;
+  repeated UserWithdrawAuditWhitelistRule rules = 2;
+  string updated_at = 3;
+  string updated_by = 4;
+}
+
+message UpsertUserWithdrawAuditWhitelistRulesResponse {
+  bool success = 1;
+  string message = 2;
+  UpsertUserWithdrawAuditWhitelistRulesData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ExportUsersData {
+  string format = 1;        // csv | xlsx
+  string file_name = 2;     // e.g. users_20260122_150405.csv
+  bytes content = 3;        // binary file content (CSV or XLSX)
+}
+
+message ExportUsersResponse {
+  bool success = 1;
+  string message = 2;
+  ExportUsersData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Security Settings (My Account)
+// ============================================================================
+
+message GetMySecuritySettingsRequest {}
+
+message PasswordPolicy {
+  int32 min_length = 1;
+  bool require_upper = 2;
+  bool require_lower = 3;
+  bool require_digit = 4;
+  bool require_special = 5;
+  int32 expiry_days = 6;
+}
+
+message TwoFAStatus {
+  bool enabled = 1;
+  bool required = 2;
+  string bound_at = 3;
+  bool has_pending_setup = 4;
+}
+
+message GetMySecuritySettingsData {
+  PasswordPolicy password_policy = 1;
+  string password_changed_at = 2;
+  string next_password_expiry = 3;
+
+  TwoFAStatus two_fa = 4;
+
+  string last_login_at = 5;
+  string last_login_ip = 6;
+}
+
+message GetMySecuritySettingsResponse {
+  bool success = 1;
+  string message = 2;
+  GetMySecuritySettingsData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message TwoFASetupPayload {
+  string qr_code = 1;
+  string secret = 2;
+  string otpauth_url = 3;
+}
+
+message StartTwoFASetupRequest {}
+
+message StartTwoFASetupResponse {
+  bool success = 1;
+  string message = 2;
+  TwoFASetupPayload data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message StartTwoFARebindRequest {
+  string current_password = 1;
+  string totp_code = 2;
+}
+
+message StartTwoFARebindResponse {
+  bool success = 1;
+  string message = 2;
+  TwoFASetupPayload data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ConfirmTwoFASetupRequest {
+  string current_password = 1;
+  string totp_code = 2;
+}
+
+message ConfirmTwoFASetupData {
+  bool enabled = 1;
+  string bound_at = 2;
+}
+
+message ConfirmTwoFASetupResponse {
+  bool success = 1;
+  string message = 2;
+  ConfirmTwoFASetupData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+  repeated string backup_codes = 6;
+}
+
+message DisableTwoFARequest {
+  string current_password = 1;
+  string totp_code = 2;
+}
+
+message DisableTwoFAData {
+  bool enabled = 1;
+  string disabled_at = 2;
+}
+
+message DisableTwoFAResponse {
+  bool success = 1;
+  string message = 2;
+  DisableTwoFAData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// My (Profile + RBAC)
+// ============================================================================
+
+message GetMeRequest {}
+
+message GetMeData {
+  AdminUserInfo user_info = 1;
+  string status = 2;
+  bool two_factor_enabled = 3;
+  bool two_factor_required = 4;
+  string last_login_at = 5;
+  string last_login_ip = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  GetMyRBACData rbac = 9;
+  string wallet_state = 10; // uninitialized/pending_backup/locked/unlocked (hot wallet)
+}
+
+// ============================================================================
+// Wallet Init / Signer Unlock
+// ============================================================================
+
+message AdminGetHotWalletRuntimeStatusRequest {
+  string seed_id = 1;
+}
+
+message AdminGetHotWalletRuntimeStatusData {
+  string seed_id = 1;
+  string wallet_state = 2; // uninitialized/pending_backup/locked/unlocked
+  bool backup_confirmed = 3;
+  string unlocked_at = 4;
+}
+
+message AdminGetHotWalletRuntimeStatusResponse {
+  bool success = 1;
+  string message = 2;
+  AdminGetHotWalletRuntimeStatusData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AdminStartHotWalletInitRequest {
+  string seed_id = 1;
+  string seed_name = 2;
+  repeated string supported_chains = 3;
+  string unlock_password = 4;
+}
+
+message AdminStartHotWalletInitData {
+  string seed_id = 1;
+  string init_session_id = 2;
+  int32 word_count = 3;
+  int32 page_size = 4;
+  int32 total_pages = 5;
+  string expires_at = 6;
+}
+
+message AdminStartHotWalletInitResponse {
+  bool success = 1;
+  string message = 2;
+  AdminStartHotWalletInitData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AdminGetHotWalletMnemonicPageRequest {
+  string init_session_id = 1;
+  int32 page_index = 2;
+}
+
+message AdminGetHotWalletMnemonicPageData {
+  int32 page_index = 1;
+  int32 page_size = 2;
+  int32 total_pages = 3;
+  repeated string words = 4;
+  bool has_prev = 5;
+  bool has_next = 6;
+}
+
+message AdminGetHotWalletMnemonicPageResponse {
+  bool success = 1;
+  string message = 2;
+  AdminGetHotWalletMnemonicPageData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AdminGetHotWalletMnemonicChallengeRequest {
+  string init_session_id = 1;
+}
+
+message AdminGetHotWalletMnemonicChallengeData {
+  string challenge_session_id = 1;
+  repeated int32 challenge_indices = 2;
+  string expires_at = 3;
+  int32 remaining_attempts = 4;
+}
+
+message AdminGetHotWalletMnemonicChallengeResponse {
+  bool success = 1;
+  string message = 2;
+  AdminGetHotWalletMnemonicChallengeData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AdminHotWalletMnemonicAnswer {
+  int32 index = 1;
+  string word = 2;
+}
+
+message AdminVerifyHotWalletMnemonicChallengeRequest {
+  string challenge_session_id = 1;
+  repeated AdminHotWalletMnemonicAnswer answers = 2;
+}
+
+message AdminVerifyHotWalletMnemonicChallengeData {
+  bool verified = 1;
+  bool backup_confirmed = 2;
+  repeated int32 incorrect_indices = 3;
+  int32 remaining_attempts = 4;
+  string verified_at = 5;
+}
+
+message AdminVerifyHotWalletMnemonicChallengeResponse {
+  bool success = 1;
+  string message = 2;
+  AdminVerifyHotWalletMnemonicChallengeData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AdminUnlockSignerHotWalletRequest {
+  string seed_id = 1;
+  string unlock_password = 2;
+}
+
+message AdminUnlockSignerHotWalletData {
+  string seed_id = 1;
+  bool unlocked = 2;
+  string unlocked_at = 3;
+}
+
+message AdminUnlockSignerHotWalletResponse {
+  bool success = 1;
+  string message = 2;
+  AdminUnlockSignerHotWalletData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message GetMeResponse {
+  bool success = 1;
+  string message = 2;
+  GetMeData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// RBAC v2 (My) - Current User
+// ============================================================================
+
+message GetMyRBACRequest {}
+
+message GetMyRBACData {
+  string admin_id = 1;
+  string role = 2;
+  google.protobuf.Struct permissions = 3;
+  // RBAC v2 (derived from admin_user_role/admin_role_* tables)
+  repeated AdminMenu user_menus = 4;                 // flat list of menus the user can access
+  repeated AdminMenu user_menu_tree = 5;             // menu tree for UI (hide_in_menu=0; respects hide_children_in_menu)
+  repeated AdminPermission user_permissions = 6;     // full permission objects
+  repeated string user_permission_codes = 7;         // convenience: distinct permission codes
+  repeated AdminRole user_roles = 8;                 // roles assigned to the user
+}
+
+message GetMyRBACResponse {
+  bool success = 1;
+  string message = 2;
+  GetMyRBACData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// RBAC v2 (UI helpers) - Permission map (scheme B)
+// ============================================================================
+
+message GetRbacPermissionMapRequest {}
+
+message GetRbacPermissionMapData {
+  // key: RPC method name (e.g. "CreateRole"), value: canonical permission code (e.g. "rbac.role.create")
+  map<string, string> rpc_method_permissions = 1;
+  // schema version for cache busting (e.g. "2025-12-20")
+  string version = 2;
+}
+
+message GetRbacPermissionMapResponse {
+  bool success = 1;
+  string message = 2;
+  GetRbacPermissionMapData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// RBAC v2 - Common Types
+// ============================================================================
+
+// AdminMenu represents a menu item (admin_menu).
+message AdminMenu {
+  int64 id = 1;
+  int64 pid = 2;
+  int32 level = 3;
+  string tree = 4;
+  string name = 5;
+  string path = 6;
+  string icon = 7;
+  bool hide_in_menu = 8;
+  bool hide_children_in_menu = 9;
+  int32 sort = 10;
+  string remark = 11;
+  int32 status = 12;
+  string updated_at = 13;
+  string created_at = 14;
+  string deleted_at = 15;
+  string target = 16;
+  string access = 17;
+  string key = 18;
+  repeated AdminMenu children = 19; // used by GetMenuTree / user_menu_tree
+}
+
+// AdminPermission represents a permission (admin_permission).
+message AdminPermission {
+  int64 id = 1;
+  string name = 2;
+  string code = 3;
+  string description = 4;
+  int64 menu_id = 5; // 0 means NULL/global permission
+  int32 status = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  string deleted_at = 9;
+}
+
+// AdminRole represents a role (admin_role).
+message AdminRole {
+  int64 id = 1;
+  string name = 2;
+  string code = 3;
+  string description = 4;
+  int32 status = 5;
+  string created_at = 6;
+  string updated_at = 7;
+  string deleted_at = 8;
+  repeated AdminMenu menus = 9;               // optional for GetRoleById
+  repeated AdminPermission permissions = 10;  // optional for GetRoleById
+}
+
+// ============================================================================
+// RBAC v2 - Menu Management
+// ============================================================================
+
+message CreateMenuRequest {
+  string name = 1; // required
+  int64 pid = 2;   // default 0
+  string path = 3;
+  string icon = 4;
+  bool hide_in_menu = 5;               // default false
+  bool hide_children_in_menu = 6;      // default false
+  int32 sort = 7;                      // default 0
+  string remark = 8;
+  int32 status = 9;                    // default 1
+  string target = 10;
+  string access = 11;
+  string key = 12;
+}
+
+message CreateMenuData {
+  AdminMenu menu = 1;
+}
+
+message CreateMenuResponse {
+  bool success = 1;
+  string message = 2;
+  CreateMenuData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateMenuRequest {
+  int64 id = 1; // required
+  google.protobuf.StringValue name = 2;
+  google.protobuf.Int64Value pid = 3;
+  google.protobuf.StringValue path = 4;
+  google.protobuf.StringValue icon = 5;
+  google.protobuf.BoolValue hide_in_menu = 6;
+  google.protobuf.BoolValue hide_children_in_menu = 7;
+  google.protobuf.Int32Value sort = 8;
+  google.protobuf.StringValue remark = 9;
+  google.protobuf.Int32Value status = 10;
+  google.protobuf.StringValue target = 11;
+  google.protobuf.StringValue access = 12;
+  google.protobuf.StringValue key = 13;
+}
+
+message UpdateMenuData {
+  AdminMenu menu = 1;
+}
+
+message UpdateMenuResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateMenuData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message DeleteMenuRequest {
+  int64 id = 1; // required
+}
+
+message DeleteMenuResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+message GetMenuByIdRequest {
+  int64 id = 1; // required
+}
+
+message GetMenuByIdData {
+  AdminMenu menu = 1;
+}
+
+message GetMenuByIdResponse {
+  bool success = 1;
+  string message = 2;
+  GetMenuByIdData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ListMenusRequest {
+  int32 page = 1;      // default 1
+  int32 page_size = 2; // default 20
+  google.protobuf.Int32Value status = 3;
+  google.protobuf.Int64Value pid = 4;
+  google.protobuf.BoolValue hide_in_menu = 5;
+}
+
+message ListMenusData {
+  repeated AdminMenu list = 1;
+}
+
+message ListMenusResponse {
+  bool success = 1;
+  string message = 2;
+  ListMenusData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message GetMenuTreeRequest {
+  google.protobuf.Int64Value root_pid = 1; // default 0
+}
+
+message GetMenuTreeData {
+  repeated AdminMenu list = 1;
+}
+
+message GetMenuTreeResponse {
+  bool success = 1;
+  string message = 2;
+  GetMenuTreeData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// RBAC v2 - Permission Management
+// ============================================================================
+
+message CreatePermissionRequest {
+  string name = 1; // required
+  string code = 2; // required, unique (non-soft-deleted)
+  google.protobuf.Int64Value menu_id = 3; // optional
+  string description = 4;
+  int32 status = 5; // default 1
+}
+
+message CreatePermissionData {
+  AdminPermission permission = 1;
+}
+
+message CreatePermissionResponse {
+  bool success = 1;
+  string message = 2;
+  CreatePermissionData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdatePermissionRequest {
+  int64 id = 1; // required
+  google.protobuf.StringValue name = 2;
+  google.protobuf.StringValue code = 3;
+  google.protobuf.Int64Value menu_id = 4;
+  google.protobuf.StringValue description = 5;
+  google.protobuf.Int32Value status = 6;
+}
+
+message UpdatePermissionData {
+  AdminPermission permission = 1;
+}
+
+message UpdatePermissionResponse {
+  bool success = 1;
+  string message = 2;
+  UpdatePermissionData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message DeletePermissionRequest {
+  int64 id = 1; // required
+  bool force = 2; // default false
+}
+
+message DeletePermissionResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+message GetPermissionByIdRequest {
+  int64 id = 1; // required
+}
+
+message GetPermissionByIdData {
+  AdminPermission permission = 1;
+}
+
+message GetPermissionByIdResponse {
+  bool success = 1;
+  string message = 2;
+  GetPermissionByIdData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ListPermissionsRequest {
+  int32 page = 1;      // default 1
+  int32 page_size = 2; // default 20
+  google.protobuf.Int64Value menu_id = 3;
+  google.protobuf.Int32Value status = 4;
+  string name = 5; // filter by name (partial match)
+  string code = 6; // filter by code (partial match)
+  string description = 7; // filter by description (partial match)
+}
+
+message ListPermissionsData {
+  repeated AdminPermission list = 1;
+}
+
+message ListPermissionsResponse {
+  bool success = 1;
+  string message = 2;
+  ListPermissionsData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message GetPermissionsByMenuIdRequest {
+  int64 menu_id = 1; // required
+}
+
+message GetPermissionsByMenuIdData {
+  repeated AdminPermission list = 1;
+}
+
+message GetPermissionsByMenuIdResponse {
+  bool success = 1;
+  string message = 2;
+  GetPermissionsByMenuIdData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// RBAC v2 - Role Management
+// ============================================================================
+
+message CreateRoleRequest {
+  string name = 1; // required
+  string code = 2; // required, unique (non-soft-deleted)
+  string description = 3;
+  int32 status = 4; // default 1
+}
+
+message CreateRoleData {
+  AdminRole role = 1;
+}
+
+message CreateRoleResponse {
+  bool success = 1;
+  string message = 2;
+  CreateRoleData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateRoleRequest {
+  int64 id = 1; // required
+  google.protobuf.StringValue name = 2;
+  google.protobuf.StringValue code = 3;
+  google.protobuf.StringValue description = 4;
+  google.protobuf.Int32Value status = 5;
+}
+
+message UpdateRoleData {
+  AdminRole role = 1;
+}
+
+message UpdateRoleResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateRoleData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message DeleteRoleRequest {
+  int64 id = 1; // required
+  bool force = 2; // default false
+}
+
+message DeleteRoleResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+message GetRoleByIdRequest {
+  int64 id = 1; // required
+  bool include_menus = 2;
+  bool include_permissions = 3;
+}
+
+message GetRoleByIdData {
+  AdminRole role = 1;
+}
+
+message GetRoleByIdResponse {
+  bool success = 1;
+  string message = 2;
+  GetRoleByIdData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ListRolesRequest {
+  int32 page = 1;      // default 1
+  int32 page_size = 2; // default 20
+  google.protobuf.Int32Value status = 3;
+}
+
+message ListRolesData {
+  repeated AdminRole list = 1;
+}
+
+message ListRolesResponse {
+  bool success = 1;
+  string message = 2;
+  ListRolesData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message AssignMenusToRoleRequest {
+  int64 role_id = 1; // required
+  repeated int64 menu_ids = 2; // required
+  google.protobuf.BoolValue replace = 3; // default true
+}
+
+message AssignMenusToRoleData {
+  int64 role_id = 1;
+  int32 assigned_count = 2;
+}
+
+message AssignMenusToRoleResponse {
+  bool success = 1;
+  string message = 2;
+  AssignMenusToRoleData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AssignPermissionsToRoleRequest {
+  int64 role_id = 1; // required
+  repeated int64 permission_ids = 2; // required
+  google.protobuf.BoolValue replace = 3; // default true
+}
+
+message AssignPermissionsToRoleData {
+  int64 role_id = 1;
+  int32 assigned_count = 2;
+}
+
+message AssignPermissionsToRoleResponse {
+  bool success = 1;
+  string message = 2;
+  AssignPermissionsToRoleData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AssignRolesToUserRequest {
+  int64 user_id = 1; // required (admin_users.id)
+  repeated int64 role_ids = 2; // required
+  google.protobuf.BoolValue replace = 3; // default true
+}
+
+message AssignRolesToUserData {
+  int64 user_id = 1;
+  int32 assigned_count = 2;
+}
+
+message AssignRolesToUserResponse {
+  bool success = 1;
+  string message = 2;
+  AssignRolesToUserData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message GetRoleMenusRequest {
+  int64 role_id = 1; // required
+}
+
+message GetRoleMenusData {
+  repeated AdminMenu list = 1;
+}
+
+message GetRoleMenusResponse {
+  bool success = 1;
+  string message = 2;
+  GetRoleMenusData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message GetRolePermissionsRequest {
+  int64 role_id = 1; // required
+}
+
+message GetRolePermissionsData {
+  repeated AdminPermission list = 1;
+}
+
+message GetRolePermissionsResponse {
+  bool success = 1;
+  string message = 2;
+  GetRolePermissionsData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message GetUserRolesRequest {
+  int64 user_id = 1; // required (admin_users.id)
+}
+
+message GetUserRolesData {
+  repeated AdminRole list = 1;
+}
+
+message GetUserRolesResponse {
+  bool success = 1;
+  string message = 2;
+  GetUserRolesData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// System Config
+// ============================================================================
+
+message GetSystemConfigRequest {}
+
+message GeneralConfig {
+  string system_name = 1;
+  string timezone = 2;
+  string currency_display = 3;
+  bool maintenance_mode = 4;
+}
+
+message SecurityConfig {
+  int32 session_timeout_minutes = 1;
+  int32 max_login_attempts = 2;
+  int32 lockout_duration_minutes = 3;
+  int32 password_expiry_days = 4;
+  bool require_2fa = 5;
+}
+
+message NotificationConfig {
+  bool email_enabled = 1;
+  bool webhook_enabled = 2;
+  string webhook_url = 3;
+  repeated string alert_recipients = 4;
+}
+
+message LimitsConfig {
+  string user_daily_withdraw_usd = 1;
+  string user_single_withdraw_usd = 2;
+  string auto_approve_max_usd = 3;
+}
+
+message SystemConfigData {
+  GeneralConfig general = 1;
+  SecurityConfig security = 2;
+  NotificationConfig notification = 3;
+  LimitsConfig limits = 4;
+}
+
+message GetSystemConfigResponse {
+  bool success = 1;
+  string message = 2;
+  SystemConfigData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateSystemConfigRequest {
+  string category = 1;
+  google.protobuf.Struct settings = 2;
+  string reason = 3;
+}
+
+message ConfigChangeItem {
+  string key = 1;
+  string old_value = 2;
+  string new_value = 3;
+}
+
+message UpdateSystemConfigData {
+  string category = 1;
+  repeated ConfigChangeItem changes = 2;
+  string updated_at = 3;
+  string updated_by = 4;
+}
+
+message UpdateSystemConfigResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateSystemConfigData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// 获取客户端配置（如is_show开关）
+message GetClientConfigRequest {
+  string key = 1; // 配置键名，如 "is_show"
+}
+
+message ClientConfigData {
+  bool is_show = 1; // 客户端显示开关
+}
+
+message GetClientConfigResponse {
+  bool success = 1;
+  string message = 2;
+  ClientConfigData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Audit Logs
+// ============================================================================
+
+message GetAuditLogsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string operator = 3;
+  string action = 4;
+  string target_type = 5;
+  string target_id = 6;
+  string date_from = 7;
+  string date_to = 8;
+  google.protobuf.BoolValue success = 9;
+  string module = 10;
+  string keyword = 11;
+  // Extended filters (v2)
+  string role = 12;
+  string ip = 13;
+  string request_id = 14;
+  string http_method = 15;
+  string http_path = 16;
+  string rpc_method = 17;
+  int32 duration_ms_from = 18;
+  int32 duration_ms_to = 19;
+}
+
+message OperatorInfo {
+  string admin_id = 1;
+  string username = 2;
+  string name = 3;
+  string role = 4;
+}
+
+message AuditLogItem {
+  string id = 1;
+  OperatorInfo operator = 2;
+  string action = 3;
+  string target_type = 4;
+  string target_id = 5;
+  string description = 6;
+  google.protobuf.Struct details = 7;
+  string ip = 8;
+  string user_agent = 9;
+  string created_at = 10;
+  bool success = 11;
+  int32 grpc_code = 12;
+  string error_message = 13;
+  string request_id = 14;
+  string rpc_method = 15;
+  string http_method = 16;
+  string http_path = 17;
+  int32 duration_ms = 18;
+  string operator_email = 19;
+  string module = 20;
+  string idempotency_key = 21;
+}
+
+message AuditLogStats {
+  int64 total = 1;
+  int64 success = 2;
+  int64 failed = 3;
+  int64 today = 4;
+}
+
+message GetAuditLogsData {
+  repeated AuditLogItem logs = 1;
+  AuditLogStats stats = 2;
+}
+
+message GetAuditLogsResponse {
+  bool success = 1;
+  string message = 2;
+  GetAuditLogsData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+// ============================================================================
+// Swap
+// ============================================================================
+
+message SwapStatisticsSummary {
+  int64 total_swaps = 1;
+  string total_volume_usd = 2;
+  string total_fee_usd = 3;
+  string avg_swap_amount_usd = 4;
+  string success_rate = 5;
+  int64 unique_users = 6;
+}
+
+message SwapStatisticsByNetworkItem {
+  string network = 1;
+  int64 swap_count = 2;
+  string volume_usd = 3;
+  string fee_usd = 4;
+}
+
+message SwapStatisticsByPairItem {
+  string pair = 1;
+  int64 swap_count = 2;
+  string volume_usd = 3;
+}
+
+message SwapStatisticsTrendItem {
+  string date = 1;
+  int64 swap_count = 2;
+  string volume_usd = 3;
+  string avg_slippage = 4;
+}
+
+message SwapStatisticsData {
+  string period = 1;
+  SwapStatisticsSummary summary = 2;
+  repeated SwapStatisticsByNetworkItem by_network = 3;
+  repeated SwapStatisticsByPairItem by_pair = 4;
+  repeated SwapStatisticsTrendItem trend = 5;
+}
+
+message GetSwapStatisticsRequest {
+  string period = 1;       // 统计周期: 7d, 30d, 90d (如果 start_date/end_date 为空则使用此参数)
+  string group_by = 2;     // 分组方式 (保留字段)
+  string network = 3;      // 网络过滤 (保留字段)
+  string start_date = 4;   // 开始日期 (YYYY-MM-DD, optional, 优先级高于 period)
+  string end_date = 5;     // 结束日期 (YYYY-MM-DD, optional, 优先级高于 period)
+}
+
+message GetSwapStatisticsResponse {
+  bool success = 1;
+  string message = 2;
+  SwapStatisticsData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Swap Configuration (Simplified Architecture)
+//
+// 注意：goctl 生成 rpc 代码时，service 的 request/response message 需要在同一个 proto 文件中定义。
+// 因此这里不能直接复用 swap.proto 的 message，需要在 admin.proto 中定义同构结构，以保持 HTTP JSON shape 不变。
+// ============================================================================
+
+// -------- 全局配置 CRUD --------
+// AdminSwapConfigItem Swap配置项
+message AdminSwapConfigItem {
+  int64 id = 1;                      // 配置ID
+  int64 provider_id = 2;             // 服务商ID
+  string provider = 3;               // 服务商代码
+  string provider_name = 4;          // 服务商名称
+  int64 chain_id = 5;                // 链ID
+  string chain_name = 6;             // 链名称
+  string chain_symbol = 7;           // 链符号
+  string token_symbol = 8;           // 代币符号
+  string token_name = 9;             // 代币名称
+  string contract_address = 10;      // 合约地址
+  int32 decimals = 11;               // 代币精度
+  string icon_url = 12;              // 图标URL
+  bool is_enabled = 13;              // 是否启用
+  int32 priority = 14;               // 优先级
+  string router_address = 15;        // 路由合约地址
+  string min_swap_amount_usd = 16;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 17;   // 最大兑换金额（USD）
+  string default_slippage = 18;      // 默认滑点
+  string max_slippage = 19;          // 最大滑点
+  string fee_rate = 20;              // 手续费率
+  string config_json = 21;           // 配置JSON
+  string created_at = 22;            // 创建时间
+  string updated_at = 23;            // 更新时间
+}
+
+// AdminListSwapConfigsRequest 列出Swap配置请求
+message AdminListSwapConfigsRequest {
+  int64 provider_id = 1;    // 服务商ID（可选过滤）
+  int64 chain_id = 2;       // 链ID（可选过滤）
+  string token_symbol = 3;  // 代币符号（可选过滤）
+  bool is_enabled = 4;      // 是否启用（可选过滤，默认所有）
+  int32 page = 5;           // 页码
+  int32 page_size = 6;      // 每页条数
+}
+
+// AdminListSwapConfigsResponse 列出Swap配置响应
+message AdminListSwapConfigsResponse {
+  bool success = 1;                   // 是否成功
+  string message = 2;                 // 响应消息
+  repeated AdminSwapConfigItem configs = 3;  // 配置列表
+  Pagination pagination = 4;          // 分页信息
+}
+
+// AdminGetSwapConfigDetailRequest 获取Swap配置详情请求
+message AdminGetSwapConfigDetailRequest {
+  int64 id = 1;  // 配置ID
+}
+
+// AdminGetSwapConfigDetailResponse 获取Swap配置详情响应
+message AdminGetSwapConfigDetailResponse {
+  bool success = 1;                // 是否成功
+  string message = 2;              // 响应消息
+  AdminSwapConfigItem config = 3;  // 配置详情
+}
+
+// AdminCreateSwapConfigRequest 创建Swap配置请求
+message AdminCreateSwapConfigRequest {
+  int64 provider_id = 1;             // 服务商ID
+  int64 chain_id = 3;                // 链ID
+  string chain_name = 4;             // 链名称
+  string chain_symbol = 5;           // 链符号
+  string token_symbol = 6;           // 代币符号
+  string token_name = 7;             // 代币名称
+  string contract_address = 8;       // 合约地址
+  int32 decimals = 9;                // 代币精度
+  string icon_url = 10;              // 图标URL
+  bool is_enabled = 11;              // 是否启用
+  int32 priority = 12;               // 优先级
+  string router_address = 13;        // 路由合约地址
+  string min_swap_amount_usd = 14;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 15;   // 最大兑换金额（USD）
+  string default_slippage = 16;      // 默认滑点
+  string max_slippage = 17;          // 最大滑点
+  string fee_rate = 18;              // 手续费率
+  string config_json = 19;           // 配置JSON
+}
+
+// AdminCreateSwapConfigResponse 创建Swap配置响应
+message AdminCreateSwapConfigResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+  int64 id = 3;      // 配置ID
+}
+
+// AdminUpdateSwapConfigDetailRequest 更新Swap配置详情请求
+message AdminUpdateSwapConfigDetailRequest {
+  int64 id = 1;                      // 配置ID
+  string provider_name = 2;          // 服务商名称
+  string chain_name = 3;             // 链名称
+  string chain_symbol = 4;           // 链符号
+  string token_name = 5;             // 代币名称
+  string icon_url = 6;               // 图标URL
+  bool is_enabled = 7;               // 是否启用
+  int32 priority = 8;                // 优先级
+  string router_address = 9;         // 路由合约地址
+  string min_swap_amount_usd = 10;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 11;   // 最大兑换金额（USD）
+  string default_slippage = 12;      // 默认滑点
+  string max_slippage = 13;          // 最大滑点
+  string fee_rate = 14;              // 手续费率
+  string config_json = 15;           // 配置JSON
+}
+
+// AdminUpdateSwapConfigDetailResponse 更新Swap配置详情响应
+message AdminUpdateSwapConfigDetailResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// AdminDeleteSwapConfigRequest 删除Swap配置请求
+message AdminDeleteSwapConfigRequest {
+  int64 id = 1;  // 配置ID
+}
+
+// AdminDeleteSwapConfigResponse 删除Swap配置响应
+message AdminDeleteSwapConfigResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// -------- 项目配置管理（启用/禁用）--------
+// AdminProjectSwapConfigItem 项目Swap配置项
+message AdminProjectSwapConfigItem {
+  int64 enabled_id = 1;              // 启用记录ID
+  string project_name = 2;           // 项目名称
+  int64 config_id = 3;               // 配置ID
+  bool project_enabled = 4;          // 项目是否启用
+
+  // 关联的全局配置信息
+  string provider = 5;               // 服务商代码
+  string provider_name = 6;          // 服务商名称
+  int64 chain_id = 7;                // 链ID
+  string chain_name = 8;             // 链名称
+  string chain_symbol = 9;           // 链符号
+  string token_symbol = 10;          // 代币符号
+  string token_name = 11;            // 代币名称
+  string contract_address = 12;      // 合约地址
+  int32 decimals = 13;               // 代币精度
+  string icon_url = 14;              // 图标URL
+  bool global_enabled = 15;          // 全局是否启用
+  int32 priority = 16;               // 优先级
+  string router_address = 17;        // 路由合约地址
+  string min_swap_amount_usd = 18;   // 最小兑换金额（USD）
+  string max_swap_amount_usd = 19;   // 最大兑换金额（USD）
+  string default_slippage = 20;      // 默认滑点
+  string max_slippage = 21;          // 最大滑点
+  string fee_rate = 22;              // 手续费率
+  string created_at = 23;            // 创建时间
+  string updated_at = 24;            // 更新时间
+  int64 provider_id = 25;
+}
+
+// AdminListProjectSwapConfigsRequest 列出项目Swap配置请求
+message AdminListProjectSwapConfigsRequest {
+  string project_name = 1;  // 项目名称（必填）
+  string provider = 2;      // 服务商代码（可选过滤）
+  int64 chain_id = 3;       // 链ID（可选过滤）
+  bool project_enabled = 4; // 项目是否启用（可选过滤，默认所有）
+  int32 page = 5;           // 页码
+  int32 page_size = 6;      // 每页条数
+}
+
+// AdminListProjectSwapConfigsResponse 列出项目Swap配置响应
+message AdminListProjectSwapConfigsResponse {
+  bool success = 1;                             // 是否成功
+  string message = 2;                           // 响应消息
+  repeated AdminProjectSwapConfigItem configs = 3;  // 配置列表
+  Pagination pagination = 4;                    // 分页信息
+}
+
+// AdminEnableSwapConfigForProjectRequest 为项目启用Swap配置请求
+message AdminEnableSwapConfigForProjectRequest {
+  string project_name = 1;  // 项目名称
+  int64 config_id = 2;      // 配置ID
+  bool is_enabled = 3;      // 是否启用
+}
+
+// AdminEnableSwapConfigForProjectResponse 为项目启用Swap配置响应
+message AdminEnableSwapConfigForProjectResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+  int64 id = 3;      // 启用记录ID
+}
+
+// AdminDisableSwapConfigForProjectRequest 为项目禁用Swap配置请求
+message AdminDisableSwapConfigForProjectRequest {
+  int64 id = 1;  // 启用记录ID（swap_project_enabled.id）
+}
+
+// AdminDisableSwapConfigForProjectResponse 为项目禁用Swap配置响应
+message AdminDisableSwapConfigForProjectResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// -------- Swap 交易查询 --------
+// AdminSwapTransactionItem Swap交易项
+message AdminSwapTransactionItem {
+  int64 id = 1;                     // 交易ID
+  string project_name = 2;          // 项目名称
+  string wallet_address = 3;        // 钱包地址
+  int64 chain_id = 4;               // 链ID
+  string chain_name = 5;            // 链名称
+  string provider = 6;              // 服务商代码
+  string from_token_symbol = 7;     // 源代币符号
+  string from_token_address = 8;    // 源代币合约地址
+  int32 from_token_decimals = 9;    // 源代币精度
+  string to_token_symbol = 10;      // 目标代币符号
+  string to_token_address = 11;     // 目标代币合约地址
+  int32 to_token_decimals = 12;     // 目标代币精度
+  string from_amount = 13;          // 源代币数量
+  string to_amount = 14;            // 目标代币数量
+  string tx_hash = 15;              // 交易哈希
+  string status = 16;               // 交易状态
+  string fee_usd = 17;              // 手续费（USD）
+  string gas = 18;                  // Gas消耗
+  string created_at = 19;           // 创建时间
+  string broadcasted_at = 20;       // 广播时间
+}
+
+// AdminListSwapTransactionsRequest 列出Swap交易请求
+message AdminListSwapTransactionsRequest {
+  string wallet_address = 1;  // 钱包地址（可选）
+  int64 chain_id = 2;         // 链ID（可选）
+  string provider = 3;        // 服务商代码（可选）
+  string status = 4;          // 交易状态（可选）
+  string start_date = 5;      // 开始日期（可选，YYYY-MM-DD）
+  string end_date = 6;        // 结束日期（可选，YYYY-MM-DD）
+  int32 page = 7;             // 页码
+  int32 page_size = 8;        // 每页条数
+}
+
+// AdminListSwapTransactionsResponse 列出Swap交易响应
+message AdminListSwapTransactionsResponse {
+  bool success = 1;                         // 是否成功
+  string message = 2;                       // 响应消息
+  repeated AdminSwapTransactionItem items = 3;  // 交易列表
+  Pagination pagination = 4;                // 分页信息
+}
+
+// -------- Provider Dropdown (for UI select) --------
+// ==================== API Key Management ====================
+// AdminCreateSwapApiKeyRequest 创建Swap API密钥请求
+message AdminCreateSwapApiKeyRequest {
+  string project_name = 1;     // 项目名称
+  string key_name = 2;         // 密钥名称（可选但推荐，项目内唯一，如 "production"、"dev"）
+  string rate_limit_tier = 3;  // 限流等级（如 "default"、"pro"）
+  int64 expires_at_unix = 4;   // 过期时间（Unix秒时间戳，0表示永不过期）
+}
+
+// AdminCreateSwapApiKeyResponse 创建Swap API密钥响应
+message AdminCreateSwapApiKeyResponse {
+  bool success = 1;                  // 是否成功
+  string message = 2;                // 响应消息
+  string api_key = 3;                // API密钥（仅返回一次，不以明文存储）
+  AdminSwapApiKeyItem item = 4;      // 密钥项详情
+}
+
+// AdminRevokeSwapApiKeyRequest 撤销Swap API密钥请求
+message AdminRevokeSwapApiKeyRequest {
+  int64 id = 1;  // 密钥ID
+}
+
+// AdminRevokeSwapApiKeyResponse 撤销Swap API密钥响应
+message AdminRevokeSwapApiKeyResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// AdminListSwapApiKeysRequest 列出Swap API密钥请求
+message AdminListSwapApiKeysRequest {
+  int32 page = 1;       // 页码
+  int32 page_size = 2;  // 每页条数
+}
+
+// AdminListSwapApiKeysResponse 列出Swap API密钥响应
+message AdminListSwapApiKeysResponse {
+  bool success = 1;                       // 是否成功
+  string message = 2;                     // 响应消息
+  repeated AdminSwapApiKeyItem items = 3; // 密钥列表
+  Pagination pagination = 4;              // 分页信息
+}
+
+// AdminSwapApiKeyItem Swap API密钥项
+message AdminSwapApiKeyItem {
+  int64 id = 1;                 // 密钥ID
+  string project_name = 2;      // 项目名称
+  string key_name = 3;          // 密钥名称（项目内唯一，如 "production"、"dev"）
+  string rate_limit_tier = 4;   // 限流等级
+  bool is_active = 5;           // 是否激活
+  int64 created_at_unix = 6;    // 创建时间（Unix秒时间戳）
+  int64 expires_at_unix = 7;    // 过期时间（Unix秒时间戳，0表示永不过期）
+  string token_display = 8;     // 完整密钥（用于显示和引用）
+}
+
+// ==================== Provider Management ====================
+// AdminSwapProviderDropdownItem Swap服务商下拉项
+message AdminSwapProviderDropdownItem {
+  int64 id = 1;              // 服务商ID
+  string provider_name = 2;  // 服务商名称
+}
+
+// AdminListSwapProvidersForDropdownRequest 列出Swap服务商下拉列表请求
+message AdminListSwapProvidersForDropdownRequest {
+  // 无需参数，返回所有启用的服务商
+}
+
+// AdminListSwapProvidersForDropdownResponse 列出Swap服务商下拉列表响应
+message AdminListSwapProvidersForDropdownResponse {
+  bool success = 1;                                 // 是否成功
+  string message = 2;                               // 响应消息
+  repeated AdminSwapProviderDropdownItem providers = 3;  // 服务商下拉列表
+}
+
+// -------- Provider CRUD Messages --------
+// AdminSwapProviderItem Swap服务商项
+message AdminSwapProviderItem {
+  int64 id = 1;                      // 服务商ID
+  string provider_code = 2;          // 服务商代码
+  string provider_name = 3;          // 服务商名称
+  string description = 4;            // 描述
+  string logo_url = 5;               // 图标URL
+  bool is_enabled = 6;               // 是否启用
+  string min_swap_amount_usd = 7;    // 最小兑换金额（USD）
+  string max_swap_amount_usd = 8;    // 最大兑换金额（USD）
+  string default_slippage = 9;       // 默认滑点
+  string max_slippage = 10;          // 最大滑点
+  string fee_rate = 11;              // 手续费率
+  string config_json = 12;           // 配置JSON
+  string created_at = 13;            // 创建时间
+  string updated_at = 14;            // 更新时间
+}
+
+// AdminListSwapProvidersRequest 列出Swap服务商请求
+message AdminListSwapProvidersRequest {
+  string provider_code = 1;  // 服务商代码（可选过滤）
+  bool is_enabled = 2;       // 是否启用（可选过滤）
+  int32 page = 3;            // 页码
+  int32 page_size = 4;       // 每页条数
+}
+
+// AdminListSwapProvidersResponse 列出Swap服务商响应
+message AdminListSwapProvidersResponse {
+  bool success = 1;                         // 是否成功
+  string message = 2;                       // 响应消息
+  repeated AdminSwapProviderItem providers = 3;  // 服务商列表
+  Pagination pagination = 4;                // 分页信息
+}
+
+// AdminGetSwapProviderDetailRequest 获取Swap服务商详情请求
+message AdminGetSwapProviderDetailRequest {
+  int64 id = 1;  // 服务商ID
+}
+
+// AdminGetSwapProviderDetailResponse 获取Swap服务商详情响应
+message AdminGetSwapProviderDetailResponse {
+  bool success = 1;                // 是否成功
+  string message = 2;              // 响应消息
+  AdminSwapProviderItem provider = 3;  // 服务商详情
+}
+
+// AdminCreateSwapProviderRequest 创建Swap服务商请求
+message AdminCreateSwapProviderRequest {
+  string provider_code = 1;          // 服务商代码
+  string provider_name = 2;          // 服务商名称
+  string description = 3;            // 描述
+  string logo_url = 4;               // 图标URL
+  string min_swap_amount_usd = 5;    // 最小兑换金额（USD）
+  string max_swap_amount_usd = 6;    // 最大兑换金额（USD）
+  string default_slippage = 7;       // 默认滑点
+  string max_slippage = 8;           // 最大滑点
+  string fee_rate = 9;               // 手续费率
+  string config_json = 10;           // 配置JSON
+}
+
+// AdminCreateSwapProviderResponse 创建Swap服务商响应
+message AdminCreateSwapProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+  int64 id = 3;      // 服务商ID
+}
+
+// AdminUpdateSwapProviderRequest 更新Swap服务商请求
+message AdminUpdateSwapProviderRequest {
+  int64 id = 1;                      // 服务商ID
+  string provider_name = 2;          // 服务商名称
+  string description = 3;            // 描述
+  string logo_url = 4;               // 图标URL
+  string min_swap_amount_usd = 5;    // 最小兑换金额（USD）
+  string max_swap_amount_usd = 6;    // 最大兑换金额（USD）
+  string default_slippage = 7;       // 默认滑点
+  string max_slippage = 8;           // 最大滑点
+  string fee_rate = 9;               // 手续费率
+  string config_json = 10;           // 配置JSON
+}
+
+// AdminUpdateSwapProviderResponse 更新Swap服务商响应
+message AdminUpdateSwapProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// AdminDeleteSwapProviderRequest 删除Swap服务商请求
+message AdminDeleteSwapProviderRequest {
+  int64 id = 1;  // 服务商ID
+}
+
+// AdminDeleteSwapProviderResponse 删除Swap服务商响应
+message AdminDeleteSwapProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// AdminEnableSwapProviderRequest 启用Swap服务商请求
+message AdminEnableSwapProviderRequest {
+  int64 id = 1;  // 服务商ID
+}
+
+// AdminEnableSwapProviderResponse 启用Swap服务商响应
+message AdminEnableSwapProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// AdminDisableSwapProviderRequest 禁用Swap服务商请求
+message AdminDisableSwapProviderRequest {
+  int64 id = 1;  // 服务商ID
+}
+
+// AdminDisableSwapProviderResponse 禁用Swap服务商响应
+message AdminDisableSwapProviderResponse {
+  bool success = 1;  // 是否成功
+  string message = 2;  // 响应消息
+}
+
+// ============================================================================
+// Wallet Assets (Tokens / Deposit Addresses / Deposits / Withdrawals)
+// ============================================================================
+
+// -------- Chains --------
+
+message ChainItem {
+  string chain_code = 1; // e.g. ETH/TRON
+  string network = 2;
+  int32 chain_id = 3;
+  string explorer_url = 4;
+  int32 status = 5; // 1=enabled 2=disabled
+  string icon_url = 6; // chain logo URL (http/https)
+}
+
+message ListChainsRequest {
+  bool include_disabled = 1;
+}
+
+message ListChainsData {
+  repeated ChainItem chains = 1;
+}
+
+message ListChainsResponse {
+  bool success = 1;
+  string message = 2;
+  ListChainsData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateChainIconRequest {
+  string chain_code = 1; // e.g. ETH/TRON
+  string icon_url = 2;   // http(s) URL; empty to clear
+}
+
+message UpdateChainIconResponse {
+  bool success = 1;
+  string message = 2;
+  ChainItem data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// -------- Accounting (Ledger) --------
+
+message AccountingAccountTypeItem {
+  string code = 1;
+  string name = 2;
+  string normal_side = 3; // debit|credit
+  repeated string asset_codes = 4;
+  string description = 5;
+}
+
+message AccountingListAccountTypesRequest {}
+
+message AccountingListAccountTypesData {
+  repeated AccountingAccountTypeItem items = 1;
+}
+
+message AccountingListAccountTypesResponse {
+  bool success = 1;
+  string message = 2;
+  AccountingListAccountTypesData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AccountingCreateAccountTypeRequest {
+  string code = 1;
+  string name = 2;
+  string normal_side = 3; // debit|credit
+  string description = 4;
+}
+
+message AccountingCreateAccountTypeData {
+  AccountingAccountTypeItem item = 1;
+}
+
+message AccountingCreateAccountTypeResponse {
+  bool success = 1;
+  string message = 2;
+  AccountingCreateAccountTypeData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AccountingUpdateAccountTypeRequest {
+  string code = 1;
+  string name = 2;
+  string normal_side = 3; // debit|credit
+  string description = 4;
+}
+
+message AccountingUpdateAccountTypeData {
+  AccountingAccountTypeItem item = 1;
+}
+
+message AccountingUpdateAccountTypeResponse {
+  bool success = 1;
+  string message = 2;
+  AccountingUpdateAccountTypeData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AccountingDeleteAccountTypeRequest {
+  string code = 1;
+}
+
+message AccountingDeleteAccountTypeResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+message AccountingSetAccountTypeAssetsRequest {
+  string code = 1;
+  repeated string asset_codes = 2;
+}
+
+message AccountingSetAccountTypeAssetsResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+message AccountingEnsureUserSetupRequest {
+  int64 user_id = 1;
+}
+
+message AccountingEnsureUserSetupResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+message AccountingUserBalanceItem {
+  string asset_code = 1;
+  int32 scale = 2;
+  string available = 3;
+  string locked = 4;
+  string available_raw = 5;
+  string locked_raw = 6;
+}
+
+message AccountingGetUserBalancesRequest {
+  int64 user_id = 1;
+}
+
+message AccountingGetUserBalancesData {
+  repeated AccountingUserBalanceItem items = 1;
+}
+
+message AccountingGetUserBalancesResponse {
+  bool success = 1;
+  string message = 2;
+  AccountingGetUserBalancesData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message AccountingEnsureSystemAccountsRequest {
+  string chain_code = 1;
+}
+
+message AccountingEnsureSystemAccountsResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+// -------- Accounting Ledger Tx / Postings --------
+
+message AccountingListLedgerTxRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+
+  // Optional filters (best-effort).
+  int64 tx_id = 3;
+  string op_type = 4;
+  string biz_ref = 5;
+  string idempotency_key = 6;
+  string asset_code = 7;
+  int64 user_id = 8;
+  string created_from = 9; // YYYY-MM-DD
+  string created_to = 10;  // YYYY-MM-DD
+}
+
+message AccountingLedgerTxItem {
+  int64 tx_id = 1;
+  string created_at = 2; // RFC3339 UTC
+  string op_type = 3;
+  string biz_ref = 4;
+  string idempotency_key = 5;
+  string request_hash = 6;
+}
+
+message AccountingListLedgerTxData {
+  repeated AccountingLedgerTxItem items = 1;
+}
+
+message AccountingListLedgerTxResponse {
+  bool success = 1;
+  string message = 2;
+  // Flatten response to avoid `data.data.*` in HTTP gateway JSON.
+  repeated AccountingLedgerTxItem items = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message AccountingGetLedgerTxDetailRequest {
+  int64 tx_id = 1;
+}
+
+message AccountingLedgerPostingItem {
+  int32 seq = 1;
+  string asset_code = 2;
+  int32 scale = 3;
+  string bucket = 4; // available|locked
+
+  int64 account_id = 5;
+  string owner_type = 6; // user|system
+  int64 owner_id = 7;
+
+  string account_type_code = 8;
+  string account_type_name = 9;
+  string account_type_description = 10;
+  string account_normal_side = 11; // debit|credit
+  string chain_scope = 12;
+
+  string debit_raw = 13;
+  string credit_raw = 14;
+  string debit_decimal = 15;
+  string credit_decimal = 16;
+}
+
+message AccountingGetLedgerTxDetailData {
+  AccountingLedgerTxItem tx = 1;
+  repeated AccountingLedgerPostingItem postings = 2;
+}
+
+message AccountingGetLedgerTxDetailResponse {
+  bool success = 1;
+  string message = 2;
+  // Flatten response to avoid `data.data.*` in HTTP gateway JSON.
+  AccountingLedgerTxItem tx = 3;
+  repeated AccountingLedgerPostingItem postings = 6;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// -------- Deposit Addresses --------
+
+message WalletDepositAddressItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  reserved 3;
+  reserved "asset_code";
+  string chain_code = 4;
+  string address = 5;
+  string status = 6; // active|inactive|frozen|deprecated
+  string memo = 7;
+  string created_at = 8;
+  string updated_at = 9;
+}
+
+// 带余额信息的充值地址项（用于管理后台）
+message WalletDepositAddressWithBalanceItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  string asset_code = 3;
+  string chain_code = 4;
+  string address = 5;
+  string status = 6; // active|inactive|frozen|deprecated
+  string memo = 7;
+  string created_at = 8;
+  string updated_at = 9;
+
+  // 余额信息（来自LEFT JOIN wallet_deposit_address_balances）
+  string balance = 10;              // 显示格式余额（带小数点）
+  string balance_raw = 11;           // 原始值（最小单位，DECIMAL(65,0)）
+  string balance_usd = 12;          // USD显示格式
+  string balance_usd_raw = 13;       // USD原始值（分，DECIMAL(65,0)）
+  bool needs_sweep = 14;            // 是否需要归集
+  string last_synced_at = 15;       // 最后同步时间
+  string sync_status = 16;          // 同步状态 unknown|synced|syncing|error
+}
+
+message ListDepositAddressesRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 user_id = 3;
+  reserved 4;
+  reserved "asset_code";
+  string chain_code = 5;
+  string status = 6;
+  string address = 7;
+  string sort_by = 8;    // created_at | id
+  string sort_order = 9; // asc | desc
+}
+
+message ListDepositAddressesData {
+  repeated WalletDepositAddressItem addresses = 1;
+}
+
+message ListDepositAddressesResponse {
+  bool success = 1;
+  string message = 2;
+  ListDepositAddressesData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+// 带余额的充值地址列表请求（用于管理后台）
+message ListDepositAddressesWithBalanceRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 user_id = 3;
+  string asset_code = 4;
+  string chain_code = 5;
+  string status = 6;
+  string address = 7;
+  string sort_by = 8;    // created_at | id
+  string sort_order = 9; // asc | desc
+}
+
+message ListDepositAddressesWithBalanceData {
+  repeated WalletDepositAddressWithBalanceItem addresses = 1;
+}
+
+message ListDepositAddressesWithBalanceResponse {
+  bool success = 1;
+  string message = 2;
+  ListDepositAddressesWithBalanceData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message GetDepositAddressRequest {
+  int64 id = 1;
+  string address = 2; // optional alternative key
+}
+
+message GetDepositAddressData {
+  WalletDepositAddressItem address = 1;
+}
+
+message GetDepositAddressResponse {
+  bool success = 1;
+  string message = 2;
+  GetDepositAddressData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message CreateDepositAddressRequest {
+  int64 user_id = 1;
+  reserved 2;
+  reserved "asset_code";
+  string chain_code = 3;
+  string address = 4;
+  string memo = 5;
+  string status = 6; // optional (default active)
+}
+
+message CreateDepositAddressData {
+  WalletDepositAddressItem address = 1;
+}
+
+message CreateDepositAddressResponse {
+  bool success = 1;
+  string message = 2;
+  CreateDepositAddressData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateDepositAddressRequest {
+  int64 id = 1;
+  google.protobuf.Int64Value user_id = 2;
+  google.protobuf.StringValue status = 3;
+  google.protobuf.StringValue memo = 4;
+}
+
+message UpdateDepositAddressData {
+  WalletDepositAddressItem address = 1;
+}
+
+message UpdateDepositAddressResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateDepositAddressData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message DeleteDepositAddressRequest {
+  int64 id = 1;
+  string reason = 2;
+}
+
+message DeleteDepositAddressResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+message InitializeUserWalletRequest {
+  int64 user_id = 1;                     // 用户ID（雪花ID）
+  repeated string chains = 2;            // 可选：指定链类型，为空则创建所有默认启用的Token
+  string requester = 3;                  // 调用方标识："business_register", "admin_manual"
+}
+
+message InitializeUserWalletData {
+  int32 total_created = 1;               // 成功创建的地址数量
+  int32 total_skipped = 2;               // 跳过的地址数量（已存在）
+  repeated WalletDepositAddressItem addresses = 3;  // 创建的地址列表
+}
+
+message InitializeUserWalletResponse {
+  bool success = 1;
+  string message = 2;
+  InitializeUserWalletData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// -------- Deposits --------
+
+message WalletDepositItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  string asset_code = 3;
+  string chain_code = 4;
+  string deposit_address = 5;
+  string amount = 6;
+  string transaction_hash = 7;
+  int64 block_number = 8;
+  int32 confirmations = 9;
+  string status = 10; // pending|confirmed|completed|failed
+  string memo = 11;
+  int64 admin_id = 12;
+  string admin_note = 13;
+  string created_at = 14;
+  string updated_at = 15;
+}
+
+message ListDepositsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 user_id = 3;
+  string asset_code = 4;
+  string chain_code = 5;
+  string status = 6; // comma-separated
+  string deposit_address = 7;
+  string transaction_hash = 8;
+  string created_from = 9; // YYYY-MM-DD
+  string created_to = 10;   // YYYY-MM-DD
+  string min_amount = 11;
+  string max_amount = 12;
+  string sort_by = 13;    // created_at | amount | status
+  string sort_order = 14; // asc | desc
+  int64 id = 15;          // deposit record id
+}
+
+message ListDepositsData {
+  repeated WalletDepositItem deposits = 1;
+}
+
+message ListDepositsResponse {
+  bool success = 1;
+  string message = 2;
+  ListDepositsData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message GetDepositRequest {
+  int64 id = 1;
+  string transaction_hash = 2; // optional alternative key
+}
+
+message GetDepositData {
+  WalletDepositItem deposit = 1;
+}
+
+message GetDepositResponse {
+  bool success = 1;
+  string message = 2;
+  GetDepositData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message CreateDepositRequest {
+  int64 user_id = 1;
+  string asset_code = 2;
+  string chain_code = 3;
+  string deposit_address = 4;
+  string amount = 5;
+  string transaction_hash = 6;
+  int64 block_number = 7;
+  int32 confirmations = 8;
+  string status = 9; // optional (default pending)
+  string memo = 10;
+}
+
+message CreateDepositData {
+  WalletDepositItem deposit = 1;
+}
+
+message CreateDepositResponse {
+  bool success = 1;
+  string message = 2;
+  CreateDepositData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateDepositRequest {
+  int64 id = 1;
+  google.protobuf.StringValue status = 2;
+  google.protobuf.Int64Value block_number = 3;
+  google.protobuf.Int32Value confirmations = 4;
+}
+
+message UpdateDepositData {
+  WalletDepositItem deposit = 1;
+}
+
+message UpdateDepositResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateDepositData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message CancelDepositRequest {
+  int64 id = 1;
+  string reason = 2;
+}
+
+message CancelDepositData {
+  WalletDepositItem deposit = 1;
+}
+
+message CancelDepositResponse {
+  bool success = 1;
+  string message = 2;
+  CancelDepositData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// -------- Currency Withdrawals (business-facing, with audit rules) --------
+
+message CurrencyWithdrawalItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  string asset_code = 3;
+  string chain_code = 4;
+  string amount = 5;
+  string fee = 6;
+  string from_address = 7;
+  string to_address = 8;
+  string strategy = 9; // auto|manual_auto|manual_manual
+  string status = 10;  // pending|processing|completed|failed|cancelled
+  string tx_hash = 11;
+  string error_message = 12;
+  int64 audit_admin_id = 13;
+  string audit_note = 14;
+  string audited_at = 15;
+  int64 transfer_admin_id = 16;
+  string transfer_note = 17;
+  string transferred_at = 18;
+  int64 updated_by = 19;
+  string created_at = 20;
+  string updated_at = 21;
+  string memo_tag = 22;
+  int64 created_by_admin_id = 23;
+  string fee_rule_summary = 24;
+  string fee_rule_source = 25; // global|asset
+}
+
+message GetCurrencyWithdrawalRequest {
+  int64 id = 1;
+  string tx_hash = 2;
+}
+
+message GetCurrencyWithdrawalData {
+  CurrencyWithdrawalItem withdrawal = 1;
+}
+
+message GetCurrencyWithdrawalResponse {
+  bool success = 1;
+  string message = 2;
+  GetCurrencyWithdrawalData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message CreateCurrencyWithdrawalRequest {
+  int64 user_id = 1;
+  string asset_code = 2;
+  string chain_code = 3;
+  string to_address = 4;
+  string amount = 5;
+  string memo_tag = 7;
+  string strategy = 8;     // manual_manual|manual_auto (default: manual_manual)
+  string from_address = 9; // optional; required for manual_auto payout
+}
+
+message CreateCurrencyWithdrawalData {
+  CurrencyWithdrawalItem withdrawal = 1;
+}
+
+message CreateCurrencyWithdrawalResponse {
+  bool success = 1;
+  string message = 2;
+  CreateCurrencyWithdrawalData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ListCurrencyWithdrawalsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 user_id = 3;
+  string asset_code = 4;
+  string chain_code = 5;
+  string status = 6;   // comma-separated
+  string strategy = 7; // comma-separated
+  string to_address = 8;
+  string tx_hash = 9;
+  string created_from = 10; // YYYY-MM-DD
+  string created_to = 11;   // YYYY-MM-DD
+  string min_amount = 12;
+  string max_amount = 13;
+  string sort_by = 14;    // created_at | amount | status
+  string sort_order = 15; // asc | desc
+}
+
+message ListCurrencyWithdrawalsData {
+  repeated CurrencyWithdrawalItem withdrawals = 1;
+}
+
+message ListCurrencyWithdrawalsResponse {
+  bool success = 1;
+  string message = 2;
+  ListCurrencyWithdrawalsData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message ApproveCurrencyWithdrawalRequest {
+  int64 id = 1;
+  string audit_note = 2;
+  string two_fa_code = 3;
+}
+
+message ApproveCurrencyWithdrawalData {
+  CurrencyWithdrawalItem withdrawal = 1;
+}
+
+message ApproveCurrencyWithdrawalResponse {
+  bool success = 1;
+  string message = 2;
+  ApproveCurrencyWithdrawalData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message RejectCurrencyWithdrawalRequest {
+  int64 id = 1;
+  string reason = 2;
+}
+
+message RejectCurrencyWithdrawalData {
+  CurrencyWithdrawalItem withdrawal = 1;
+}
+
+message RejectCurrencyWithdrawalResponse {
+  bool success = 1;
+  string message = 2;
+  RejectCurrencyWithdrawalData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message CancelCurrencyWithdrawalRequest {
+  int64 id = 1;
+  string reason = 2;
+}
+
+message CancelCurrencyWithdrawalData {
+  CurrencyWithdrawalItem withdrawal = 1;
+}
+
+message CancelCurrencyWithdrawalResponse {
+  bool success = 1;
+  string message = 2;
+  CancelCurrencyWithdrawalData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateCurrencyWithdrawalRequest {
+  int64 id = 1;
+  google.protobuf.StringValue status = 2;
+  google.protobuf.StringValue tx_hash = 3;
+  google.protobuf.StringValue transfer_note = 4;
+}
+
+message UpdateCurrencyWithdrawalData {
+  CurrencyWithdrawalItem withdrawal = 1;
+}
+
+message UpdateCurrencyWithdrawalResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateCurrencyWithdrawalData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message CurrencyWithdrawalEventItem {
+  int64 id = 1;
+  int64 withdraw_order_id = 2;
+  string event_type = 3;
+  string actor_type = 4; // system|user|admin
+  int64 actor_id = 5;
+  string ip = 6;
+  string summary = 7;
+  google.protobuf.Struct details = 8;
+  string created_at = 9;
+}
+
+message ListCurrencyWithdrawalEventsRequest {
+  int64 id = 1; // withdraw_order_id
+  repeated string event_types = 2;
+  repeated string actor_types = 3;
+  string date_from = 4; // YYYY-MM-DD
+  string date_to = 5;   // YYYY-MM-DD
+  int32 page = 6;
+  int32 page_size = 7;
+}
+
+message ListCurrencyWithdrawalEventsData {
+  repeated CurrencyWithdrawalEventItem events = 1;
+}
+
+message ListCurrencyWithdrawalEventsResponse {
+  bool success = 1;
+  string message = 2;
+  ListCurrencyWithdrawalEventsData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+// ============================================================================
+// Internal Transfers (User-to-User)
+// ============================================================================
+
+message InternalTransferItem {
+  int64 id = 1;
+  int64 from_user_id = 2;
+  int64 to_user_id = 3;
+  string asset_code = 4;
+  string amount = 5;
+  string fee = 6;
+  string note = 7;
+  string strategy = 8; // auto|manual_auto
+  string status = 9;  // pending|processing|completed|failed|cancelled
+  string error_message = 10;
+  int64 ledger_tx_id = 11;
+  int64 audit_admin_id = 12;
+  string audit_note = 13;
+  string audited_at = 14;
+  int64 updated_by = 15;
+  string created_at = 16;
+  string updated_at = 17;
+  int64 created_by_admin_id = 18;
+  // 用户信息（可选，用于展示）
+  string from_user_email = 19;
+  string from_user_phone = 20;
+  string to_user_email = 21;
+  string to_user_phone = 22;
+}
+
+message ListInternalTransfersRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 from_user_id = 3;
+  int64 to_user_id = 4;
+  string asset_code = 5;
+  string status = 6;   // comma-separated: pending|processing|completed|failed|cancelled
+  string strategy = 7; // comma-separated: auto|manual_auto
+  string created_from = 8; // YYYY-MM-DD
+  string created_to = 9;   // YYYY-MM-DD
+  string min_amount = 10;
+  string max_amount = 11;
+  string sort_by = 12;    // created_at | amount | status
+  string sort_order = 13; // asc | desc
+}
+
+// 内部转账统计汇总
+message InternalTransferSummary {
+  int64 total = 1;            // 总转账笔数
+  int64 pending = 2;          // 待处理数
+  int64 completed = 3;        // 已完成数
+  int64 failed = 4;           // 失败数
+  int64 cancelled = 5;        // 已取消数
+  string total_amount = 6;    // 累计转账金额（本位）
+  int64 rejected = 7;         // 已拒绝数（管理员审核拒绝）
+}
+
+message ListInternalTransfersData {
+  repeated InternalTransferItem transfers = 1;
+  InternalTransferSummary summary = 2;  // 统计汇总
+}
+
+message ListInternalTransfersResponse {
+  bool success = 1;
+  string message = 2;
+  ListInternalTransfersData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message GetInternalTransferRequest {
+  int64 id = 1;
+}
+
+message GetInternalTransferData {
+  InternalTransferItem transfer = 1;
+}
+
+message GetInternalTransferResponse {
+  bool success = 1;
+  string message = 2;
+  GetInternalTransferData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ApproveInternalTransferRequest {
+  int64 id = 1;
+  string audit_note = 2;
+  string two_fa_code = 3;
+}
+
+message ApproveInternalTransferData {
+  InternalTransferItem transfer = 1;
+}
+
+message ApproveInternalTransferResponse {
+  bool success = 1;
+  string message = 2;
+  ApproveInternalTransferData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message RejectInternalTransferRequest {
+  int64 id = 1;
+  string reason = 2;
+}
+
+message RejectInternalTransferData {
+  InternalTransferItem transfer = 1;
+}
+
+message RejectInternalTransferResponse {
+  bool success = 1;
+  string message = 2;
+  RejectInternalTransferData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message CancelInternalTransferRequest {
+  int64 id = 1;
+  string reason = 2;
+}
+
+message CancelInternalTransferData {
+  InternalTransferItem transfer = 1;
+}
+
+message CancelInternalTransferResponse {
+  bool success = 1;
+  string message = 2;
+  CancelInternalTransferData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Transfer (Batch Payout)
+// ============================================================================
+
+message TransferBatchItem {
+  string batch_id = 1;
+  string name = 2;
+  string description = 3;
+  string network = 4;
+  string currency = 5;
+  int32 total_recipients = 6;
+  string total_amount = 7;
+  string total_amount_usd = 8;
+  string status = 9; // draft|pending|approved|processing|completed|partial_failed|cancelled
+  int32 success_count = 10;
+  int32 failed_count = 11;
+  int32 pending_count = 12;
+  string created_by = 13;
+  string created_at = 14;
+  string submitted_at = 15;
+  string approved_by = 16;
+  string approved_at = 17;
+  string processed_at = 18;
+  string completed_at = 19;
+  string cancelled_at = 20;
+  string cancelled_by = 21;
+  string transfer_type = 22; // normal|airdrop
+}
+
+message TransferBatchSummary {
+  int64 total_batches = 1;
+  int64 processing_batches = 2;
+  string total_transferred_usd = 3;
+}
+
+message ListTransferBatchesRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string status = 3;
+  string network = 4;
+  string currency = 5;
+  string date_from = 6; // YYYY-MM-DD
+  string date_to = 7;   // YYYY-MM-DD
+  string keyword = 8;   // batch name / id
+}
+
+message ListTransferBatchesData {
+  repeated TransferBatchItem batches = 1;
+  TransferBatchSummary summary = 2;
+}
+
+message ListTransferBatchesResponse {
+  bool success = 1;
+  string message = 2;
+  ListTransferBatchesData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message ImportTransferBatchRequest {
+  bytes file = 1;
+  string filename = 2;
+  string name = 3;
+  string network = 4;
+  string currency = 5; // optional: default currency when row currency not provided
+  string description = 6;
+  string transfer_type = 7; // normal|airdrop
+  bool preview = 8; // validate only, do not create batch
+}
+
+message ImportTransferErrorItem {
+  int32 row = 1;
+  string error = 2;
+}
+
+message ImportTransferResult {
+  int32 total_rows = 1;
+  int32 valid_rows = 2;
+  int32 invalid_rows = 3;
+  string total_amount = 4;
+  repeated ImportTransferErrorItem errors = 5;
+  repeated ImportTransferCurrencyStat currency_stats = 6;
+}
+
+message ImportTransferCurrencyStat {
+  string currency = 1;
+  int32 valid_rows = 2;
+  string total_amount = 3;
+}
+
+message ImportTransferPreviewItem {
+  int32 row = 1;
+  string uid = 2;
+  string address = 3;
+  string amount = 4;
+  string note = 5;
+  repeated string errors = 6;
+  string currency = 7;
+}
+
+message ImportTransferBatchData {
+  string batch_id = 1;
+  string name = 2;
+  string network = 3;
+  string currency = 4;
+  string status = 5; // draft
+  ImportTransferResult import_result = 6;
+  string created_at = 7;
+  string transfer_type = 8; // normal|airdrop
+  repeated ImportTransferPreviewItem preview_items = 9;
+}
+
+message ImportTransferBatchResponse {
+  bool success = 1;
+  string message = 2;
+  ImportTransferBatchData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message TransferRecipientItem {
+  string id = 1;
+  string address = 2;
+  string amount = 3;
+  string note = 4;
+  string status = 5; // pending|success|failed|retrying
+  string tx_hash = 6;
+  string fee = 7;
+  string error_message = 8;
+  int32 retry_count = 9;
+  string processed_at = 10;
+  string currency = 11;
+  string uid = 12;
+  string email = 13;
+  string phone = 14;
+  string nickname = 15;
+  string role = 16; // user|vip (consistent with /users)
+}
+
+message TransferBatchCurrencySummary {
+  string currency = 1;
+  int32 total_recipients = 2;
+  string total_amount = 3;
+}
+
+message TransferBatchDetailSummary {
+  int32 total_recipients = 1;
+  string total_amount = 2;
+  string total_amount_usd = 3;
+  string total_fee = 4;
+  string total_fee_usd = 5;
+  int32 success_count = 6;
+  int32 failed_count = 7;
+  int32 pending_count = 8;
+}
+
+message TransferBatchTimelineItem {
+  string status = 1;
+  string timestamp = 2;
+  string operator = 3;
+  string note = 4;
+}
+
+message GetTransferBatchRequest {
+  string batch_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+  string status = 4; // pending|success|failed
+  
+  // Multi-condition filters for recipients list
+  string id = 5; // transfer_batch_item.id
+  string uid = 6; // user_id
+  string nickname = 7; // user nickname
+  string email = 8; // user email
+  string phone = 9; // user phone
+  string role = 10; // user role (member_level)
+  string currency = 11; // currency
+  string amount = 12; // amount (partial match)
+  string note = 13; // note (partial match)
+  string error_message = 14; // error_message (partial match)
+  string processed_at_start = 15; // processed_at start time
+  string processed_at_end = 16; // processed_at end time
+}
+
+message GetTransferBatchData {
+  TransferBatchItem batch = 1;
+  TransferBatchDetailSummary summary = 2;
+  repeated TransferRecipientItem recipients = 3;
+  repeated TransferBatchTimelineItem timeline = 4;
+  repeated TransferBatchCurrencySummary currency_summary = 5;
+}
+
+message GetTransferBatchResponse {
+  bool success = 1;
+  string message = 2;
+  GetTransferBatchData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message SubmitTransferBatchRequest {
+  string batch_id = 1;
+  string note = 2;
+}
+
+message SubmitTransferBatchData {
+  string batch_id = 1;
+  string status = 2; // pending
+  string submitted_at = 3;
+}
+
+message SubmitTransferBatchResponse {
+  bool success = 1;
+  string message = 2;
+  SubmitTransferBatchData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ApproveTransferBatchRequest {
+  string batch_id = 1;
+  string action = 2; // approve|reject
+  string note = 3;
+  string two_fa_code = 4;
+}
+
+message ApproveTransferBatchData {
+  string batch_id = 1;
+  string status = 2; // approved|cancelled
+  string approved_at = 3;
+  string approved_by = 4;
+}
+
+message ApproveTransferBatchResponse {
+  bool success = 1;
+  string message = 2;
+  ApproveTransferBatchData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message CancelTransferBatchRequest {
+  string batch_id = 1;
+  string reason = 2;
+}
+
+message CancelTransferBatchData {
+  string batch_id = 1;
+  string status = 2; // cancelled
+  string cancelled_at = 3;
+  string cancelled_by = 4;
+}
+
+message CancelTransferBatchResponse {
+  bool success = 1;
+  string message = 2;
+  CancelTransferBatchData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ExecuteTransferBatchRequest {
+  string batch_id = 1;
+  string note = 2;
+  string two_fa_code = 3;
+}
+
+message ExecuteTransferBatchData {
+  string batch_id = 1;
+  string status = 2; // processing
+  string started_at = 3;
+  string started_by = 4;
+}
+
+message ExecuteTransferBatchResponse {
+  bool success = 1;
+  string message = 2;
+  ExecuteTransferBatchData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message RetryTransferBatchRequest {
+  string batch_id = 1;
+  repeated string transfer_ids = 2; // optional
+  string two_fa_code = 3;
+  string note = 4; // required (retry reason/remark)
+}
+
+message RetryTransferBatchData {
+  string batch_id = 1;
+  int32 retry_count = 2;
+  string status = 3; // processing
+}
+
+message RetryTransferBatchResponse {
+  bool success = 1;
+  string message = 2;
+  RetryTransferBatchData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Web3 Users (Device-based)
+// ============================================================================
+
+message Web3DeviceInfo {
+  string platform = 1; // iOS/Android
+  string os_version = 2; // 系统版本（如：iOS 16.0, Android 13）
+  string app_version = 3; // 应用版本（如：1.0.5）
+  string device_model = 4; // 设备型号（如：iPhone 14 Pro, SM-G998B）
+  string device_name = 5; // 设备名称（用户自定义）
+  string push_token = 6; // 推送通知令牌
+  string locale = 7; // 语言/地区（如：zh-CN, en-US）
+  string last_active_at = 8; // 最后活跃时间
+  string created_at = 9;     // 创建时间
+}
+
+message Web3SecurityInfo {
+  bool two_factor_enabled = 1; // 双因素认证是否启用
+  string two_factor_type = 2; // 双因素认证类型（如：totp, sms）
+  bool biometric_enabled = 3; // 生物识别是否启用
+  string biometric_type = 4; // 生物识别类型（如：face_id, touch_id, fingerprint）
+  string last_security_update = 5; // 最后安全设置更新时间
+}
+
+message Web3TokenBalance {
+  string currency = 1; // 代币符号（如：USDT, ETH, WBTC）
+  string balance = 2; // 代币余额（原始单位）
+  string balance_usd = 3; // USD 等值
+}
+
+message Web3WalletAddress {
+  string network = 1; // 网络名称（如：Ethereum, BSC, Polygon）
+  int64 chain_id = 2; // 链ID（如：1=Ethereum, 56=BSC）
+  string address = 3; // 钱包地址
+  bool is_primary = 4; // 是否为主地址
+  bool enabled = 5; // 地址是否启用
+  bool is_blacklisted = 6; // 是否在黑名单中
+  string balance = 7; // 主币余额（如：ETH, BNB）
+  string balance_usd = 8; // 主币余额的 USD 等值
+  repeated Web3TokenBalance token_balances = 9; // 代币余额列表
+  string created_at = 10; // 地址添加时间
+  string last_transaction_at = 11; // 最后交易时间
+  string blacklist_reason = 12; // 黑名单原因
+  string risk_level = 13; // 风险级别（high | medium | low）
+  string blacklisted_at = 14; // 加入黑名单时间
+  string blacklisted_by = 15; // 加入黑名单的操作员
+}
+
+message Web3UserActivitySummary {
+  int64 total_transactions = 1; // 总交易数
+  string total_deposit_usd = 2; // 总充值金额（USD）
+  string total_withdrawal_usd = 3; // 总提现金额（USD）
+  string total_swap_usd = 4; // 总兑换金额（USD）
+  string first_transaction_at = 5; // 首次交易时间
+  string last_transaction_at = 6; // 最后交易时间
+}
+
+message Web3UserListItem {
+  string id = 1; // web3-<id>
+  string device_id = 2; // 设备ID（唯一标识）
+  Web3DeviceInfo device_info = 3; // 设备信息
+  int32 wallet_count = 4; // 钱包地址数量
+  repeated string networks = 5; // 使用的网络列表（如：["Ethereum", "BSC"]）
+  string primary_address = 6; // 主钱包地址
+  string total_balance_usd = 7; // 总资产（USD）
+  bool two_factor_enabled = 8; // 双因素认证是否启用
+  bool biometric_enabled = 9; // 生物识别是否启用
+  bool has_blacklisted_address = 10; // 是否有黑名单地址
+  string last_active_at = 11; // 最后活跃时间
+  string created_at = 12; // 创建时间
+}
+
+message Web3UserListSummary {
+  int64 total_devices = 1; // 设备总数
+  int64 total_addresses = 2; // 地址总数
+  int64 blacklisted_addresses = 3; // 黑名单地址数
+  string two_factor_rate = 4; // 双因素认证启用率（如：75.5%）
+}
+
+message ListWeb3UsersRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string address_status = 3; // normal | blacklisted
+  google.protobuf.BoolValue two_factor_enabled = 4;
+  google.protobuf.BoolValue biometric_enabled = 5;
+  string network = 6;
+  string keyword = 7;
+  string created_from = 8; // YYYY-MM-DD
+  string created_to = 9;   // YYYY-MM-DD
+  string sort_by = 10;     // created_at | last_active_at
+  string sort_order = 11;  // asc | desc
+}
+
+message ListWeb3UsersData {
+  repeated Web3UserListItem users = 1;
+  Web3UserListSummary summary = 2;
+}
+
+message ListWeb3UsersResponse {
+  bool success = 1;
+  string message = 2;
+  ListWeb3UsersData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message GetWeb3UserRequest {
+  string device_id = 1;
+}
+
+message Web3UserDetail {
+  string id = 1; // Web3用户ID（web3-<id>）
+  string device_id = 2; // 设备ID（唯一标识）
+  Web3DeviceInfo device_info = 3; // 设备信息
+  Web3SecurityInfo security_info = 4; // 安全设置信息
+  repeated Web3WalletAddress wallet_addresses = 5; // 钱包地址列表
+  Web3UserActivitySummary activity_summary = 6; // 活动统计汇总
+  string created_at = 7; // 创建时间
+  string last_active_at = 8; // 最后活跃时间
+}
+
+message GetWeb3UserData {
+  Web3UserDetail user = 1;
+}
+
+message GetWeb3UserResponse {
+  bool success = 1;
+  string message = 2;
+  GetWeb3UserData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ==================== GetWeb3UsersPageList (新增扁平化列表接口) ====================
+message GetWeb3UsersPageListRequest {
+  // Pagination
+  int32 page = 1;
+  int32 page_size = 2;
+  
+  // Device filters (web3_users table fields)
+  string device_id = 3;         // 设备ID（精确搜索）
+  string platform = 4;          // 平台：iOS | Android
+  string os_version = 5;        // 系统版本
+  string app_version = 6;       // 应用版本
+  string device_model = 7;      // 设备型号
+  string device_name = 8;       // 设备名称
+  string locale = 9;            // 语言/地区
+  
+  // Security filters
+  google.protobuf.BoolValue two_factor_enabled = 10;  // 2FA启用
+  google.protobuf.BoolValue biometric_enabled = 11;   // 生物识别启用
+  google.protobuf.BoolValue has_trade_password = 12;  // 是否有交易密码
+  
+  // Address filters (web3_user_addresses table)
+  string network = 13;          // 网络筛选
+  string address_status = 14;   // 地址状态：normal | blacklisted
+  string primary_address = 15;  // 主地址搜索（模糊匹配）
+  
+  // Wallet count filter
+  int32 wallet_count_min = 16;  // 钱包数量最小值
+  int32 wallet_count_max = 17;  // 钱包数量最大值
+  
+  // Time range
+  string created_from = 18;     // 创建开始时间 YYYY-MM-DD
+  string created_to = 19;       // 创建结束时间 YYYY-MM-DD
+  string last_active_from = 20; // 最后活跃开始时间 YYYY-MM-DD
+  string last_active_to = 21;   // 最后活跃结束时间 YYYY-MM-DD
+  
+  // General search
+  string keyword = 22;          // 关键词搜索（device_id或address）
+  
+  // Sort
+  string sort_by = 23;          // 排序字段：created_at | last_active_at
+  string sort_order = 24;       // 排序方向：asc | desc
+}
+
+message Web3UserPageListItem {
+  string id = 1;                    // web3-<id>
+  string device_id = 2;             // 设备ID
+  string platform = 3;              // 平台
+  string os_version = 4;            // 系统版本（如：10.5）
+  string app_version = 5;           // 应用版本（如：1.0.5）
+  int32 wallet_count = 6;           // 钱包数
+  repeated string networks = 7;     // 网络列表（如：["Ethereum", "BSC"]）
+  string primary_address = 8;       // 主地址（脱敏显示）
+  bool two_factor_enabled = 9;      // 2FA启用
+  bool biometric_enabled = 10;      // 生物识别启用
+  bool is_primary_blacklisted = 11; // 主地址是否被拉黑
+  string last_active_at = 12;       // 最后活跃时间
+  string created_at = 13;           // 创建时间
+}
+
+message GetWeb3UsersPageListData {
+  repeated Web3UserPageListItem items = 1;
+  Pagination pagination = 2;
+}
+
+message GetWeb3UsersPageListResponse {
+  bool success = 1;
+  string message = 2;
+  GetWeb3UsersPageListData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ==================== GetWeb3UsersSummary (新增统计接口) ====================
+message GetWeb3UsersSummaryRequest {
+  // 全局统计，不需要筛选条件
+}
+
+message GetWeb3UsersSummaryData {
+  int64 total_devices = 1;          // 设备总数
+  int64 total_addresses = 2;        // 地址总数
+  int64 blacklisted_addresses = 3;  // 黑名单地址数
+  double two_factor_enabled_rate = 4; // 2FA启用率（百分比）
+}
+
+message GetWeb3UsersSummaryResponse {
+  bool success = 1;
+  string message = 2;
+  GetWeb3UsersSummaryData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ==================== ListWeb3UserTransactions (新增交易记录接口) ====================
+message ListWeb3UserTransactionsRequest {
+  string device_id = 1;       // 设备ID（必填）
+  int32 page = 2;
+  int32 page_size = 3;
+  
+  // Filters
+  string tx_type = 4;         // receive | send | swap | contract_call | approve
+  string direction = 5;       // in | out
+  string asset_code = 6;      // BTC | ETH | USDT等
+  string status = 7;          // pending | confirmed | failed
+  string date_from = 8;       // YYYY-MM-DD
+  string date_to = 9;         // YYYY-MM-DD
+  string sort_by = 10;        // block_time | created_at (default: block_time)
+  string sort_order = 11;     // asc | desc (default: desc)
+  string network = 12;        // 网络筛选（ethereum | bsc | tron等）
+}
+
+message AdminWeb3TransactionItem {
+  string id = 1;              // tx-<id>
+  string tx_hash = 2;         // 交易哈希
+  string network = 3;         // 网络
+  int64 chain_id = 4;         // 链ID
+  string user_address = 5;    // 用户地址
+  string tx_type = 6;         // 交易类型
+  string direction = 7;       // 方向
+  string asset_code = 8;      // 资产代码
+  string amount = 9;          // 数量
+  string amount_usd = 10;     // USD价值
+  string from_address = 11;   // 发送地址
+  string to_address = 12;     // 接收地址
+  string status = 13;         // 状态
+  int32 confirmations = 14;   // 确认数
+  string fee = 15;            // 手续费
+  string fee_asset = 16;      // 手续费资产
+  int64 block_number = 17;    // 区块高度
+  string block_time = 18;     // 区块时间
+  string created_at = 19;     // 创建时间
+}
+
+message ListWeb3UserTransactionsData {
+  repeated AdminWeb3TransactionItem items = 1;
+  Pagination pagination = 2;
+}
+
+message ListWeb3UserTransactionsResponse {
+  bool success = 1;
+  string message = 2;
+  ListWeb3UserTransactionsData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message BlacklistWeb3AddressRequest {
+  string device_id = 1;
+  string address = 2;
+  string reason = 3;
+  string risk_level = 4; // high | medium | low
+  bool disable_address = 5;
+  bool notify_user = 6;
+}
+
+message Web3AddressBlacklistInfo {
+  string device_id = 1; // 设备ID
+  string address = 2; // 钱包地址
+  string network = 3; // 网络名称
+  bool enabled = 4; // 地址是否启用
+  bool is_blacklisted = 5; // 是否在黑名单中
+  string blacklist_reason = 6; // 加入黑名单的原因
+  string risk_level = 7; // 风险级别（high | medium | low）
+  string blacklisted_at = 8; // 加入黑名单时间
+  string blacklisted_by = 9; // 加入黑名单的操作员
+  string removed_at = 10; // 从黑名单移除时间
+  string removed_by = 11; // 移除黑名单的操作员
+  string remove_reason = 12; // 移除黑名单的原因
+}
+
+message BlacklistWeb3AddressData {
+  Web3AddressBlacklistInfo result = 1;
+}
+
+message BlacklistWeb3AddressResponse {
+  bool success = 1;
+  string message = 2;
+  BlacklistWeb3AddressData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UnblacklistWeb3AddressRequest {
+  string device_id = 1;
+  string address = 2;
+  string reason = 3;
+  bool enable_address = 4;
+  bool notify_user = 5;
+}
+
+message UnblacklistWeb3AddressData {
+  Web3AddressBlacklistInfo result = 1;
+}
+
+message UnblacklistWeb3AddressResponse {
+  bool success = 1;
+  string message = 2;
+  UnblacklistWeb3AddressData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message BatchWeb3AddressItem {
+  string device_id = 1;
+  string address = 2;
+}
+
+message BatchWeb3AddressResult {
+  string device_id = 1;
+  string address = 2;
+  string status = 3; // success | failed
+  string error = 4;
+}
+
+message BatchWeb3AddressBlacklistRequest {
+  string action = 1; // add | remove
+  repeated BatchWeb3AddressItem addresses = 2;
+  string reason = 3;
+  string risk_level = 4;
+  bool notify_users = 5;
+}
+
+message BatchWeb3AddressBlacklistData {
+  int32 total = 1;
+  int32 succeeded = 2;
+  int32 failed = 3;
+  repeated BatchWeb3AddressResult results = 4;
+}
+
+message BatchWeb3AddressBlacklistResponse {
+  bool success = 1;
+  string message = 2;
+  BatchWeb3AddressBlacklistData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message Web3StatisticsOverview {
+  int64 total_devices = 1;
+  int64 active_devices_30d = 2;
+  int64 total_addresses = 3;
+  int64 blacklisted_addresses = 4;
+  string total_balance_usd = 5;
+}
+
+message Web3StatisticsByNetwork {
+  string network = 1;
+  int64 address_count = 2;
+  string balance_usd = 3;
+  string percentage = 4;
+}
+
+message Web3StatisticsByPlatform {
+  string platform = 1;
+  int64 device_count = 2;
+  string percentage = 3;
+}
+
+message Web3StatisticsSecurity {
+  int64 two_factor_enabled = 1;
+  string two_factor_rate = 2;
+  int64 biometric_enabled = 3;
+  string biometric_rate = 4;
+}
+
+message Web3StatisticsGrowthTrend {
+  string date = 1; // YYYY-MM-DD
+  int64 new_devices = 2;
+  int64 total_devices = 3;
+}
+
+message GetWeb3UserStatisticsRequest {
+  string period = 1; // 7d | 30d | 90d
+}
+
+message GetWeb3UserStatisticsData {
+  Web3StatisticsOverview overview = 1;
+  repeated Web3StatisticsByNetwork by_network = 2;
+  repeated Web3StatisticsByPlatform by_platform = 3;
+  Web3StatisticsSecurity security_stats = 4;
+  repeated Web3StatisticsGrowthTrend growth_trend = 5;
+}
+
+message GetWeb3UserStatisticsResponse {
+  bool success = 1;
+  string message = 2;
+  GetWeb3UserStatisticsData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ExportWeb3UsersRequest {
+  string format = 1; // xlsx | csv
+  bool include_addresses = 2;
+  // filters (same as list, best-effort)
+  string address_status = 3;
+  google.protobuf.BoolValue two_factor_enabled = 4;
+  google.protobuf.BoolValue biometric_enabled = 5;
+  string network = 6;
+  string keyword = 7;
+  string created_from = 8;
+  string created_to = 9;
+}
+
+message ExportWeb3UsersData {
+  string export_id = 1;
+  string status = 2;
+  int64 estimated_records = 3;
+  int32 estimated_time = 4;
+  string download_url = 5;
+}
+
+message ExportWeb3UsersResponse {
+  bool success = 1;
+  string message = 2;
+  ExportWeb3UsersData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ==================== ListWeb3UserAddresses (for chainsync monitoring) ====================
+message ListWeb3UserAddressesRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string network = 3;      // 可选：按网络筛选（如：Ethereum, BSC）
+  string status = 4;       // 可选：enabled, disabled, blacklisted
+}
+
+message Web3UserAddressItem {
+  int64 user_id = 1;       // web3_user_id
+  string network = 2;      // 网络名称
+  int64 chain_id = 3;      // 链ID
+  string address = 4;      // 钱包地址
+  bool enabled = 5;        // 是否启用
+  bool is_blacklisted = 6; // 是否在黑名单
+}
+
+message ListWeb3UserAddressesData {
+  repeated Web3UserAddressItem addresses = 1;
+  Pagination pagination = 2;
+}
+
+message ListWeb3UserAddressesResponse {
+  bool success = 1;
+  string message = 2;
+  ListWeb3UserAddressesData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Blacklist (Sensitive Addresses)
+// ============================================================================
+
+message BlacklistAddressItem {
+  int64 id = 1;
+  string address = 2;
+  string network = 3;    // ethereum | bsc | polygon | tron | arbitrum | optimism
+  string risk_level = 4; // high | medium | low
+  string source = 5;     // user_report | third_party | auto_detect | association
+  int64 hit_count = 6;
+  string last_hit_at = 7; // RFC3339
+  string monitor_status = 8; // active | stopped
+  string reason = 9;
+  string added_at = 10; // RFC3339
+  string added_by = 11;
+}
+
+message BlacklistAddressStats {
+  int64 total = 1;
+  int64 high_risk = 2;
+  double high_risk_ratio = 3;
+  int64 monitoring = 4;
+  int64 total_hits = 5;
+}
+
+message ListBlacklistAddressesRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string keyword = 3;        // address/reason/source keyword
+  string risk_level = 4;     // high | medium | low | all
+  string network = 5;        // ethereum | bsc | polygon | tron | arbitrum | optimism | all
+  string monitor_status = 6; // active | stopped | all
+}
+
+message ListBlacklistAddressesData {
+  repeated BlacklistAddressItem addresses = 1;
+  BlacklistAddressStats stats = 2;
+}
+
+message ListBlacklistAddressesResponse {
+  bool success = 1;
+  string message = 2;
+  ListBlacklistAddressesData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message CreateBlacklistAddressRequest {
+  string address = 1;
+  string network = 2;
+  string risk_level = 3; // high | medium | low
+  string source = 4;     // user_report | third_party | auto_detect | association
+  string reason = 5;
+  string monitor_status = 6; // active | stopped (default active)
+}
+
+message CreateBlacklistAddressData {
+  BlacklistAddressItem address = 1;
+}
+
+message CreateBlacklistAddressResponse {
+  bool success = 1;
+  string message = 2;
+  CreateBlacklistAddressData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message BatchCreateBlacklistAddressItem {
+  string address = 1;
+  string network = 2;
+  string risk_level = 3;
+  string source = 4;
+  string reason = 5;
+  string monitor_status = 6;
+}
+
+message BatchCreateBlacklistAddressResult {
+  string address = 1;
+  string network = 2;
+  string status = 3; // success | skipped | failed
+  string error = 4;
+}
+
+message BatchCreateBlacklistAddressesRequest {
+  repeated BatchCreateBlacklistAddressItem addresses = 1;
+  bool ignore_existing = 2; // ignore duplicates (treat as skipped)
+}
+
+message BatchCreateBlacklistAddressesData {
+  int32 total = 1;
+  int32 succeeded = 2;
+  int32 skipped = 3;
+  int32 failed = 4;
+  repeated BatchCreateBlacklistAddressResult results = 5;
+}
+
+message BatchCreateBlacklistAddressesResponse {
+  bool success = 1;
+  string message = 2;
+  BatchCreateBlacklistAddressesData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateBlacklistAddressMonitorStatusRequest {
+  int64 id = 1;
+  string monitor_status = 2; // active | stopped
+}
+
+message UpdateBlacklistAddressMonitorStatusData {
+  BlacklistAddressItem address = 1;
+}
+
+message UpdateBlacklistAddressMonitorStatusResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateBlacklistAddressMonitorStatusData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message DeleteBlacklistAddressRequest {
+  int64 id = 1;
+}
+
+message DeleteBlacklistAddressResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+message ExportBlacklistAddressesRequest {
+  string format = 1; // csv
+  string keyword = 2;
+  string risk_level = 3;
+  string network = 4;
+  string monitor_status = 5;
+}
+
+message ExportBlacklistAddressesData {
+  string format = 1;
+  string file_name = 2;
+  string content = 3; // file content (e.g. CSV)
+}
+
+message ExportBlacklistAddressesResponse {
+  bool success = 1;
+  string message = 2;
+  ExportBlacklistAddressesData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Vault Funds Management (SRD 10)
+// ============================================================================
+
+message VaultAlert {
+  string type = 1;
+  string message = 2;
+}
+
+message VaultOverviewSummary {
+  string total_balance_usd = 1;           // 所有钱包总资产（USD）
+  int32 total_networks = 2;               // 覆盖网络数量
+  int32 healthy_networks = 3;             // 健康网络数量
+  int32 pending_adjustments = 4;          // 待审批调整数量
+  int32 alerts_count = 5;                 // 预警数量
+  string unswept_balance_usd = 6;         // 未归集钱包总资产（USD）
+}
+
+message VaultBalanceOverviewItem {
+  string currency = 1;
+  string balance = 2;
+  string balance_usd = 3;
+  string threshold_low = 4;
+  string threshold_critical = 5;
+  string status = 6; // normal|low|critical
+}
+
+message VaultNetworkOverviewItem {
+  string network = 1;
+  int64 chain_id = 2;
+  string vault_address = 3;
+  string status = 4; // healthy|warning|critical
+  string total_balance_usd = 5;
+  repeated VaultBalanceOverviewItem balances = 6;
+  string last_sync_at = 7;
+  string sync_status = 8; // unknown|synced|syncing|error|delayed
+  VaultAlert alert = 9;
+  int64 network_id = 10; // 网络 ID (关联 vault_networks.id)
+}
+
+message GetVaultOverviewRequest {}
+
+message GetVaultOverviewData {
+  VaultOverviewSummary summary = 1;
+  repeated VaultNetworkOverviewItem networks = 2;
+}
+
+message GetVaultOverviewResponse {
+  bool success = 1;
+  string message = 2;
+  GetVaultOverviewData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message VaultThresholdDetail {
+  string low = 1;
+  string critical = 2;
+  bool notify_email = 3;
+  bool notify_webhook = 4;
+}
+
+message VaultBalanceDetailItem {
+  string currency = 1;
+  string contract_address = 2;
+  string balance = 3;
+  string balance_usd = 4;
+  string locked_balance = 5;
+  string available_balance = 6;
+  int32 pending_withdrawals = 7;
+  string pending_withdrawals_amount = 8;
+  VaultThresholdDetail threshold_config = 9;
+  string status = 10; // normal|low|critical
+}
+
+message VaultRecentTransactionItem {
+  string id = 1;
+  string type = 2; // inflow|outflow
+  string currency = 3;
+  string amount = 4;
+  string to_address = 5;
+  string tx_hash = 6;
+  string status = 7;
+  string created_at = 8;
+}
+
+message VaultSyncInfo {
+  string last_sync_at = 1;
+  int64 last_block_synced = 2;
+  int64 current_block = 3;
+  int64 blocks_behind = 4;
+  string sync_status = 5;
+}
+
+message VaultGasInfo {
+  string balance = 1;
+  string balance_usd = 2;
+  int32 estimated_transactions = 3;
+  string avg_gas_price_gwei = 4;
+}
+
+message GetVaultDetailRequest {
+  int64 chain_id = 1;
+}
+
+message GetVaultDetailData {
+  string network = 1;
+  int64 chain_id = 2;
+  string vault_address = 3;
+  string status = 4;
+  repeated VaultBalanceDetailItem balances = 5;
+  repeated VaultRecentTransactionItem recent_transactions = 6;
+  VaultSyncInfo sync_info = 7;
+  VaultGasInfo gas_info = 8;
+}
+
+message GetVaultDetailResponse {
+  bool success = 1;
+  string message = 2;
+  GetVaultDetailData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message VaultAttachment {
+  string name = 1;
+  string url = 2;
+}
+
+message CreateVaultAdjustmentRequest {
+  string network = 1;
+  int64 chain_id = 2;
+  string currency = 3;
+  string adjustment_type = 4; // increase|decrease
+  string amount = 5;
+  string reason = 6;
+  string source = 7; // cold_wallet|exchange|other
+  string source_address = 8;
+  string tx_hash = 9;
+  repeated VaultAttachment attachments = 10;
+}
+
+message VaultAdjustmentItem {
+  int64 id = 1;
+  string network = 2;
+  int64 chain_id = 3;
+  string currency = 4;
+  string adjustment_type = 5;
+  string amount = 6;
+  int64 amount_raw = 7;
+  string amount_usd = 8;
+  string reason = 9;
+  string source = 10;
+  string source_address = 11;
+  string tx_hash = 12;
+  string status = 13;
+  int64 submitted_by = 14;
+  string submitted_at = 15;
+  int64 reviewed_by = 16;
+  string reviewed_at = 17;
+  string review_note = 18;
+  string completed_at = 19;
+}
+
+message CreateVaultAdjustmentData {
+  VaultAdjustmentItem adjustment = 1;
+}
+
+message CreateVaultAdjustmentResponse {
+  bool success = 1;
+  string message = 2;
+  CreateVaultAdjustmentData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ListVaultAdjustmentsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string status = 3; // comma-separated
+  string network = 4;
+  int64 chain_id = 5;
+  string currency = 6;
+  string adjustment_type = 7;
+  string date_from = 8; // YYYY-MM-DD
+  string date_to = 9;   // YYYY-MM-DD
+  string sort_by = 10;  // created_at | amount | status
+  string sort_order = 11; // asc | desc
+}
+
+message ListVaultAdjustmentsData {
+  repeated VaultAdjustmentItem adjustments = 1;
+}
+
+message ListVaultAdjustmentsResponse {
+  bool success = 1;
+  string message = 2;
+  ListVaultAdjustmentsData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message ApproveVaultAdjustmentRequest {
+  int64 id = 1;
+  string action = 2; // approve|reject
+  string note = 3;
+  string two_fa_code = 4;
+}
+
+message ApproveVaultAdjustmentData {
+  VaultAdjustmentItem adjustment = 1;
+  string next_step = 2;
+}
+
+message ApproveVaultAdjustmentResponse {
+  bool success = 1;
+  string message = 2;
+  ApproveVaultAdjustmentData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message VaultThresholds {
+  string low = 1;
+  string critical = 2;
+}
+
+message VaultThresholdNotifications {
+  bool email_enabled = 1;
+  repeated string email_recipients = 2;
+  bool webhook_enabled = 3;
+  string webhook_url = 4;
+}
+
+message UpdateVaultThresholdsRequest {
+  string network = 1;
+  int64 chain_id = 2;
+  string currency = 3;
+  VaultThresholds thresholds = 4;
+  VaultThresholdNotifications notifications = 5;
+}
+
+message UpdateVaultThresholdsData {
+  string network = 1;
+  int64 chain_id = 2;
+  string currency = 3;
+  VaultThresholds thresholds = 4;
+  VaultThresholdNotifications notifications = 5;
+  string updated_at = 6;
+  int64 updated_by = 7;
+}
+
+message UpdateVaultThresholdsResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateVaultThresholdsData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message SyncVaultRequest {
+  int64 chain_id = 1;
+}
+
+message SyncVaultData {
+  string network = 1;
+  string sync_id = 2;
+  string status = 3;
+  string started_at = 4;
+}
+
+message SyncVaultResponse {
+  bool success = 1;
+  string message = 2;
+  SyncVaultData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Currency Management (Business Assets + Multi-chain Withdraw Fees)
+// ============================================================================
+
+message CurrencyFeatureSettings {
+  bool web2_deposit_enabled = 1;
+  bool web2_withdraw_enabled = 2;
+  bool web2_transfer_enabled = 3;
+  bool web3_deposit_enabled = 4;
+  bool web3_withdraw_enabled = 5;
+  bool web3_swap_enabled = 6;
+  bool use_global_withdraw_fee = 7;
+  bool use_global_withdraw_audit = 8;
+  bool use_global_transfer_audit = 9;
+}
+
+message CurrencyItem {
+  string asset_code = 1;
+  string asset_name = 2;
+  int32 status = 3; // 1=enabled 2=disabled
+  CurrencyFeatureSettings settings = 4;
+  int32 chain_total = 5;
+  int32 chain_enabled = 6;
+  string updated_at = 7;
+  string icon_url = 8; // http(s) icon URL (optional)
+  int32 precision = 9; // 精度（小数位数，0-30）
+}
+
+message CurrencyChainSettingItem {
+  string chain_code = 1;
+  string chain_name = 2;
+  int32 status = 3; // 1=enabled 2=disabled
+  bool deposit_enabled = 4;
+  bool withdraw_enabled = 5;
+  string min_withdraw_amount = 6;
+  string min_deposit_amount = 7;
+  string contract_address = 8; // optional, empty for native token
+  google.protobuf.Int32Value token_decimals = 13; // optional, required when contract_address is set (0..30)
+  google.protobuf.BoolValue web3_asset_display_enabled = 9; // optional, default true when absent
+  string chain_icon_url = 10; // chain logo URL (http/https)
+  int64 id = 11; // currency_chain_settings.id (0 = new)
+  bool consolidation_enabled = 12; // 归集开关（1=开启 0=关闭）
+}
+
+message CurrencyWithdrawFeeRuleItem {
+  int64 id = 1;
+  string rule_type = 2; // fixed|percent
+  string value = 3; // fixed=token amount; percent=0-100
+  string min_fee = 4; // 百分比规则的手续费下限
+  string max_fee = 5; // 百分比规则的手续费上限
+  string min_amount = 8; // 规则适用的最小提现金额（金额区间下限）
+  string max_amount = 9; // 规则适用的最大提现金额（金额区间上限，NULL=无上限）
+  bool enabled = 6;
+  int32 sort_order = 7;
+}
+
+message CurrencyChainFeeRules {
+  string chain_code = 1;
+  repeated CurrencyWithdrawFeeRuleItem rules = 2;
+}
+
+message CurrencyWithdrawAuditRuleItem {
+  int64 id = 1;
+  string min_amount = 2; // 区间下限（资产本位）
+  string max_amount = 3; // 区间上限（资产本位，空=无上限）
+  string strategy = 4;   // auto|manual_auto|manual_manual
+  bool enabled = 5;
+  int32 sort_order = 6;
+}
+
+message CurrencyChainAuditRules {
+  string chain_code = 1;
+  repeated CurrencyWithdrawAuditRuleItem rules = 2;
+}
+
+message GetCurrencyOverviewRequest {}
+
+message GetCurrencyOverviewData {
+  int64 total = 1;
+  int64 enabled = 2;
+  int64 disabled = 3;
+  string base_currency = 4; // always USDT
+}
+
+message GetCurrencyOverviewResponse {
+  bool success = 1;
+  string message = 2;
+  GetCurrencyOverviewData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message CreateCurrencyRequest {
+  string asset_code = 1;
+  string asset_name = 2;
+  google.protobuf.Int32Value precision = 3; // optional, default 18
+  google.protobuf.Int32Value status = 4; // optional, 1=enabled 2=disabled (default 2)
+  google.protobuf.StringValue icon_url = 5; // optional, http(s) only
+}
+
+message CreateCurrencyData {
+  CurrencyItem currency = 1;
+}
+
+message CreateCurrencyResponse {
+  bool success = 1;
+  string message = 2;
+  CreateCurrencyData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateCurrencyRequest {
+  string asset_code = 1; // 作为标识符，必填
+  string asset_name = 2; // 可选，空字符串表示不更新
+  google.protobuf.Int32Value precision = 3; // 可选，不提供表示不更新
+  google.protobuf.StringValue icon_url = 4; // 可选，不提供表示不更新
+}
+
+message UpdateCurrencyData {
+  CurrencyItem currency = 1;
+}
+
+message UpdateCurrencyResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateCurrencyData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message GetCurrencyRequest {
+  string asset_code = 1; // 必填
+}
+
+message GetCurrencyData {
+  CurrencyItem currency = 1;
+}
+
+message GetCurrencyResponse {
+  bool success = 1;
+  string message = 2;
+  GetCurrencyData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message ListCurrenciesRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string keyword = 3; // code/name partial
+  int32 status = 4;   // 0=all 1=enabled 2=disabled
+}
+
+message ListCurrenciesData {
+  repeated CurrencyItem currencies = 1;
+}
+
+message ListCurrenciesResponse {
+  bool success = 1;
+  string message = 2;
+  ListCurrenciesData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+message GetCurrencyConfigRequest {
+  string asset_code = 1;
+}
+
+message GetCurrencyConfigData {
+  CurrencyItem currency = 1;
+  repeated CurrencyChainSettingItem chains = 2;
+  repeated CurrencyChainFeeRules fee_rules = 3;
+  repeated CurrencyChainAuditRules audit_rules = 4;
+}
+
+message GetCurrencyConfigResponse {
+  bool success = 1;
+  string message = 2;
+  GetCurrencyConfigData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateCurrencyConfigRequest {
+  string asset_code = 1;
+  CurrencyFeatureSettings settings = 2;
+  repeated CurrencyChainSettingItem chains = 3;
+  repeated CurrencyChainFeeRules fee_rules = 4;
+  repeated CurrencyChainAuditRules audit_rules = 5;
+  google.protobuf.StringValue icon_url = 6; // optional; empty string means clear
+}
+
+message UpdateCurrencyConfigData {
+  CurrencyItem currency = 1;
+}
+
+message UpdateCurrencyConfigResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateCurrencyConfigData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateCurrencyStatusRequest {
+  string asset_code = 1;
+  int32 status = 2; // 1=enabled 2=disabled
+}
+
+message UpdateCurrencyStatusData {
+  string asset_code = 1;
+  int32 status = 2;
+}
+
+message UpdateCurrencyStatusResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateCurrencyStatusData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message GetCurrencyGlobalWithdrawFeeRequest {}
+
+message GetCurrencyGlobalWithdrawFeeData {
+  repeated CurrencyChainFeeRules fee_rules = 1;
+}
+
+message GetCurrencyGlobalWithdrawFeeResponse {
+  bool success = 1;
+  string message = 2;
+  GetCurrencyGlobalWithdrawFeeData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateCurrencyGlobalWithdrawFeeRequest {
+  repeated CurrencyChainFeeRules fee_rules = 1;
+}
+
+message UpdateCurrencyGlobalWithdrawFeeData {
+  repeated CurrencyChainFeeRules fee_rules = 1;
+}
+
+message UpdateCurrencyGlobalWithdrawFeeResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateCurrencyGlobalWithdrawFeeData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message GetCurrencyGlobalWithdrawAuditRequest {}
+
+message GetCurrencyGlobalWithdrawAuditData {
+  repeated CurrencyChainAuditRules audit_rules = 1;
+}
+
+message GetCurrencyGlobalWithdrawAuditResponse {
+  bool success = 1;
+  string message = 2;
+  GetCurrencyGlobalWithdrawAuditData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateCurrencyGlobalWithdrawAuditRequest {
+  repeated CurrencyChainAuditRules audit_rules = 1;
+}
+
+message UpdateCurrencyGlobalWithdrawAuditData {
+  repeated CurrencyChainAuditRules audit_rules = 1;
+}
+
+message UpdateCurrencyGlobalWithdrawAuditResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateCurrencyGlobalWithdrawAuditData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Global Transfer Audit Rules (内部转账审核规则)
+// ============================================================================
+
+message CurrencyTransferAuditRuleItem {
+  int64 id = 1;
+  string min_amount = 2; // 区间下限（资产本位）
+  string max_amount = 3; // 区间上限（资产本位，空=无上限）
+  string strategy = 4;   // auto|manual_auto
+  bool enabled = 5;
+  int32 sort_order = 6;
+}
+
+message CurrencyAssetTransferAuditRules {
+  string asset_code = 1;
+  repeated CurrencyTransferAuditRuleItem rules = 2;
+}
+
+message GetCurrencyGlobalTransferAuditRequest {}
+
+message GetCurrencyGlobalTransferAuditData {
+  // 按资产分组的全局转账审核规则（类似提现审核按链分组）
+  repeated CurrencyAssetTransferAuditRules audit_rules = 1;
+}
+
+message GetCurrencyGlobalTransferAuditResponse {
+  bool success = 1;
+  string message = 2;
+  GetCurrencyGlobalTransferAuditData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message UpdateCurrencyGlobalTransferAuditRequest {
+  // 按资产分组的全局转账审核规则
+  repeated CurrencyAssetTransferAuditRules audit_rules = 1;
+}
+
+message UpdateCurrencyGlobalTransferAuditData {
+  repeated CurrencyAssetTransferAuditRules audit_rules = 1;
+}
+
+message UpdateCurrencyGlobalTransferAuditResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateCurrencyGlobalTransferAuditData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Vault Address Management
+// ============================================================================
+
+// AddVaultAddress - 添加钱包地址
+message AddVaultAddressRequest {
+  int64 network_id = 1;           // 网络 ID (关联 vault_networks.id)
+  string address = 2;              // 钱包地址
+  string address_type = 3;         // 地址类型: active|hot|cold|deposit
+  string label = 4;                // 地址标签/备注 (可选)
+}
+
+message AddVaultAddressData {
+  int64 id = 1;
+  int64 network_id = 2;
+  string address = 3;
+  string address_type = 4;
+  string label = 5;
+  string status = 6;
+  bool is_active_wallet = 7;
+  string created_at = 8;
+}
+
+message AddVaultAddressResponse {
+  bool success = 1;
+  string message = 2;
+  AddVaultAddressData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ListVaultAddresses - 查询地址列表
+message ListVaultAddressesRequest {
+  int64 network_id = 1;            // 可选: 按网络筛选
+  string address_type = 2;         // 可选: 按地址类型筛选
+  string status = 3;               // 可选: 按状态筛选
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+message VaultAddressItem {
+  int64 id = 1;
+  int64 network_id = 2;
+  string network = 3;              // 网络名称 (ETH/BSC/TRON)
+  string address = 4;
+  string address_type = 5;
+  string label = 6;
+  string status = 7;
+  bool is_active_wallet = 8;
+  string total_balance_usd = 9;    // 该地址所有币种的总 USD 价值
+  int32 currencies_count = 10;     // 该地址持有的币种数量
+  string last_synced_at = 11;
+  string created_at = 12;
+  string created_by_name = 13;     // 创建人名称
+}
+
+message ListVaultAddressesData {
+  repeated VaultAddressItem addresses = 1;
+  Pagination pagination = 2;
+}
+
+message ListVaultAddressesResponse {
+  bool success = 1;
+  string message = 2;
+  ListVaultAddressesData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// UpdateVaultAddressStatus - 更新地址状态
+message UpdateVaultAddressStatusRequest {
+  int64 id = 1;                    // 地址 ID
+  string status = 2;               // 新状态: active|inactive|disabled
+  bool set_as_active_wallet = 3;   // 是否设置为活跃钱包 (仅当 address_type=active 时有效)
+}
+
+message UpdateVaultAddressStatusData {
+  int64 id = 1;
+  string status = 2;
+  bool is_active_wallet = 3;
+  string updated_at = 4;
+}
+
+message UpdateVaultAddressStatusResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateVaultAddressStatusData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// DeleteVaultAddress - 删除地址 (软删除)
+message DeleteVaultAddressRequest {
+  int64 id = 1;
+}
+
+message DeleteVaultAddressResponse {
+  bool success = 1;
+  string message = 2;
+  string request_id = 3;
+  string timestamp = 4;
+}
+
+// GetVaultAddressBalances - 查询地址余额明细
+message GetVaultAddressBalancesRequest {
+  int64 address_id = 1;            // 地址 ID
+}
+
+message VaultAddressBalanceItem {
+  string currency = 1;
+  string contract_address = 2;
+  string balance = 3;
+  string balance_usd = 4;
+  string last_synced_at = 5;
+}
+
+message GetVaultAddressBalancesData {
+  int64 address_id = 1;
+  string address = 2;
+  string network = 3;
+  repeated VaultAddressBalanceItem balances = 4;
+  string total_balance_usd = 5;
+}
+
+message GetVaultAddressBalancesResponse {
+  bool success = 1;
+  string message = 2;
+  GetVaultAddressBalancesData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================
+// CheckHotWalletBalance - 检查热钱包余额
+// ============================================
+
+message CheckHotWalletBalanceRequest {
+  string asset_code = 1;   // 资产代码（如 USDT, TRX）
+  string chain_code = 2;   // 链代码（如 TRON, ETH, BSC）
+  string amount = 3;       // 需要的金额（decimal string）
+}
+
+message CheckHotWalletBalanceData {
+  bool sufficient = 1;              // 余额是否足够
+  string hot_wallet_address = 2;    // 热钱包地址
+  string asset_balance = 3;         // 资产余额
+  string gas_balance = 4;           // Gas（原生币）余额
+  string required_amount = 5;       // 需要的资产金额
+  string required_gas = 6;          // 需要的 gas 金额（对于代币转账）
+  string insufficient_reason = 7;   // 余额不足的原因（如果不足）
+}
+
+message CheckHotWalletBalanceResponse {
+  bool success = 1;
+  int32 code = 2;
+  string message = 3;
+  CheckHotWalletBalanceData data = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+// ============================================
+// Deposit Address Balances
+// ============================================
+
+// ListDepositAddressBalances - 查询充值地址余额列表
+message ListDepositAddressBalancesRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 user_id = 3;                // 用户ID筛选
+  string asset_code = 4;            // 币种筛选
+  string chain_code = 5;            // 链筛选
+  optional bool needs_sweep = 6;    // 是否需要归集（null=全部）
+  optional string min_balance_usd_raw = 7;  // 最小USD余额（分，DECIMAL(65,0)）
+  optional string max_balance_usd_raw = 8;  // 最大USD余额（分，DECIMAL(65,0)）
+  string sync_status = 9;           // 同步状态筛选
+  string sort_by = 10;              // 排序字段（balance_raw/balance_usd_raw/last_synced_at/created_at）
+  string sort_order = 11;           // 排序方向（asc/desc）
+}
+
+message DepositAddressBalanceItem {
+  int64 id = 1;
+  int64 deposit_address_id = 2;
+  int64 user_id = 3;
+  string asset_code = 4;
+  string chain_code = 5;
+  string address = 6;               // 充值地址（关联查询）
+  string balance = 7;               // 余额（字符串，小数）
+  string balance_raw = 8;            // 余额（最小单位，DECIMAL(65,0)）
+  string balance_usd = 9;           // USD估值
+  string balance_usd_raw = 10;       // USD估值（分，DECIMAL(65,0)）
+  bool needs_sweep = 11;            // 是否需要归集
+  string sweep_threshold_raw = 12;   // 归集阈值（DECIMAL(65,0)）
+  string last_sweep_at = 13;        // 最后归集时间
+  string last_sweep_amount_raw = 14; // 最后归集金额（DECIMAL(65,0)）
+  string last_synced_at = 15;       // 最后同步时间
+  string sync_status = 16;          // 同步状态
+  string created_at = 17;
+  string updated_at = 18;
+}
+
+message ListDepositAddressBalancesData {
+  repeated DepositAddressBalanceItem balances = 1;
+}
+
+message ListDepositAddressBalancesResponse {
+  bool success = 1;
+  string message = 2;
+  ListDepositAddressBalancesData data = 3;
+  Pagination pagination = 4;
+  string request_id = 5;
+  string timestamp = 6;
+}
+
+// GetDepositAddressBalance - 获取单个地址余额
+message GetDepositAddressBalanceRequest {
+  int64 id = 1;                     // 余额记录ID
+  reserved 2;
+  reserved "deposit_address_id";
+}
+
+message GetDepositAddressBalanceData {
+  DepositAddressBalanceItem balance = 1;
+}
+
+message GetDepositAddressBalanceResponse {
+  bool success = 1;
+  string message = 2;
+  GetDepositAddressBalanceData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// GetDepositAddressBalanceStats - 获取统计数据
+message GetDepositAddressBalanceStatsRequest {
+  int64 user_id = 1;                // 用户ID（可选）
+  string asset_code = 2;            // 币种筛选（可选）
+  string chain_code = 3;            // 链筛选（可选）
+}
+
+message GetDepositAddressBalanceStatsData {
+  int64 total_addresses = 1;        // 总地址数
+  int64 active_addresses = 2;       // 活跃地址数（balance_raw > 0）
+  int64 needs_sweep_count = 3;      // 待归集地址数
+  string total_balance_usd = 4;     // 总余额USD
+  string total_balance_usd_raw = 5;  // 总余额USD（分，DECIMAL(65,0)）
+  string pending_sweep_usd = 6;     // 待归集总额USD
+  string pending_sweep_usd_raw = 7;  // 待归集总额USD（分，DECIMAL(65,0)）
+  int64 last_24h_sweep_count = 8;   // 24小时归集次数
+  double sweep_success_rate = 9;    // 归集成功率
+}
+
+message GetDepositAddressBalanceStatsResponse {
+  bool success = 1;
+  string message = 2;
+  GetDepositAddressBalanceStatsData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// UpdateDepositAddressBalance - 更新余额（ChainSync使用）
+message UpdateDepositAddressBalanceRequest {
+  int64 deposit_address_id = 1;     // 充值地址ID
+  int64 user_id = 2;                // 用户ID
+  string asset_code = 3;            // 币种
+  string chain_code = 4;            // 链
+  string balance = 5;               // 余额
+  string balance_raw = 6;            // 余额（最小单位，DECIMAL(65,0)）
+  string balance_usd = 7;           // USD估值
+  string balance_usd_raw = 8;        // USD估值（分，DECIMAL(65,0)）
+  string sweep_threshold_raw = 9;    // 归集阈值（DECIMAL(65,0)）
+  string sync_status = 10;          // 同步状态
+  string sync_error = 11;           // 同步错误（可选）
+}
+
+message UpdateDepositAddressBalanceData {
+  DepositAddressBalanceItem balance = 1;
+  bool marked_for_sweep = 2;        // 是否被标记为待归集
+}
+
+message UpdateDepositAddressBalanceResponse {
+  bool success = 1;
+  string message = 2;
+  UpdateDepositAddressBalanceData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// GetDepositAddressBalanceByAsset - 按币种统计待归集金额（币种分布）
+message GetDepositAddressBalanceByAssetRequest {
+  string asset_code = 1;  // 币种筛选（可选，空则返回所有币种）
+}
+
+message AssetBalanceStats {
+  string asset_code = 1;           // 币种代码
+  string asset_name = 2;           // 币种名称
+  int64 address_count = 3;         // 地址数
+  string total_balance = 4;        // 总余额
+  string total_balance_raw = 5;     // 总余额（最小单位，DECIMAL(65,0)）
+  string total_balance_usd = 6;    // USD估值
+  string total_balance_usd_raw = 7; // USD估值（分，DECIMAL(65,0)）
+  string percentage = 8;           // 占总余额的百分比
+}
+
+message GetDepositAddressBalanceByAssetData {
+  repeated AssetBalanceStats assets = 1;  // 币种统计列表
+  string total_balance_usd = 2;           // 所有币种总余额USD
+  string total_balance_usd_raw = 3;        // 所有币种总余额USD（分，DECIMAL(65,0)）
+}
+
+message GetDepositAddressBalanceByAssetResponse {
+  bool success = 1;
+  string message = 2;
+  GetDepositAddressBalanceByAssetData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// ============================================================================
+// Dashboard Statistics
+// ============================================================================
+
+// ==================== Dashboard Overview (Fast Stats) ====================
+message GetDashboardOverviewRequest {
+  bool force_refresh = 1;  // 可选：强制刷新缓存
+}
+
+message GetDashboardOverviewResponse {
+  bool success = 1;
+  string message = 2;
+  DashboardOverviewData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message DashboardOverviewData {
+  UserStatsOverview user_stats = 1;              // Web2用户统计
+  VaultBalanceOverview vault_balance = 2;        // 金库余额概览
+  TransferOverview today_transfer = 3;           // 今日转账概览
+  ApprovalOverview approval_stats = 4;           // 审批概览
+  UserStatusDistribution user_status_dist = 5;   // 用户状态分布
+  int32 supported_currencies = 6;                // 系统支持币种数
+}
+
+message UserStatsOverview {
+  int64 total_users = 1;              // 总用户数
+  int64 today_new_users = 2;          // 今日新增
+  double growth_rate = 3;             // 增长率（对比昨日）
+  int64 active_users_7d = 4;          // 近7日活跃用户
+}
+
+message VaultBalanceOverview {
+  string total_balance_usd = 1;       // 总余额（USD）
+  string today_change_usd = 2;        // 今日变化（简化版：可返回"0"）
+  double change_rate = 3;             // 变化率
+}
+
+message TransferOverview {
+  string today_amount_usd = 1;        // 今日转账金额
+  int32 today_count = 2;              // 今日转账笔数
+  double growth_rate = 3;             // 对比昨日增长率
+}
+
+message ApprovalOverview {
+  int32 pending_count = 1;            // 待审批提现数
+  int32 today_new_count = 2;          // 今日新增待审批
+  int32 today_withdrawal_count = 3;   // 今日提现笔数
+}
+
+message UserStatusDistribution {
+  int64 normal = 1;
+  int64 frozen = 2;
+  int64 terminated = 3;
+  double normal_rate = 4;
+  double frozen_rate = 5;
+  double terminated_rate = 6;
+}
+
+// ==================== Dashboard Trends (Heavy Queries) ====================
+message GetDashboardTrendsRequest {
+  int32 fund_flow_months = 1;   // 资金流水月份数（默认6）
+  int32 transfer_days = 2;      // 转账趋势天数（默认7）
+  bool force_refresh = 3;
+}
+
+message GetDashboardTrendsResponse {
+  bool success = 1;
+  string message = 2;
+  DashboardTrendsData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message DashboardTrendsData {
+  FundFlowTrend fund_flow_trend = 1;                     // 资金流水趋势（按月）
+  TransferBatchTrend transfer_batch_trend = 2;           // 转账批次执行趋势（按日）
+  WithdrawalApprovalDistribution approval_distribution = 3;  // 提现审批状态分布（饼图）
+  repeated VaultCurrencyBalance vault_top_currencies = 4;    // Vault币种余额 Top 5
+}
+
+message FundFlowTrend {
+  repeated FundFlowDataPoint data_points = 1;
+}
+
+message FundFlowDataPoint {
+  string period = 1;              // "2024-07"
+  string deposit_amount = 2;      // 充值总额
+  string withdrawal_amount = 3;   // 提现总额
+  string transfer_amount = 4;     // 转账总额
+  string total_amount = 5;        // 总流水
+}
+
+message TransferBatchTrend {
+  repeated TransferBatchDataPoint data_points = 1;
+}
+
+message TransferBatchDataPoint {
+  string date = 1;                // "2024-12-25"
+  int32 total_batches = 2;
+  int32 completed_batches = 3;
+  int32 failed_batches = 4;
+  double success_rate = 5;        // 成功率（%）
+}
+
+message WithdrawalApprovalDistribution {
+  int32 pending = 1;
+  int32 approved = 2;
+  int32 rejected = 3;
+  int32 cancelled = 4;
+}
+
+message VaultCurrencyBalance {
+  int32 rank = 1;
+  string currency = 2;
+  string balance = 3;
+  string balance_usd = 4;
+  double percentage = 5;          // 占总余额百分比
+}
+
+// ==================== Dashboard Activities (Frequently Refreshed) ====================
+message GetDashboardActivitiesRequest {
+  int32 page = 1;         // 页码（默认1）
+  int32 page_size = 2;    // 每页数量（默认20）
+}
+
+message GetDashboardActivitiesResponse {
+  bool success = 1;
+  string message = 2;
+  DashboardActivitiesData data = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message DashboardActivitiesData {
+  repeated RecentActivity activities = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message RecentActivity {
+  string activity_type = 1;     // transfer_batch, withdrawal_approval, user_registration, vault_adjustment
+  string title = 2;             // 标题（简短描述）
+  string description = 3;       // 详细描述
+  string related_id = 4;        // 关联记录ID
+  int64 created_at = 5;         // Unix timestamp (seconds)
+  string operator = 6;          // 操作人（用户UID或管理员名称）
+  string status_icon = 7;       // success/warning/error/info（前端图标提示）
+}
+
+// ==================== Alert Configs ====================
+message AdminListAlertConfigsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  bool enabled_only = 3;
+}
+
+message AdminListAlertConfigsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated AdminAlertConfigItem configs = 3;
+  int32 total = 4;
+}
+
+message AdminAlertConfigItem {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string alert_type = 4;
+  string threshold_usd = 5;
+  int32 time_window_seconds = 6;
+  bool monitor_web3_withdraw = 7;
+  bool monitor_web2_withdraw = 8;
+  bool monitor_internal_transfer = 9;
+  bool enabled = 10;
+  bool test_mode = 11;
+  int32 cooldown_seconds = 12;
+  int64 created_at = 13;
+  int64 updated_at = 14;
+}
+
+message AdminCreateAlertConfigRequest {
+  string name = 1;
+  string description = 2;
+  string threshold_usd = 3;
+  int32 time_window_seconds = 4;
+  bool monitor_web3_withdraw = 5;
+  bool monitor_web2_withdraw = 6;
+  bool monitor_internal_transfer = 7;
+  bool enabled = 8;
+  bool test_mode = 9;
+  int32 cooldown_seconds = 10;
+}
+
+message AdminCreateAlertConfigResponse {
+  bool success = 1;
+  string message = 2;
+  int64 config_id = 3;
+  AdminAlertConfigItem config = 4;
+}
+
+message AdminUpdateAlertConfigRequest {
+  int64 config_id = 1;
+  string name = 2;
+  string description = 3;
+  string threshold_usd = 4;
+  int32 time_window_seconds = 5;
+  bool monitor_web3_withdraw = 6;
+  bool monitor_web2_withdraw = 7;
+  bool monitor_internal_transfer = 8;
+  bool enabled = 9;
+  bool test_mode = 10;
+  int32 cooldown_seconds = 11;
+}
+
+message AdminUpdateAlertConfigResponse {
+  bool success = 1;
+  string message = 2;
+  AdminAlertConfigItem config = 3;
+}
+
+message AdminDeleteAlertConfigRequest {
+  int64 config_id = 1;
+}
+
+message AdminDeleteAlertConfigResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message AdminGetAlertConfigRequest {
+  int64 config_id = 1;
+}
+
+message AdminGetAlertConfigResponse {
+  bool success = 1;
+  string message = 2;
+  AdminAlertConfigItem config = 3;
+}
+
+message AdminToggleAlertConfigRequest {
+  int64 config_id = 1;
+  bool enabled = 2;
+}
+
+message AdminToggleAlertConfigResponse {
+  bool success = 1;
+  string message = 2;
+  AdminAlertConfigItem config = 3;
+}
+
+message AdminGetAlertConfigWithStatsRequest {
+  int64 config_id = 1;
+}
+
+message AdminGetAlertConfigWithStatsResponse {
+  bool success = 1;
+  string message = 2;
+  AdminAlertConfigItem config = 3;
+  AdminAlertConfigStats stats = 4;
+}
+
+message AdminAlertConfigStats {
+  string current_window_amount = 1;
+  int32 current_window_tx_count = 2;
+  string progress_percentage = 3;
+  bool is_in_cooldown = 4;
+  int32 cooldown_remaining_seconds = 5;
+}
+
+// ============================================================================
+// Accounting - User Transaction Records
+// ============================================================================
+
+// 用户交易记录列表查询
+message AccountingListUserTransactionRecordsRequest {
+  int64 user_id = 1;           // 用户ID
+  int32 page = 2;              // 页码
+  int32 page_size = 3;         // 每页数量
+  int32 tx_type = 4;           // 交易类型（0=全部, 1=充值, 2=提现，3=内部转账）
+  string asset_code = 5;       // 资产代码（可选筛选）
+  string chain_code = 6;       // 链代码（可选筛选）
+  string status = 7;           // 状态（可选筛选）
+  int64 start_time = 8;        // 开始时间（Unix秒）
+  int64 end_time = 9;          // 结束时间（Unix秒）
+}
+
+message AccountingListUserTransactionRecordsResponse {
+  bool success = 1;
+  string message = 2;
+  int64 total = 3;
+  repeated AccountingUserTransactionRecordItem items = 4;
+  Pagination pagination = 5;
+  string request_id = 6;
+  string timestamp = 7;
+}
+
+// 用户交易记录详情查询
+message AccountingGetUserTransactionRecordDetailRequest {
+  int64 id = 1;  // 记录ID
+}
+
+message AccountingGetUserTransactionRecordDetailResponse {
+  bool success = 1;
+  string message = 2;
+  AccountingUserTransactionRecordItem item = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+// 用户交易记录项
+message AccountingUserTransactionRecordItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  int32 tx_type = 3;           // 1=deposit(充值), 2=withdraw(提现), 3=internal_transfer(内部转账)
+  string asset_code = 4;
+  string chain_code = 5;
+  string amount_decimal = 6;   // 交易金额
+  string fee_decimal = 7;      // 手续费
+  string status = 8;           // pending/completed/failed
+  string memo = 9;             // 备注
+  string from_address = 10;    // 发送地址
+  string to_address = 11;      // 接收地址
+  string tx_hash = 12;         // 交易哈希
+  int64 timestamp = 13;        // 创建时间（Unix秒）
+  int64 freeze_ledger_tx_id = 14;  // 冻结账本交易ID
+  int64 settle_ledger_tx_id = 15;  // 结算账本交易ID
+  int64 confirm_ledger_tx_id = 16; // 确认账本交易ID（充值时使用）
+  string biz_ref = 17;             // 业务引用
+  string idempotency_key = 18;     // 幂等性键
+  string created_at = 19;          // 创建时间（格式：2006-01-02 15:04:05）
+  string updated_at = 20;          // 更新时间（格式：2006-01-02 15:04:05）
+}

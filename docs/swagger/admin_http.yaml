@@ -1,0 +1,733 @@
+type: google.api.Service
+config_version: 3
+name: admin
+http:
+  rules:
+    - selector: admin.Admin.GetDashboardOverview
+      get: /api/v1/admin/dashboard/overview
+
+    - selector: admin.Admin.GetDashboardTrends
+      get: /api/v1/admin/dashboard/trends
+
+    - selector: admin.Admin.GetDashboardActivities
+      get: /api/v1/admin/dashboard/activities
+
+    - selector: admin.Admin.RefreshToken
+      post: /api/v1/admin/auth/refresh
+      body: "*"
+
+    - selector: admin.Admin.Logout
+      post: /api/v1/admin/auth/logout
+      body: "*"
+
+    - selector: admin.Admin.AdminMFACaptchaGenerate
+      post: /api/v1/admin/auth/captcha/generate
+      body: "*"
+
+    - selector: admin.Admin.AdminMFACaptchaValidate
+      post: /api/v1/admin/auth/captcha/validate
+      body: "*"
+
+    - selector: admin.Admin.AdminMFALogin
+      post: /api/v1/admin/auth/login
+      body: "*"
+
+    - selector: admin.Admin.GetHotWalletRuntimeStatus
+      get: /api/v1/admin/wallet/init/status
+
+    - selector: admin.Admin.StartHotWalletInit
+      post: /api/v1/admin/wallet/init/start
+      body: "*"
+
+    - selector: admin.Admin.GetHotWalletMnemonicPage
+      get: /api/v1/admin/wallet/init/mnemonic/page
+
+    - selector: admin.Admin.GetHotWalletMnemonicChallenge
+      post: /api/v1/admin/wallet/init/challenge
+      body: "*"
+
+    - selector: admin.Admin.VerifyHotWalletMnemonicChallenge
+      post: /api/v1/admin/wallet/init/verify
+      body: "*"
+
+    - selector: admin.Admin.UnlockSignerHotWallet
+      post: /api/v1/admin/signer/unlock
+      body: "*"
+
+    - selector: admin.Admin.AdminMFAGetTwoFAQrCode
+      post: /api/v1/admin/auth/2fa/qrcode
+      body: "*"
+
+    - selector: admin.Admin.AdminMFABindTwoFA
+      post: /api/v1/admin/auth/2fa/bind
+      body: "*"
+
+    - selector: admin.Admin.AdminMFAVerifyTwoFA
+      post: /api/v1/admin/auth/2fa/verify
+      body: "*"
+
+    - selector: admin.Admin.ListAdmins
+      get: /api/v1/admin/settings/admins
+
+    - selector: admin.Admin.CreateAdmin
+      post: /api/v1/admin/settings/admins
+      body: "*"
+
+    - selector: admin.Admin.UpdateAdmin
+      put: /api/v1/admin/settings/admins/{admin_id}
+      body: "*"
+
+    - selector: admin.Admin.DisableAdmin
+      post: /api/v1/admin/settings/admins/{admin_id}/disable
+      body: "*"
+
+    - selector: admin.Admin.ResetAdminPassword
+      post: /api/v1/admin/settings/admins/{admin_id}/reset-password
+      body: "*"
+
+    - selector: admin.Admin.ResetAdminTwoFA
+      post: /api/v1/admin/settings/admins/{admin_id}/reset-2fa
+      body: "*"
+
+    - selector: admin.Admin.ChangeMyPassword
+      post: /api/v1/admin/settings/change-password
+      body: "*"
+
+    - selector: admin.Admin.ListUsers
+      get: /api/v1/admin/users
+
+    - selector: admin.Admin.GetUsersStatistics
+      get: /api/v1/admin/users/statistics
+
+    - selector: admin.Admin.ListUserWithdrawAuditWhitelistRules
+      get: /api/v1/admin/users/{uid}/withdraw-audit-whitelist-rules
+
+    - selector: admin.Admin.UpsertUserWithdrawAuditWhitelistRules
+      put: /api/v1/admin/users/{uid}/withdraw-audit-whitelist-rules
+      body: "*"
+
+    - selector: admin.Admin.GetUserDetail
+      get: /api/v1/admin/users/{uid}
+
+    - selector: admin.Admin.FreezeUser
+      post: /api/v1/admin/users/{uid}/freeze
+      body: "*"
+
+    - selector: admin.Admin.UnfreezeUser
+      post: /api/v1/admin/users/{uid}/unfreeze
+      body: "*"
+
+    - selector: admin.Admin.TerminateUser
+      post: /api/v1/admin/users/{uid}/terminate
+      body: "*"
+
+    - selector: admin.Admin.UpdateUserRole
+      put: /api/v1/admin/users/{uid}/role
+      body: "*"
+
+    - selector: admin.Admin.UpdateUserMemberLevel
+      put: /api/v1/admin/users/{uid}/member-level
+      body: "*"
+
+    - selector: admin.Admin.ResetUserPassword
+      post: /api/v1/admin/users/{uid}/reset-password
+      body: "*"
+
+    - selector: admin.Admin.ResetUserTradePassword
+      post: /api/v1/admin/users/{uid}/reset-trade-password
+      body: "*"
+
+    - selector: admin.Admin.UnlockTradePassword
+      post: /api/v1/admin/users/{uid}/unlock-trade-password
+      body: "*"
+
+    - selector: admin.Admin.UpdateUserWithdrawAuditWhitelist
+      put: /api/v1/admin/users/{uid}/withdraw-audit-whitelist
+      body: "*"
+
+    - selector: admin.Admin.UnbindUserTotp
+      post: /api/v1/admin/users/{uid}/2fa/unbind
+      body: "*"
+
+    - selector: admin.Admin.ListUser2FAHistory
+      get: /api/v1/admin/users/{uid}/2fa/history
+
+    - selector: admin.Admin.AddUserNote
+      post: /api/v1/admin/users/{uid}/notes
+      body: "*"
+
+    - selector: admin.Admin.ExportUsers
+      post: /api/v1/admin/users/export
+      body: "*"
+
+    - selector: admin.Admin.GetMe
+      get: /api/v1/admin/me
+
+    - selector: admin.Admin.GetMySecuritySettings
+      get: /api/v1/admin/settings/security
+
+    - selector: admin.Admin.StartTwoFASetup
+      post: /api/v1/admin/settings/2fa/setup
+      body: "*"
+
+    - selector: admin.Admin.ConfirmTwoFASetup
+      post: /api/v1/admin/settings/2fa/confirm
+      body: "*"
+
+    - selector: admin.Admin.StartTwoFARebind
+      post: /api/v1/admin/settings/2fa/rebind
+      body: "*"
+
+    - selector: admin.Admin.DisableTwoFA
+      post: /api/v1/admin/settings/2fa/disable
+      body: "*"
+
+    - selector: admin.Admin.GetMyRBAC
+      get: /api/v1/admin/rbac/me
+
+    - selector: admin.Admin.GetRbacPermissionMap
+      get: /api/v1/admin/rbac/permission-map
+
+    - selector: admin.Admin.ListMenus
+      get: /api/v1/admin/rbac/menus
+
+    - selector: admin.Admin.CreateMenu
+      post: /api/v1/admin/rbac/menus
+      body: "*"
+
+    - selector: admin.Admin.GetMenuTree
+      get: /api/v1/admin/rbac/menus/tree
+
+    - selector: admin.Admin.GetMenuById
+      get: /api/v1/admin/rbac/menus/{id}
+
+    - selector: admin.Admin.UpdateMenu
+      put: /api/v1/admin/rbac/menus/{id}
+      body: "*"
+
+    - selector: admin.Admin.DeleteMenu
+      delete: /api/v1/admin/rbac/menus/{id}
+
+    - selector: admin.Admin.ListPermissions
+      get: /api/v1/admin/rbac/permissions
+
+    - selector: admin.Admin.CreatePermission
+      post: /api/v1/admin/rbac/permissions
+      body: "*"
+
+    - selector: admin.Admin.GetPermissionById
+      get: /api/v1/admin/rbac/permissions/{id}
+
+    - selector: admin.Admin.UpdatePermission
+      put: /api/v1/admin/rbac/permissions/{id}
+      body: "*"
+
+    - selector: admin.Admin.DeletePermission
+      delete: /api/v1/admin/rbac/permissions/{id}
+
+    - selector: admin.Admin.GetPermissionsByMenuId
+      get: /api/v1/admin/rbac/menus/{menu_id}/permissions
+
+    - selector: admin.Admin.ListRoles
+      get: /api/v1/admin/rbac/roles
+
+    - selector: admin.Admin.CreateRole
+      post: /api/v1/admin/rbac/roles
+      body: "*"
+
+    - selector: admin.Admin.GetRoleById
+      get: /api/v1/admin/rbac/roles/{id}
+
+    - selector: admin.Admin.UpdateRole
+      put: /api/v1/admin/rbac/roles/{id}
+      body: "*"
+
+    - selector: admin.Admin.DeleteRole
+      delete: /api/v1/admin/rbac/roles/{id}
+
+    - selector: admin.Admin.GetRoleMenus
+      get: /api/v1/admin/rbac/roles/{role_id}/menus
+
+    - selector: admin.Admin.GetRolePermissions
+      get: /api/v1/admin/rbac/roles/{role_id}/permissions
+
+    - selector: admin.Admin.AssignMenusToRole
+      post: /api/v1/admin/rbac/roles/{role_id}/menus
+      body: "*"
+
+    - selector: admin.Admin.AssignPermissionsToRole
+      post: /api/v1/admin/rbac/roles/{role_id}/permissions
+      body: "*"
+
+    - selector: admin.Admin.GetUserRoles
+      get: /api/v1/admin/rbac/users/{user_id}/roles
+
+    - selector: admin.Admin.AssignRolesToUser
+      post: /api/v1/admin/rbac/users/{user_id}/roles
+      body: "*"
+
+    - selector: admin.Admin.GetSystemConfig
+      get: /api/v1/admin/settings/config
+
+    - selector: admin.Admin.UpdateSystemConfig
+      put: /api/v1/admin/settings/config
+      body: "*"
+
+    - selector: admin.Admin.GetAuditLogs
+      get: /api/v1/admin/settings/audit-logs
+
+    - selector: admin.Admin.ListAlertConfigs
+      get: /api/v1/admin/alert/configs
+
+    - selector: admin.Admin.CreateAlertConfig
+      post: /api/v1/admin/alert/configs
+      body: "*"
+
+    - selector: admin.Admin.GetAlertConfig
+      get: /api/v1/admin/alert/configs/{config_id}
+
+    - selector: admin.Admin.UpdateAlertConfig
+      put: /api/v1/admin/alert/configs/{config_id}
+      body: "*"
+
+    - selector: admin.Admin.DeleteAlertConfig
+      delete: /api/v1/admin/alert/configs/{config_id}
+
+    - selector: admin.Admin.ToggleAlertConfig
+      post: /api/v1/admin/alert/configs/{config_id}/toggle
+      body: "*"
+
+    - selector: admin.Admin.GetAlertConfigWithStats
+      get: /api/v1/admin/alert/configs/{config_id}/stats
+
+    - selector: admin.Admin.CreateSwapApiKey
+      post: /api/v1/admin/swap/api-keys
+      body: "*"
+
+    - selector: admin.Admin.ListSwapApiKeys
+      get: /api/v1/admin/swap/api-keys
+
+    - selector: admin.Admin.RevokeSwapApiKey
+      post: /api/v1/admin/swap/api-keys/{id}/revoke
+      body: "*"
+
+    - selector: admin.Admin.ListSwapProvidersForDropdown
+      get: /api/v1/admin/swap/providers/dropdown
+
+    - selector: admin.Admin.ListSwapProviders
+      get: /api/v1/admin/swap/providers
+
+    - selector: admin.Admin.GetSwapProviderDetail
+      get: /api/v1/admin/swap/providers/{id}
+
+    - selector: admin.Admin.CreateSwapProvider
+      post: /api/v1/admin/swap/providers
+      body: "*"
+
+    - selector: admin.Admin.UpdateSwapProvider
+      put: /api/v1/admin/swap/providers/{id}
+      body: "*"
+
+    - selector: admin.Admin.DeleteSwapProvider
+      delete: /api/v1/admin/swap/providers/{id}
+
+    - selector: admin.Admin.EnableSwapProvider
+      post: /api/v1/admin/swap/providers/{id}/enable
+      body: "*"
+
+    - selector: admin.Admin.DisableSwapProvider
+      post: /api/v1/admin/swap/providers/{id}/disable
+      body: "*"
+
+    - selector: admin.Admin.ListSwapConfigs
+      get: /api/v1/admin/swap/configs
+
+    - selector: admin.Admin.GetSwapConfigDetail
+      get: /api/v1/admin/swap/configs/{id}
+
+    - selector: admin.Admin.CreateSwapConfig
+      post: /api/v1/admin/swap/configs
+      body: "*"
+
+    - selector: admin.Admin.UpdateSwapConfigDetail
+      put: /api/v1/admin/swap/configs/{id}
+      body: "*"
+
+    - selector: admin.Admin.DeleteSwapConfig
+      delete: /api/v1/admin/swap/configs/{id}
+
+    - selector: admin.Admin.ListProjectSwapConfigs
+      get: /api/v1/admin/swap/projects/{project_name}/configs
+
+    - selector: admin.Admin.EnableSwapConfigForProject
+      post: /api/v1/admin/swap/projects/{project_name}/configs/enable
+      body: "*"
+
+    - selector: admin.Admin.DisableSwapConfigForProject
+      post: /api/v1/admin/swap/projects/configs/{id}/disable
+      body: "*"
+
+    - selector: admin.Admin.ListSwapTransactions
+      get: /api/v1/admin/swap/transactions
+
+    - selector: admin.Admin.GetCurrencyOverview
+      get: /api/v1/admin/currencies/overview
+
+    - selector: admin.Admin.ListCurrencies
+      get: /api/v1/admin/currencies
+
+    - selector: admin.Admin.CreateCurrency
+      post: /api/v1/admin/currencies
+      body: "*"
+
+    - selector: admin.Admin.GetCurrency
+      get: /api/v1/admin/currencies/{asset_code}
+
+    - selector: admin.Admin.UpdateCurrency
+      post: /api/v1/admin/currencies/{asset_code}
+      body: "*"
+
+    - selector: admin.Admin.ListChains
+      get: /api/v1/admin/chains
+
+    - selector: admin.Admin.UpdateChainIcon
+      put: /api/v1/admin/chains/{chain_code}/icon
+      body: "*"
+
+    - selector: admin.Admin.GetCurrencyConfig
+      get: /api/v1/admin/currencies/{asset_code}/config
+
+    - selector: admin.Admin.UpdateCurrencyConfig
+      put: /api/v1/admin/currencies/{asset_code}/config
+      body: "*"
+
+    - selector: admin.Admin.UpdateCurrencyStatus
+      put: /api/v1/admin/currencies/{asset_code}/status
+      body: "*"
+
+    - selector: admin.Admin.GetCurrencyGlobalWithdrawFee
+      get: /api/v1/admin/currencies/fees/global
+
+    - selector: admin.Admin.UpdateCurrencyGlobalWithdrawFee
+      put: /api/v1/admin/currencies/fees/global
+      body: "*"
+
+    - selector: admin.Admin.GetCurrencyGlobalWithdrawAudit
+      get: /api/v1/admin/currencies/audit/global
+
+    - selector: admin.Admin.UpdateCurrencyGlobalWithdrawAudit
+      put: /api/v1/admin/currencies/audit/global
+      body: "*"
+
+    - selector: admin.Admin.GetCurrencyGlobalTransferAudit
+      get: /api/v1/admin/currencies/transfer-audit/global
+
+    - selector: admin.Admin.UpdateCurrencyGlobalTransferAudit
+      put: /api/v1/admin/currencies/transfer-audit/global
+      body: "*"
+
+    - selector: admin.Admin.AccountingListAccountTypes
+      get: /api/v1/admin/accounting/account-types
+
+    - selector: admin.Admin.AccountingCreateAccountType
+      post: /api/v1/admin/accounting/account-types
+      body: "*"
+
+    - selector: admin.Admin.AccountingUpdateAccountType
+      put: /api/v1/admin/accounting/account-types/{code}
+      body: "*"
+
+    - selector: admin.Admin.AccountingDeleteAccountType
+      delete: /api/v1/admin/accounting/account-types/{code}
+
+    - selector: admin.Admin.AccountingSetAccountTypeAssets
+      put: /api/v1/admin/accounting/account-types/{code}/assets
+      body: "*"
+
+    - selector: admin.Admin.AccountingEnsureUserSetup
+      post: /api/v1/admin/accounting/users/{user_id}/ensure
+      body: "*"
+
+    - selector: admin.Admin.AccountingGetUserBalances
+      get: /api/v1/admin/accounting/users/{user_id}/balances
+
+    - selector: admin.Admin.AccountingEnsureSystemAccounts
+      post: /api/v1/admin/accounting/system/ensure
+      body: "*"
+
+    - selector: admin.Admin.AccountingListLedgerTx
+      get: /api/v1/admin/accounting/ledger/tx
+
+    - selector: admin.Admin.AccountingGetLedgerTxDetail
+      get: /api/v1/admin/accounting/ledger/tx/{tx_id}
+
+    - selector: admin.Admin.AccountingListUserTransactionRecords
+      post: /api/v1/admin/accounting/transactions/list
+      body: "*"
+
+    - selector: admin.Admin.AccountingGetUserTransactionRecordDetail
+      get: /api/v1/admin/accounting/transactions/{id}
+
+    - selector: admin.Admin.ListDepositAddresses
+      get: /api/v1/admin/deposit-addresses
+
+    - selector: admin.Admin.GetDepositAddress
+      get: /api/v1/admin/deposit-addresses/{id}
+
+    - selector: admin.Admin.GetDepositAddress
+      get: /api/v1/admin/deposit-addresses/by-address/{address}
+
+    - selector: admin.Admin.CreateDepositAddress
+      post: /api/v1/admin/deposit-addresses
+      body: "*"
+
+    - selector: admin.Admin.UpdateDepositAddress
+      put: /api/v1/admin/deposit-addresses/{id}
+      body: "*"
+
+    - selector: admin.Admin.DeleteDepositAddress
+      delete: /api/v1/admin/deposit-addresses/{id}
+
+    - selector: admin.Admin.ListDepositAddressBalances
+      get: /api/v1/admin/deposit-address-balances
+
+    - selector: admin.Admin.GetDepositAddressBalance
+      get: /api/v1/admin/deposit-address-balances/{id}
+
+    - selector: admin.Admin.GetDepositAddressBalanceStats
+      get: /api/v1/admin/deposit-address-balances/stats
+
+    - selector: admin.Admin.GetDepositAddressBalanceByAsset
+      get: /api/v1/admin/deposit-address-balances/stats/by-asset
+
+    - selector: admin.Admin.UpdateDepositAddressBalance
+      put: /api/v1/admin/deposit-address-balances
+      body: "*"
+
+    - selector: admin.Admin.ListConsolidationTasks
+      get: /api/v1/admin/consolidation/tasks
+
+    - selector: admin.Admin.GetConsolidationTask
+      get: /api/v1/admin/consolidation/tasks/{task_id}
+
+    - selector: admin.Admin.RetryConsolidationTask
+      post: /api/v1/admin/consolidation/tasks/{task_id}/retry
+      body: "*"
+
+    - selector: admin.Admin.CancelConsolidationTask
+      post: /api/v1/admin/consolidation/tasks/{task_id}/cancel
+      body: "*"
+
+    - selector: admin.Admin.TriggerConsolidation
+      post: /api/v1/admin/consolidation/trigger
+      body: "*"
+
+    - selector: admin.Admin.GetConsolidationStats
+      get: /api/v1/admin/consolidation/stats
+
+    - selector: admin.Admin.ListConsolidationLogs
+      get: /api/v1/admin/consolidation/logs
+
+    - selector: admin.Admin.ListConsolidationTopupRecords
+      get: /api/v1/admin/consolidation/topups
+
+    - selector: admin.Admin.ListEnergyRentalRecords
+      get: /api/v1/admin/consolidation/energy-rentals
+
+    - selector: admin.Admin.GetEnergyRentalRecord
+      get: /api/v1/admin/consolidation/energy-rentals/{id}
+
+    - selector: admin.Admin.ListDeposits
+      get: /api/v1/admin/deposits
+
+    - selector: admin.Admin.GetDeposit
+      get: /api/v1/admin/deposits/{id}
+
+    - selector: admin.Admin.GetDeposit
+      get: /api/v1/admin/deposits/by-tx/{transaction_hash}
+
+    - selector: admin.Admin.CreateDeposit
+      post: /api/v1/admin/deposits
+      body: "*"
+
+    - selector: admin.Admin.UpdateDeposit
+      put: /api/v1/admin/deposits/{id}
+      body: "*"
+
+    - selector: admin.Admin.CancelDeposit
+      delete: /api/v1/admin/deposits/{id}
+
+    - selector: admin.Admin.ListCurrencyWithdrawals
+      get: /api/v1/admin/currency-withdrawals
+
+    - selector: admin.Admin.CreateCurrencyWithdrawal
+      post: /api/v1/admin/currency-withdrawals
+      body: "*"
+
+    - selector: admin.Admin.GetCurrencyWithdrawal
+      get: /api/v1/admin/currency-withdrawals/{id}
+
+    - selector: admin.Admin.GetCurrencyWithdrawal
+      get: /api/v1/admin/currency-withdrawals/by-tx/{tx_hash}
+
+    - selector: admin.Admin.UpdateCurrencyWithdrawal
+      put: /api/v1/admin/currency-withdrawals/{id}
+      body: "*"
+
+    - selector: admin.Admin.ApproveCurrencyWithdrawal
+      put: /api/v1/admin/currency-withdrawals/{id}/approve
+      body: "*"
+
+    - selector: admin.Admin.RejectCurrencyWithdrawal
+      put: /api/v1/admin/currency-withdrawals/{id}/reject
+      body: "*"
+
+    - selector: admin.Admin.ListCurrencyWithdrawalEvents
+      get: /api/v1/admin/currency-withdrawals/{id}/events
+
+    - selector: admin.Admin.ListInternalTransfers
+      get: /api/v1/admin/internal-transfers
+
+    - selector: admin.Admin.GetInternalTransfer
+      get: /api/v1/admin/internal-transfers/{id}
+
+    - selector: admin.Admin.ApproveInternalTransfer
+      put: /api/v1/admin/internal-transfers/{id}/approve
+      body: "*"
+
+    - selector: admin.Admin.RejectInternalTransfer
+      put: /api/v1/admin/internal-transfers/{id}/reject
+      body: "*"
+
+    - selector: admin.Admin.CancelInternalTransfer
+      put: /api/v1/admin/internal-transfers/{id}/cancel
+      body: "*"
+
+    - selector: admin.Admin.CancelCurrencyWithdrawal
+      delete: /api/v1/admin/currency-withdrawals/{id}
+
+    - selector: admin.Admin.ListTransferBatches
+      get: /api/v1/admin/transfer/batches
+
+    - selector: admin.Admin.GetTransferBatch
+      get: /api/v1/admin/transfer/batches/{batch_id}
+
+    - selector: admin.Admin.SubmitTransferBatch
+      post: /api/v1/admin/transfer/batches/{batch_id}/submit
+      body: "*"
+
+    - selector: admin.Admin.ApproveTransferBatch
+      post: /api/v1/admin/transfer/batches/{batch_id}/approve
+      body: "*"
+
+    - selector: admin.Admin.CancelTransferBatch
+      post: /api/v1/admin/transfer/batches/{batch_id}/cancel
+      body: "*"
+
+    - selector: admin.Admin.ExecuteTransferBatch
+      post: /api/v1/admin/transfer/batches/{batch_id}/execute
+      body: "*"
+
+    - selector: admin.Admin.RetryTransferBatch
+      post: /api/v1/admin/transfer/batches/{batch_id}/retry
+      body: "*"
+
+    - selector: admin.Admin.GetWeb3UsersSummary
+      get: /api/v1/admin/web3users/summary
+
+    - selector: admin.Admin.GetWeb3UsersPageList
+      post: /api/v1/admin/web3users/list
+      body: "*"
+
+    - selector: admin.Admin.ListWeb3Users
+      post: /api/v1/admin/web3users
+      body: "*"
+
+    - selector: admin.Admin.GetWeb3User
+      get: /api/v1/admin/web3users/{device_id}
+
+    - selector: admin.Admin.ListWeb3UserTransactions
+      post: /api/v1/admin/web3users/{device_id}/transactions
+      body: "*"
+
+    - selector: admin.Admin.BlacklistWeb3Address
+      post: /api/v1/admin/web3users/{device_id}/addresses/{address}/blacklist
+      body: "*"
+
+    - selector: admin.Admin.UnblacklistWeb3Address
+      delete: /api/v1/admin/web3users/{device_id}/addresses/{address}/blacklist
+
+    - selector: admin.Admin.BatchWeb3AddressBlacklist
+      post: /api/v1/admin/web3users/addresses/blacklist/batch
+      body: "*"
+
+    - selector: admin.Admin.GetWeb3UserStatistics
+      get: /api/v1/admin/web3users/statistics
+
+    - selector: admin.Admin.ExportWeb3Users
+      post: /api/v1/admin/web3users/export
+      body: "*"
+
+    - selector: admin.Admin.ListBlacklistAddresses
+      get: /api/v1/admin/blacklist/addresses
+
+    - selector: admin.Admin.CreateBlacklistAddress
+      post: /api/v1/admin/blacklist/addresses
+      body: "*"
+
+    - selector: admin.Admin.BatchCreateBlacklistAddresses
+      post: /api/v1/admin/blacklist/addresses/batch
+      body: "*"
+
+    - selector: admin.Admin.UpdateBlacklistAddressMonitorStatus
+      post: /api/v1/admin/blacklist/addresses/{id}/monitor-status
+      body: "*"
+
+    - selector: admin.Admin.DeleteBlacklistAddress
+      delete: /api/v1/admin/blacklist/addresses/{id}
+
+    - selector: admin.Admin.ExportBlacklistAddresses
+      get: /api/v1/admin/blacklist/addresses/export
+
+    - selector: admin.Admin.GetVaultOverview
+      get: /api/v1/admin/vault/overview
+
+    - selector: admin.Admin.GetVaultDetail
+      get: /api/v1/admin/vault/{chain_id}
+
+    - selector: admin.Admin.CreateVaultAdjustment
+      post: /api/v1/admin/vault/adjust
+      body: "*"
+
+    - selector: admin.Admin.ListVaultAdjustments
+      get: /api/v1/admin/vault/adjustments
+
+    - selector: admin.Admin.ApproveVaultAdjustment
+      post: /api/v1/admin/vault/adjustments/{id}/approve
+      body: "*"
+
+    - selector: admin.Admin.UpdateVaultThresholds
+      put: /api/v1/admin/vault/thresholds
+      body: "*"
+
+    - selector: admin.Admin.SyncVault
+      post: /api/v1/admin/vault/{chain_id}/sync
+      body: "*"
+
+    - selector: admin.Admin.AddVaultAddress
+      post: /api/v1/admin/vault/addresses
+      body: "*"
+
+    - selector: admin.Admin.ListVaultAddresses
+      get: /api/v1/admin/vault/addresses
+
+    - selector: admin.Admin.UpdateVaultAddressStatus
+      put: /api/v1/admin/vault/addresses/{id}/status
+      body: "*"
+
+    - selector: admin.Admin.DeleteVaultAddress
+      delete: /api/v1/admin/vault/addresses/{id}
+
+    - selector: admin.Admin.GetVaultAddressBalances
+      get: /api/v1/admin/vault/addresses/{address_id}/balances
+

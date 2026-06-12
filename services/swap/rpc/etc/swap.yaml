@@ -1,0 +1,124 @@
+Name: swap.rpc
+ListenOn: 0.0.0.0:9014
+Etcd:
+  Hosts:
+  - 127.0.0.1:2379
+  Key: swap.rpc
+Mode: dev
+
+# 雪花ID配置（必须配置，范围0-1023，每个服务唯一）
+# 建议分配：business=1, chainrpc=2, chainsync=3, signer=4, admin=5, swap=6
+NodeID: 6
+
+# 日志配置
+Log:
+  ServiceName: swap.rpc
+  Mode: console
+  Path: logs/swap
+  Level: info
+  Compress: true
+  KeepDays: 7
+  StackCooldownMillis: 100
+
+# GORM MySQL/MariaDB 配置（使用 common/db 统一配置）
+MySQL:
+  Host: localhost
+  Port: 3306
+  Username: crypto
+  Password: crypto123456
+  Database: crypto_wallet
+  MaxIdleConns: 10
+  MaxOpenConns: 100
+  ConnMaxLifetime: 3600
+  LogLevel: 4
+  SlowThreshold: 200
+
+CacheRedis:
+  - Host: localhost:6379
+    Pass: redis123456
+    Type: node
+
+Swap:
+  Auth:
+    # 用于对外 API key 哈希的 pepper（必须通过环境变量覆盖，不要提交到 git）
+    # env: SWAP_API_KEY_PEPPER
+    ApiKeyPepper: ""
+
+    # API key 管理 RPC 的 admin token（推荐环境变量注入）
+    # env: SWAP_ADMIN_TOKEN 或 SWAP_ADMIN_TOKEN_SHA256
+    AdminTokenHash: ""
+
+    DefaultTier: default
+    RateLimitTiers:
+      default:
+        RequestsPerMinute: 60
+      pro:
+        RequestsPerMinute: 600
+
+  Provider:
+    Type: 1inch
+    OneInch:
+      BaseURL: https://api.1inch.dev
+      SwapBasePath: /swap/v6.0
+      # 1inch upstream key（必须通过环境变量覆盖，不要提交到 git）
+      # env: ONEINCH_API_KEY
+      ApiKey: ""
+      TimeoutMillis: 8000
+      MaxRetries: 2
+      RetryBaseDelayMillis: 200
+      RateLimitRPS: 15
+    Okx:
+      BaseURL: https://web3.okx.com
+      # API base path（v5/v6 可切换）
+      # v5: /api/v5/dex/aggregator
+      # v6: /api/v6/dex/aggregator
+      BasePath: /api/v6/dex/aggregator
+      # OKX credentials（必须通过环境变量覆盖，不要提交到 git）
+      # env: OKX_API_KEY / OKX_SECRET_KEY / OKX_PASSPHRASE
+      ApiKey: ""
+      SecretKey: ""
+      Passphrase: ""
+      TimeoutMillis: 8000
+      MaxRetries: 2
+      RetryBaseDelayMillis: 200
+      RateLimitRPS: 15
+
+  # 支持的链（Phase 1）
+  Chains:
+    - ChainID: 1
+      Name: Ethereum
+      Enabled: true
+      RPCEndpoints:
+        # 填写你自己的 RPC endpoint（不要提交生产 endpoint 到 git）
+        - "https://ethereum-rpc.publicnode.com"
+      RequiredConfirmations: 3
+    - ChainID: 56
+      Name: BSC
+      Enabled: true
+      RPCEndpoints:
+        - ""
+      RequiredConfirmations: 3
+    - ChainID: 137
+      Name: Polygon
+      Enabled: true
+      RPCEndpoints:
+        - ""
+      RequiredConfirmations: 3
+    - ChainID: 42161
+      Name: Arbitrum
+      Enabled: true
+      RPCEndpoints:
+        - ""
+      RequiredConfirmations: 3
+    - ChainID: 10
+      Name: Optimism
+      Enabled: true
+      RPCEndpoints:
+        - ""
+      RequiredConfirmations: 3
+
+  Cache:
+    TokensTTLSeconds: 43200
+
+# 数据库自动迁移配置（仅开发/测试环境建议启用）
+AutoMigrate: false

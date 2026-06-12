@@ -1,0 +1,256 @@
+Name: consolidation.rpc
+ListenOn: 0.0.0.0:9016
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: consolidation.rpc
+Mode: dev
+
+# 雪花ID配置（必须配置，范围0-1023，每个服务唯一）
+# 建议不要与现有服务冲突：business=1, chainrpc=2, chainsync=3, signer=4, admin=5?, swap=6?, accounting=7?
+NodeID: 20
+
+Log:
+  ServiceName: consolidation.rpc
+  Mode: console
+  Path: logs/consolidation
+  Level: info
+  Compress: true
+  KeepDays: 7
+  StackCooldownMillis: 100
+
+# GORM MySQL 配置（使用common/db统一配置）
+# 密码从环境变量/AWS Secrets Manager 注入，不在此配置
+MySQL:
+  Host: localhost
+  Port: 3306
+  Username: crypto
+  Password: "" # 占位符（由 secrets/env 注入）
+  Database: crypto_wallet
+  MaxIdleConns: 10
+  MaxOpenConns: 100
+  ConnMaxLifetime: 3600
+  LogLevel: 4
+  SlowThreshold: 200
+
+CacheRedis:
+  - Host: localhost:6379
+    Pass: "" # 占位符（由 secrets/env 注入）
+    Type: node
+
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9096
+  Path: /metrics
+
+Telemetry:
+  Name: consolidation.rpc
+  Endpoint: http://localhost:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger
+
+# Direct chain node configs (no ChainRpc dependency).
+# Configure only the chains you actually use in Consolidation.MinBalanceThresholds/TargetAddresses.
+Chains:
+  - ChainType: "TRON"
+    TronEndpoint: "grpc.trongrid.io:50051"
+    TronAPIKey: ""                    # optional
+    TronTrc20FeeLimitSun: 100000000   # default 100 TRX
+    Enabled: true
+  - ChainType: "ETH"
+    RPCEndpoint: "https://your-eth-node.example"
+    APIKey: ""                        # optional (header: X-API-Key)
+    Enabled: true
+  - ChainType: "BSC"
+    RPCEndpoint: "https://your-bsc-node.example"
+    APIKey: ""                        # optional (header: X-API-Key)
+    Enabled: true
+
+SignerRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: signer.rpc
+
+# AccountingRpc is optional (Phase 1 can run without it)
+AccountingRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: accounting.rpc
+
+Consolidation:
+  Enabled: true
+
+  # Polling intervals (seconds)
+  DiscoveryInterval: 300
+  StatusCheckInterval: 30
+  EnergyCheckInterval: 10
+  ExecutorTickInterval: 2
+
+  # EVM stuck-tx handling (legacy gas_price bump)
+  EvmBumpAfterSeconds: 120
+  EvmGasBumpMultiplier: 1.2
+  EvmMaxBumps: 3
+
+  # Concurrency limits
+  MaxConcurrentTasks: 20
+  MaxConcurrentPerChain:
+    TRON: 5
+    ETH: 10
+    BSC: 10
+
+  # Destination address selection for consolidation transfers:
+  # - target_addresses: use Consolidation.TargetAddresses (per chain/asset)
+  # - system_hot_wallet: use Signer.GetCompanyWallet (per chain)
+  ToAddressMode: "system_hot_wallet"
+  # Selector for system hot wallet (only used when ToAddressMode=system_hot_wallet)
+  SystemHotWalletAddressType: "hot_primary"
+  SystemHotWalletTemperature: 1
+
+  # Target addresses (hot wallets): chain -> asset_symbol -> address
+  # NOTE: Required only when ToAddressMode=target_addresses.
+  TargetAddresses:
+    TRON:
+      TRX: "TYourHotWalletAddress..."
+      USDT: "TYourHotWalletAddress..."
+    ETH:
+      ETH: "0xYourHotWalletAddress..."
+      USDT: "0xYourHotWalletAddress..."
+    BSC:
+      BNB: "0xYourHotWalletAddress..."
+      USDT: "0xYourHotWalletAddress..."
+
+  # Minimum balance thresholds (smallest units): chain -> asset_symbol -> amount
+  # NOTE:
+  # - Asset list is driven by DB table `currency_chain_settings`:
+  #   status=1 AND consolidation_enabled=1 AND deleted_at IS NULL
+  # - For every enabled (chain_code, asset_code) in DB, a matching threshold entry is required here.
+  # - For tokens (asset_symbol != native symbol), DB must also provide:
+  #   contract_address + token_decimals (missing => fail-fast on startup).
+  MinBalanceThresholds:
+    TRON:
+      TRX: "1000000"                  # 1 TRX (sun)
+      USDT: "10000000"                # 10 USDT (TRC20 typically 6 decimals)
+      USDC: "10000000"                # 10 USDC (TRC20 typically 6 decimals)
+    ETH:
+      ETH: "1000000000000000"         # 0.001 ETH (wei)
+      USDT: "10000000"                # 10 USDT (ERC20 typically 6 decimals)
+      USDC: "10000000"                # 10 USDC (ERC20 typically 6 decimals)
+    BSC:
+      BNB: "1000000000000000"         # 0.001 BNB (wei)
+      USDT: "10000000000000000000"    # 10 USDT (BEP20 often 18 decimals)
+      USDC: "10000000000000000000"    # 10 USDC (BEP20 often 18 decimals)
+
+  ValidateTokenInfo: true
+
+  # Native reserves to keep on deposit addresses to avoid breaking token sweeps (smallest units)
+  NativeReserves:
+    TRON:
+      TRX: "2000000"                  # keep 2 TRX (sun)
+    ETH:
+      ETH: "2000000000000000"         # keep 0.002 ETH (wei)
+    BSC:
+      BNB: "2000000000000000"         # keep 0.002 BNB (wei)
+
+  # Native consolidation minimum (smallest units):
+  # available = balance - NativeReserves
+  # consolidate only if: available >= MinConsolidationAmount
+  MinConsolidationAmount:
+    TRON:
+      TRX: "5000000"                  # 5 TRX (sun)
+    ETH:
+      ETH: "10000000000000000"        # 0.01 ETH (wei)
+    BSC:
+      BNB: "10000000000000000"        # 0.01 BNB (wei)
+
+  # Gas/Fee settings
+  GasSafetyMultipliers:
+    TRON: 5.0
+    ETH: 2.0
+    BSC: 2.0
+  MaxGasPrice:
+    ETH: "50000000000"                # 50 gwei
+    BSC: "10000000000"                # 10 gwei
+
+  # Risk controls (native smallest unit): used by Executor/TopUp/FeeGuard
+  Risk:
+    MaxNativeSpendPerTask:
+      TRON: "5000000"                 # 5 TRX (sun)
+      ETH: "10000000000000000"        # 0.01 ETH (wei)
+      BSC: "10000000000000000"        # 0.01 BNB (wei)
+
+  # Fee guard (USDT-only): if typical USDT transfer fee exceeds risk cap, pause execution.
+  FeeGuard:
+    Enabled: true
+    CheckIntervalSeconds: 30
+    BlockSeconds: 60
+    EvmUsdtTransferGasLimit: 70000
+
+  # TRON TRC20 fee mode when energy is insufficient:
+  # - energy_rental: rent energy via provider (requires EnergyRental.Enabled=true)
+  # - trx_fee: pay shortage by burning TRX from the deposit address (requires enough TRX balance)
+  TronTrc20FeeMode: "energy_rental"
+
+  RequiredConfirmations:
+    ETH: 3
+    BSC: 3
+    TRON: 3
+
+  # Retry & timeout
+  MaxRetries: 3
+  RetryBackoffSeconds: [60, 300, 900]
+  MaxPendingDuration: 1800            # 30 minutes
+  MaxNoReceiptDuration: 3600          # 60 minutes (abandon tx_hash/signed_tx and retry)
+
+  # Cooldown period (seconds) to prevent re-consolidating the same address/asset
+  ConsolidationCooldown: 0            # disabled
+
+  # Task claiming / leasing (multi-instance safety)
+  ClaimLeaseSeconds: 60
+
+  # Strategy: immediate / scheduled
+  Strategy: immediate
+  ScheduledTime: "02:00"              # UTC HH:MM (scheduled strategy)
+
+  # TRON Energy rental (iTRX)
+  EnergyRental:
+    Enabled: true
+    Provider: "itrx"
+    ApiEndpoint: "https://api.itrx.io"
+    ApiKey: ""                        # Prefer env: CONSOLIDATION_ITRX_API_KEY
+    ApiSecret: ""                     # Prefer env: CONSOLIDATION_ITRX_API_SECRET
+    DefaultRentalAmount: 32000
+    RentalDurationSeconds: 3600
+    # Safety caps (fund protection)
+    MaxOrdersPerTask: 2
+    MaxEnergyPerOrder: 100000
+    MaxTotalCostSunPerTask: 3000000   # 3 TRX (SUN)
+
+  # Auto top-up (gas/activation) for stuck token consolidation tasks
+  TopUp:
+    Enabled: true
+    # Only top-up token consolidation tasks (never native sweeps)
+    OnlyForTokens: true
+    # Hot wallet selector via Signer GetCompanyWallet
+    HotWalletAddressType: "hot_primary"
+    HotWalletTemperature: 1
+    # Risk controls (per task)
+    MaxTopUpAttemptsPerTask: 3
+    # Confirmations for top-up verification
+    VerificationConfirmations:
+      TRON: 3
+      ETH: 3
+      BSC: 3
+    # Worker intervals (seconds)
+    TopUpInterval: 10
+    VerifyInterval: 15
+    # Backoff (seconds) when retrying after failures
+    RetryBackoffSeconds: [60, 300, 900]
+    # How soon NeedGas/NeedEnergy becomes claimable again (seconds)
+    TaskRetryDelaySeconds: 30
+    # NOTE: TRON activation top-up is fixed to 0.1 TRX (100000 SUN) in code.
+    # TRON TRC20: fixed TRX amount (SUN) to cover bandwidth burn when bandwidth points are insufficient.
+    TronBandwidthTopUpSun: "1000000"  # 1 TRX (sun)
+
+AutoMigrate: false

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>重要设置变更通知 - 2FA已禁用 - {{.CompanyName}}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f6f6f6; font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <!-- 外层容器 -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f6f6f6;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <!-- 主内容卡片 -->
+                <table width="725" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; max-width: 725px; width: 100%;">
+                    <!-- 顶部黑色装饰线 -->
+                    <tr>
+                        <td height="8" style="background-color: #000000;"></td>
+                    </tr>
+
+                    <!-- Logo 区域 -->
+                    <tr>
+                        <td style="padding: 32px 28px 20px 28px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td>
+                                        <img src="{{.LogoURL}}" alt="{{.CompanyName}}" style="height: 50px; width: auto; display: block;" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- 标题 -->
+                    <tr>
+                        <td style="padding: 20px 55px 0 55px;">
+                            <h1 style="margin: 0; font-size: 44px; font-weight: 600; color: #000000; line-height: 1.2;">
+                                尊敬的【{{.Username}}】
+                            </h1>
+                        </td>
+                    </tr>
+
+                    <!-- 说明文字 -->
+                    <tr>
+                        <td style="padding: 30px 55px 20px 55px;">
+                            <p style="margin: 0; font-size: 20px; color: #000000; line-height: 1.5;">
+                                您的账户发生了一项极高风险的安全设置变更：用于登录和提现的二次验证（2FA）已被完全关闭。您的账户安全等级已显著降低。
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- 关键变更详情标题 -->
+                    <tr>
+                        <td style="padding: 20px 55px 10px 55px;">
+                            <h2 style="margin: 0; font-size: 24px; font-weight: 600; color: #000000;">
+                                【关键变更详情】
+                            </h2>
+                        </td>
+                    </tr>
+
+                    <!-- 关键变更详情内容 -->
+                    <tr>
+                        <td style="padding: 10px 55px 40px 55px;">
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td style="padding: 5px 0;">
+                                        <p style="margin: 0; font-size: 18px; color: #000000; line-height: 1.8;">
+                                            <strong>• 变更操作：</strong>关闭 二次验证（2FA）
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0;">
+                                        <p style="margin: 0; font-size: 18px; color: #000000; line-height: 1.8;">
+                                            <strong>• 已关闭的验证方式：</strong> 谷歌验证器
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0;">
+                                        <p style="margin: 0; font-size: 18px; color: #000000; line-height: 1.8;">
+                                            <strong>• 生效时间 (UTC)：</strong>{{.ChangeTime}}
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0;">
+                                        <p style="margin: 0; font-size: 18px; color: #000000; line-height: 1.8;">
+                                            <strong>• 操作IP地址：</strong>{{.IPAddress}}
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0;">
+                                        <p style="margin: 0; font-size: 18px; color: #000000; line-height: 1.8;">
+                                            <strong>• 操作地点（大致）：</strong>{{.Location}}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- 祝福语 -->
+                    <tr>
+                        <td style="padding: 20px 55px 40px 55px;">
+                            <p style="margin: 0; font-size: 20px; color: #000000; line-height: 1.5; font-weight: 600;">
+                                顺祝商祺！<br>
+                                {{.CompanyName}}团队
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- UID -->
+                    <tr>
+                        <td style="padding: 0 55px 60px 55px;">
+                            <p style="margin: 0; font-size: 16px; color: #000000; font-weight: 600;">
+                                UID:{{.UID}}
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Footer 区域 -->
+                <table width="725" cellpadding="0" cellspacing="0" border="0" style="max-width: 725px; width: 100%;">
+                    <!-- 社交媒体图标 -->
+                    <tr>
+                        <td style="padding: 40px 28px 20px 28px;" align="center">
+                            <table cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    {{if .SocialXURL}}
+                                    <td style="padding: 0 10px;">
+                                        <a href="{{.SocialXLink}}" target="_blank" style="display: block;">
+                                            <img src="{{.SocialXURL}}" alt="X" style="width: 32px; height: 32px; display: block;" />
+                                        </a>
+                                    </td>
+                                    {{end}}
+                                    {{if .SocialTelegramURL}}
+                                    <td style="padding: 0 10px;">
+                                        <a href="{{.SocialTelegramLink}}" target="_blank" style="display: block;">
+                                            <img src="{{.SocialTelegramURL}}" alt="Telegram" style="width: 32px; height: 32px; display: block;" />
+                                        </a>
+                                    </td>
+                                    {{end}}
+                                    {{if .SocialTikTokURL}}
+                                    <td style="padding: 0 10px;">
+                                        <a href="{{.SocialTikTokLink}}" target="_blank" style="display: block;">
+                                            <img src="{{.SocialTikTokURL}}" alt="TikTok" style="width: 32px; height: 32px; display: block;" />
+                                        </a>
+                                    </td>
+                                    {{end}}
+                                    {{if .SocialLinkedInURL}}
+                                    <td style="padding: 0 10px;">
+                                        <a href="{{.SocialLinkedInLink}}" target="_blank" style="display: block;">
+                                            <img src="{{.SocialLinkedInURL}}" alt="LinkedIn" style="width: 32px; height: 32px; display: block;" />
+                                        </a>
+                                    </td>
+                                    {{end}}
+                                    {{if .SocialFacebookURL}}
+                                    <td style="padding: 0 10px;">
+                                        <a href="{{.SocialFacebookLink}}" target="_blank" style="display: block;">
+                                            <img src="{{.SocialFacebookURL}}" alt="Facebook" style="width: 32px; height: 32px; display: block;" />
+                                        </a>
+                                    </td>
+                                    {{end}}
+                                    {{if .SocialRedditURL}}
+                                    <td style="padding: 0 10px;">
+                                        <a href="{{.SocialRedditLink}}" target="_blank" style="display: block;">
+                                            <img src="{{.SocialRedditURL}}" alt="Reddit" style="width: 32px; height: 32px; display: block;" />
+                                        </a>
+                                    </td>
+                                    {{end}}
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- 下载应用标题 -->
+                    <tr>
+                        <td style="padding: 30px 28px 15px 28px;">
+                            <p style="margin: 0; font-size: 31px; font-weight: 600; color: #000000;">
+                                下载{{.CompanyName}} App
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- 应用商店按钮 -->
+                    <tr>
+                        <td style="padding: 0 28px 30px 28px;">
+                            <table cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    {{if .AppGooglePlayURL}}
+                                    <td style="padding-right: 15px;">
+                                        <a href="{{.AppGooglePlayLink}}" target="_blank" style="display: block;">
+                                            <img src="{{.AppGooglePlayURL}}" alt="Google Play" style="width: 168px; height: auto; display: block;" />
+                                        </a>
+                                    </td>
+                                    {{end}}
+                                    {{if .AppAppStoreURL}}
+                                    <td>
+                                        <a href="{{.AppAppStoreLink}}" target="_blank" style="display: block;">
+                                            <img src="{{.AppAppStoreURL}}" alt="App Store" style="width: 168px; height: auto; display: block;" />
+                                        </a>
+                                    </td>
+                                    {{end}}
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- 客服支持文字 -->
+                    <tr>
+                        <td style="padding: 20px 40px 10px 40px;">
+                            <p style="margin: 0; font-size: 17px; color: #737372; line-height: 1.5;">
+                                感谢您选择{{.CompanyName}}。需要帮助？{{if .SupportEmail}}<a href="mailto:{{.SupportEmail}}" style="color: #000000; text-decoration: underline; font-weight: 600;">请联系客服</a>{{else}}<span style="color: #000000; text-decoration: underline; font-weight: 600;">请联系客服</span>{{end}}。
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- 免责声明 -->
+                    <tr>
+                        <td style="padding: 10px 40px;">
+                            <p style="margin: 0; font-size: 17px; color: #737372; line-height: 1.8;">
+                                本邮件内容仅供参考，不构成要约或邀请。包括稳定币和NFT在内的数字资产风险较高，您甚至可能会损失全部资产价值。如果您不确定自己是否适合交易或持有数字资产，请咨询法律/税务/投资专家。某些产品可能不在部分地区提供。如需进一步了解{{.CompanyName}}服务受限的司法管辖区及更多详情，请参阅{{.CompanyName}}<span style="color: #000000; text-decoration: underline; font-weight: 600;">服务条款</span>和<span style="color: #000000; text-decoration: underline; font-weight: 600;">风险披露&免责声明</span>。
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- 版权信息 -->
+                    <tr>
+                        <td style="padding: 20px 40px 40px 40px;">
+                            <p style="margin: 0; font-size: 17px; color: #737372;">
+                                版权所有©{{.Year}} {{.CompanyName}}。保留所有权利。
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
