@@ -1,0 +1,15 @@
+export default {
+  'component.tagSelect.expand': 'Expand',
+  'component.tagSelect.collapse': 'Collapse',
+  'component.tagSelect.all': 'All',
+  'common.all': 'All',
+  'common.reset': 'Reset',
+  'common.search': 'Search',
+  'common.actions': 'Actions',
+  'common.cancel': 'Cancel',
+  'common.next': 'Next',
+  'common.back': 'Back',
+  'common.submit': 'Submit',
+  'common.invalid': 'Invalid',
+  'common.mixedCurrencies': 'Mixed Currencies',
+};

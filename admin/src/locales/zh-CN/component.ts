@@ -1,0 +1,15 @@
+export default {
+  "component.tagSelect.expand": "展开",
+  "component.tagSelect.collapse": "收起",
+  "component.tagSelect.all": "全部",
+  "common.all": "全部",
+  "common.reset": "重置",
+  "common.search": "查询",
+  "common.actions": "操作",
+  "common.cancel": "取消",
+  "common.next": "下一步预览",
+  "common.back": "返回",
+  "common.submit": "提交",
+  "common.invalid": "无效",
+  "common.mixedCurrencies": "多币种",
+};

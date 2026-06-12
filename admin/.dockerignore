@@ -1,0 +1,12 @@
+node_modules
+dist
+.umi
+.umi-production
+.umi-test
+coverage
+*.log
+.DS_Store
+.idea
+.vscode
+tests/**/__snapshots__
+

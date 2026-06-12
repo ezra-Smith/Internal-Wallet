@@ -1,0 +1,7 @@
+address,network,risk_level,source,reason,monitor_status
+0x1111111111111111111111111111111111111111,ERC20,high,third_party,Known scam address (sample),active
+0x2222222222222222222222222222222222222222,ETH,,,,active
+0x3333333333333333333333333333333333333333,BEP20,,,,
+T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb,TRC20,medium,user_report,User report: phishing,active
+bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080,BTC,,,,stopped
+
